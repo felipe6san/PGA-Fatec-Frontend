@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ProjectForm from '../../dashboard/components/projectForm';
 import { Card, CardContent, CardHeader } from "../../dashboard/components/cardDashboard";
 
 export const AddProject = (): JSX.Element => {
@@ -38,7 +39,8 @@ export const AddProject = (): JSX.Element => {
           </h2>
         </CardHeader>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <ProjectForm />
+          {/* <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="title"
@@ -128,7 +130,7 @@ export const AddProject = (): JSX.Element => {
                 Salvar Projeto
               </button>
             </div>
-          </form>
+          </form> */}
         </CardContent>
       </Card>
     </>
