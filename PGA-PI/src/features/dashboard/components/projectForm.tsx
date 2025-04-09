@@ -124,258 +124,313 @@ const ProjectForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Registro de Projeto</h2>
+    <form onSubmit={handleSubmit} className="space-y-6 p-4 max-w-4xl mx-auto bg-white shadow-md rounded-lg">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Registro de Projeto</h2>
 
-      <div>
-        <label htmlFor="projectId">ID do Projeto (Tema):</label>
-        <input
-          type="text"
-          id="projectId"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-          required
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-1">ID do Projeto (Tema):</label>
+          <input
+            type="text"
+            id="projectId"
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto (Opcional):</label>
+          <input
+            type="text"
+            id="nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="ano" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
+          <input
+            type="number"
+            id="ano"
+            value={ano}
+            onChange={(e) => setAno(parseInt(e.target.value))}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="origem" className="block text-sm font-medium text-gray-700 mb-1">Origem:</label>
+          <select
+            id="origem"
+            value={origem}
+            onChange={(e) => setOrigem(e.target.value)}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          >
+            <option value="">Selecione a Origem</option>
+            <option value="CPA">
+              CPA (Relatório da Comissão Própria de Avaliação da Unidade)
+            </option>
+            <option value="Outra">Outra</option>
+            <option value="CEE">
+              CEE (Relatório Circunstanciado do Conselho Estadual de Educação)
+            </option>
+            //TODO {/* Add other relevant origins based on your system */}
+          </select>
+        </div>
       </div>
 
       <div>
-        <label htmlFor="nome">Nome do Projeto (Opcional):</label>
-        <input
-          type="text"
-          id="nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="ano">Ano:</label>
-        <input
-          type="number"
-          id="ano"
-          value={ano}
-          onChange={(e) => setAno(parseInt(e.target.value))}
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="origem">Origem:</label>
-        <select
-          id="origem"
-          value={origem}
-          onChange={(e) => setOrigem(e.target.value)}
-          required
-        >
-          <option value="">Selecione a Origem</option>
-          <option value="CPA">
-            CPA (Relatório da Comissão Própria de Avaliação da Unidade)
-          </option>
-          <option value="Outra">Outra</option>
-          <option value="CEE">
-            CEE (Relatório Circunstanciado do Conselho Estadual de Educação)
-          </option>
-          //TODO {/* Add other relevant origins based on your system */}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="descricao">O que será feito:</label>
+        <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">O que será feito:</label>
         <textarea
           id="descricao"
           value={descricao}
           onChange={(e) => setDescricao(e.target.value)}
           rows={3}
           required
+          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
 
       <div>
-        <label htmlFor="justificativa">Por que será feito:</label>
+        <label htmlFor="justificativa" className="block text-sm font-medium text-gray-700 mb-1">Por que será feito:</label>
         <textarea
           id="justificativa"
           value={justificativa}
           onChange={(e) => setJustificativa(e.target.value)}
           rows={3}
           required
+          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="dataInicial" className="block text-sm font-medium text-gray-700 mb-1">Data Inicial:</label>
+            <input
+              type="date"
+              id="dataInicial"
+              value={dataInicial}
+              onChange={(e) => setDataInicial(e.target.value)}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="dataFinal" className="block text-sm font-medium text-gray-700 mb-1">Data Final:</label>
+            <input
+              type="date"
+              id="dataFinal"
+              value={dataFinal}
+              onChange={(e) => setDataFinal(e.target.value)}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+              <label htmlFor="custo" className="block text-sm font-medium text-gray-700 mb-1">Custo Estimado (R$):</label>
+              <input
+                type="number"
+                id="custo"
+                value={custo}
+                onChange={(e) => setCusto(e.target.value)}
+                step="0.01"
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              />
+          </div>
+          <div>
+              <label htmlFor="fonteRecursos" className="block text-sm font-medium text-gray-700 mb-1">Fonte de Recursos:</label>
+              <input
+                type="text"
+                id="fonteRecursos"
+                value={fonteRecursos}
+                onChange={(e) => setFonteRecursos(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              />
+          </div>
+      </div>
+
       <div>
-        <label htmlFor="responsavel">Responsável (ID do Usuário):</label>
+        <label htmlFor="responsavel" className="block text-sm font-medium text-gray-700 mb-1">Responsável (ID do Usuário):</label>
         <input
-          type="number"
+          type="number" // Consider changing to a user selector component later
           id="responsavel"
           value={responsavel}
           onChange={(e) => setResponsavel(e.target.value)}
           required
+          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
 
-      <h3>Colaboradores</h3>
-      {colaboradores.map((colaborador, index) => (
-        <div key={colaborador.id}>
-          <h4>Colaborador #{index + 1}</h4>
-          <div>
-            <label htmlFor={`userId-${index}`}>ID do Usuário:</label>
-            <input
-              type="number"
-              id={`userId-${index}`}
-              name="userId"
-              value={colaborador.userId}
-              onChange={(e) => handleColaboradorChange(index, e)}
-            />
-          </div>
-          <div>
-            <label htmlFor={`cargaHorariaSemanal-${index}`}>
-              Carga Horária Semanal:
-            </label>
-            <input
-              type="number"
-              id={`cargaHorariaSemanal-${index}`}
-              name="cargaHorariaSemanal"
-              value={colaborador.cargaHorariaSemanal}
-              onChange={(e) => handleColaboradorChange(index, e)}
-            />
-          </div>
-          <div>
-            <label htmlFor={`tipoCargaHoraria-${index}`}>
-              Tipo de Carga Horária:
-            </label>
+      {/* Colaboradores Section */}
+      <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Colaboradores</h3>
+          {colaboradores.map((colaborador, index) => (
+            <div key={colaborador.id} className="mb-4 p-4 border border-gray-200 rounded-md relative">
+               <button
+                  type="button"
+                  onClick={() => handleRemoveColaborador(index)}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                >
+                  &times; {/* Simple 'x' icon */}
+                </button>
+              <h4 className="text-md font-medium text-gray-800 mb-2">Colaborador #{index + 1}</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor={`userId-${index}`} className="block text-sm font-medium text-gray-700 mb-1">ID do Usuário:</label>
+                    <input
+                      type="number" // Consider changing to a user selector
+                      id={`userId-${index}`}
+                      name="userId"
+                      value={colaborador.userId}
+                      onChange={(e) => handleColaboradorChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`cargaHorariaSemanal-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                      Carga Horária Semanal:
+                    </label>
+                    <input
+                      type="number"
+                      id={`cargaHorariaSemanal-${index}`}
+                      name="cargaHorariaSemanal"
+                      value={colaborador.cargaHorariaSemanal}
+                      onChange={(e) => handleColaboradorChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`tipoCargaHoraria-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                      Tipo de Carga Horária:
+                    </label>
+                    <input // Consider changing to a select if predefined types exist
+                      type="text"
+                      id={`tipoCargaHoraria-${index}`}
+                      name="tipoCargaHoraria"
+                      value={colaborador.tipoCargaHoraria}
+                      onChange={(e) => handleColaboradorChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddColaborador}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Adicionar Colaborador
+          </button>
+      </div>
+
+      {/* Etapas Section */}
+       <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Etapas do Projeto</h3>
+          {etapas.map((etapa, index) => (
+            <div key={etapa.id} className="mb-4 p-4 border border-gray-200 rounded-md relative">
+               <button
+                  type="button"
+                  onClick={() => handleRemoveEtapa(index)}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                >
+                  &times;
+                </button>
+              <h4 className="text-md font-medium text-gray-800 mb-2">Etapa #{index + 1}</h4>
+              <div className="mb-2">
+                  <label htmlFor={`etapa-descricao-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Descrição:</label>
+                  <input
+                      type="text"
+                      id={`etapa-descricao-${index}`}
+                      name="descricao"
+                      value={etapa.descricao}
+                      onChange={(e) => handleEtapaChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                  />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor={`etapa-dataInicio-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Data de Início:</label>
+                    <input
+                      type="date"
+                      id={`etapa-dataInicio-${index}`}
+                      name="dataInicio"
+                      value={etapa.dataInicio}
+                      onChange={(e) => handleEtapaChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`etapa-dataFim-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Data de Fim:</label>
+                    <input
+                      type="date"
+                      id={`etapa-dataFim-${index}`}
+                      name="dataFim"
+                      value={etapa.dataFim}
+                      onChange={(e) => handleEtapaChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddEtapa}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Adicionar Etapa
+          </button>
+      </div>
+
+      {/* Situação Problema Section */}
+      <div className="border-t border-gray-200 pt-6 mt-6">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Situação Problema / Oportunidade de Melhoria</h3>
+        {situacaoProblema.map((situacao, index) => (
+          <div key={index} className="flex items-center mb-2">
             <input
               type="text"
-              id={`tipoCargaHoraria-${index}`}
-              name="tipoCargaHoraria"
-              value={colaborador.tipoCargaHoraria}
-              onChange={(e) => handleColaboradorChange(index, e)}
+              value={situacao}
+              onChange={(e) => handleSituacaoProblemaChange(index, e)}
+              placeholder={`Descrição #${index + 1}`}
+              className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mr-2"
+              required
             />
-          </div>
-          {colaboradores.length > 1 && (
-            <button
-              type="button"
-              onClick={() => handleRemoveColaborador(index)}
-            >
-              Remover Colaborador
-            </button>
-          )}
-        </div>
-      ))}
-      <button type="button" onClick={handleAddColaborador}>
-        Adicionar Colaborador
-      </button>
-
-      <div>
-        <label htmlFor="dataInicial">Data Inicial:</label>
-        <input
-          type="date"
-          id="dataInicial"
-          value={dataInicial}
-          onChange={(e) => setDataInicial(e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="dataFinal">Data Final:</label>
-        <input
-          type="date"
-          id="dataFinal"
-          value={dataFinal}
-          onChange={(e) => setDataFinal(e.target.value)}
-          required
-        />
-      </div>
-
-      <h3>Etapas do Processo</h3>
-      {etapas.map((etapa, index) => (
-        <div key={etapa.id}>
-          <h4>Etapa #{index + 1}</h4>
-          <div>
-            <label htmlFor={`descricaoEtapa-${index}`}>Descrição:</label>
-            <input
-              type="text"
-              id={`descricaoEtapa-${index}`}
-              name="descricao"
-              value={etapa.descricao}
-              onChange={(e) => handleEtapaChange(index, e)}
-            />
-          </div>
-          <div>
-            <label htmlFor={`dataInicioEtapa-${index}`}>Data de Início:</label>
-            <input
-              type="date"
-              id={`dataInicioEtapa-${index}`}
-              name="dataInicio"
-              value={etapa.dataInicio}
-              onChange={(e) => handleEtapaChange(index, e)}
-            />
-          </div>
-          <div>
-            <label htmlFor={`dataFimEtapa-${index}`}>Data de Fim:</label>
-            <input
-              type="date"
-              id={`dataFimEtapa-${index}`}
-              name="dataFim"
-              value={etapa.dataFim}
-              onChange={(e) => handleEtapaChange(index, e)}
-            />
-          </div>
-          {etapas.length > 1 && (
-            <button type="button" onClick={() => handleRemoveEtapa(index)}>
-              Remover Etapa
-            </button>
-          )}
-        </div>
-      ))}
-      <button type="button" onClick={handleAddEtapa}>
-        Adicionar Etapa
-      </button>
-
-      <div>
-        <label htmlFor="custo">Custo (R$):</label>
-        <input
-          type="number"
-          id="custo"
-          value={custo}
-          onChange={(e) => setCusto(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="fonteRecursos">Fonte(s) dos Recursos:</label>
-        <input
-          type="text"
-          id="fonteRecursos"
-          value={fonteRecursos}
-          onChange={(e) => setFonteRecursos(e.target.value)}
-        />
-      </div>
-
-      <h3>Situação Problema (a ser resolvida/mitigada)</h3>
-      {situacaoProblema.map((problema, index) => (
-        <div key={index}>
-          <label htmlFor={`situacaoProblema-${index}`}>Problema:</label>
-          <input
-            type="text"
-            id={`situacaoProblema-${index}`}
-            value={problema}
-            onChange={(e) => handleSituacaoProblemaChange(index, e)}
-          />
-          {situacaoProblema.length > 1 && (
             <button
               type="button"
               onClick={() => handleRemoveSituacaoProblema(index)}
+              className="px-3 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400"
             >
-              Remover Problema
+              Remover
             </button>
-          )}
-        </div>
-      ))}
-      <button type="button" onClick={handleAddSituacaoProblema}>
-        Adicionar Problema
-      </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={handleAddSituacaoProblema}
+          className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Adicionar Situação/Oportunidade
+        </button>
+      </div>
 
-      <button type="submit">Registrar Projeto</button>
+      <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
+        <button
+          type="submit"
+          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          Registrar Projeto
+        </button>
+      </div>
     </form>
   );
 };
