@@ -21,14 +21,12 @@ interface Etapa {
   dataFim: string;
 }
 
-// Adicione este enum no início do arquivo, junto com as interfaces
 enum TipoCargaHoraria {
   HA = "Hora Atividade (HA)",
   HAE = "Hora Atividade Específica (HAE)",
   H = "Hora (H) <Não Especificado>"
 }
 
-// Adicione esta função no início do arquivo, após as interfaces
 const formatCurrency = (value: string): string => {
   const number = parseFloat(value.replace(/[^\d]/g, '')) / 100;
   return new Intl.NumberFormat('pt-BR', {
@@ -41,7 +39,6 @@ const parseCurrencyInput = (value: string): string => {
   return value.replace(/\D/g, '');
 };
 
-// Lista mock de usuários que podem ser responsáveis
 const mockResponsaveis = [
   { id: 1, userId: "1", nome: "João Silva" },
   { id: 2, userId: "2", nome: "Maria Santos" },
@@ -49,7 +46,6 @@ const mockResponsaveis = [
   { id: 4, userId: "4", nome: "Ana Costa" },
 ];
 
-// Lista mock de usuários que podem ser colaboradores
 const mockColaboradores = [
   { id: 1, userId: "1", nome: "João Silva" },
   { id: 2, userId: "2", nome: "Maria Santos" },
@@ -257,7 +253,6 @@ const ProjectForm: React.FC = () => {
             <option value="CEE">
               CEE (Relatório Circunstanciado do Conselho Estadual de Educação)
             </option>
-            {/* Add other relevant origins based on your system */}
           </select>
         </div>
       </div>
@@ -446,7 +441,7 @@ const ProjectForm: React.FC = () => {
               onClick={() => handleRemoveColaborador(index)}
               className="absolute top-2 right-2 text-red-500 hover:text-red-700"
             >
-              &times; {/* Simple 'x' icon */}
+              &times;
             </button>
             <h4 className="text-md font-medium text-gray-800 mb-2">
               Colaborador #{index + 1}
