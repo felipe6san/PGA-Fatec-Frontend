@@ -20,7 +20,6 @@ const projects = [
     description: "Iniciativa para conectar alunos experientes com calouros, oferecendo orientação acadêmica e profissional.",
     teamMembers: ["Daniel Oliveira", "Eduarda Lima"],
   },
-  // Add more sample projects as needed
 ];
 
 export const Projects = (): JSX.Element => {
