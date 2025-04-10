@@ -15,9 +15,8 @@ export const AddProject = (): JSX.Element => {
             Informações do Projeto
           </h2>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-0">
           <ProjectForm />
-
         </CardContent>
       </Card>
     </>
