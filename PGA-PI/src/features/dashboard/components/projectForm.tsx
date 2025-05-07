@@ -1,100 +1,17 @@
 import React, { useState } from "react";
+import {
+  PapelProjeto,
+  TipoVinculoHAE,
+  ProjetoPessoa,
+  StatusVerificacao,
+  EtapaProcesso,
+  TipoAnexo,
+  AquisicaoItem,
+  EixoTematico,
+  PrioridadeAcao
+} from './projectFormTypes';
 
-interface Responsavel {
-  id: number;
-  userId: string;
-  nome: string;
-}
-
-interface Colaborador {
-  id: number;
-  userId: string;
-  nome: string;
-  cargaHorariaSemanal: string;
-  tipoCargaHoraria: TipoCargaHoraria | string;
-}
-
-interface Etapa {
-  id: number;
-  descricao: string;
-  dataInicio: string;
-  dataFim: string;
-}
-
-enum TipoCargaHoraria {
-  HA = "Hora Atividade (HA)",
-  HAE = "Hora Atividade Específica (HAE)",
-  H = "Hora (H) <Não Especificado>"
-}
-
-enum PapelProjeto {
-  Responsavel = "Responsavel",
-  Colaborador = "Colaborador",
-}
-
-enum TipoVinculoHAE {
-  HAE15 = "15",
-  HAE25 = "25",
-  HAE40 = "40",
-  NaoSeAplica = "NaoSeAplica",
-}
-
-interface ProjetoPessoa {
-  id: number;
-  pessoaId: string;
-  nome: string;
-  papel: PapelProjeto;
-  cargaHorariaSemanal?: string;
-  tipoVinculoHAE?: TipoVinculoHAE | string;
-}
-
-enum StatusVerificacao {
-  Pendente = "Pendente",
-  OK = "OK",
-  RequerAcao = "RequerAcao",
-}
-
-interface EtapaProcesso {
-  id: number;
-  descricao: string;
-  entregavelLinkSei?: string;
-  numeroRef?: string;
-  dataVerificacaoPrevista?: string;
-  dataVerificacaoRealizada?: string;
-  statusVerificacao: StatusVerificacao | string;
-}
-
-enum TipoAnexo {
-  MaterialPermanente = "MaterialPermanente",
-  MaterialConsumo = "MaterialConsumo",
-  ReagenteQuimico = "ReagenteQuimico",
-  Livro = "Livro",
-  Software = "Software",
-}
-
-interface AquisicaoItem {
-  id: number;
-  tipoAnexo: TipoAnexo | string;
-  descricaoItem: string;
-  unidadeMedida?: string;
-  quantidade: string;
-  justificativa?: string;
-  valorUnitarioEstimado?: string;
-  valorTotalEstimado?: string;
-}
-
-interface EixoTematico {
-  id: number;
-  numero: number;
-  nome: string;
-}
-
-interface PrioridadeAcao {
-  id: number;
-  grau: number;
-  descricao: string;
-}
-
+// --- Utility Functions ---
 const formatCurrency = (value: string): string => {
   const number = parseFloat(value.replace(/[^\d]/g, '')) / 100;
   return new Intl.NumberFormat('pt-BR', {
@@ -106,22 +23,6 @@ const formatCurrency = (value: string): string => {
 const parseCurrencyInput = (value: string): string => {
   return value.replace(/\D/g, '');
 };
-
-const mockResponsaveisOrig = [
-  { id: 1, userId: "1", nome: "João Silva" },
-  { id: 2, userId: "2", nome: "Maria Santos" },
-  { id: 3, userId: "3", nome: "Pedro Oliveira" },
-  { id: 4, userId: "4", nome: "Ana Costa" },
-];
-
-const mockColaboradoresOrig = [
-  { id: 1, userId: "1", nome: "João Silva" },
-  { id: 2, userId: "2", nome: "Maria Santos" },
-  { id: 3, userId: "3", nome: "Pedro Oliveira" },
-  { id: 4, userId: "4", nome: "Ana Costa" },
-  { id: 5, userId: "5", nome: "Lucas Ferreira" },
-  { id: 6, userId: "6", nome: "Mariana Lima" },
-];
 
 const mockPessoas = [
   { pessoaId: "1", nome: "João Silva (Docente)" },
