@@ -27,6 +27,74 @@ enum TipoCargaHoraria {
   H = "Hora (H) <Não Especificado>"
 }
 
+enum PapelProjeto {
+  Responsavel = "Responsavel",
+  Colaborador = "Colaborador",
+}
+
+enum TipoVinculoHAE {
+  HAE15 = "15",
+  HAE25 = "25",
+  HAE40 = "40",
+  NaoSeAplica = "NaoSeAplica",
+}
+
+interface ProjetoPessoa {
+  id: number;
+  pessoaId: string;
+  nome: string;
+  papel: PapelProjeto;
+  cargaHorariaSemanal?: string;
+  tipoVinculoHAE?: TipoVinculoHAE | string;
+}
+
+enum StatusVerificacao {
+  Pendente = "Pendente",
+  OK = "OK",
+  RequerAcao = "RequerAcao",
+}
+
+interface EtapaProcesso {
+  id: number;
+  descricao: string;
+  entregavelLinkSei?: string;
+  numeroRef?: string;
+  dataVerificacaoPrevista?: string;
+  dataVerificacaoRealizada?: string;
+  statusVerificacao: StatusVerificacao | string;
+}
+
+enum TipoAnexo {
+  MaterialPermanente = "MaterialPermanente",
+  MaterialConsumo = "MaterialConsumo",
+  ReagenteQuimico = "ReagenteQuimico",
+  Livro = "Livro",
+  Software = "Software",
+}
+
+interface AquisicaoItem {
+  id: number;
+  tipoAnexo: TipoAnexo | string;
+  descricaoItem: string;
+  unidadeMedida?: string;
+  quantidade: string;
+  justificativa?: string;
+  valorUnitarioEstimado?: string;
+  valorTotalEstimado?: string;
+}
+
+interface EixoTematico {
+  id: number;
+  numero: number;
+  nome: string;
+}
+
+interface PrioridadeAcao {
+  id: number;
+  grau: number;
+  descricao: string;
+}
+
 const formatCurrency = (value: string): string => {
   const number = parseFloat(value.replace(/[^\d]/g, '')) / 100;
   return new Intl.NumberFormat('pt-BR', {
@@ -39,14 +107,14 @@ const parseCurrencyInput = (value: string): string => {
   return value.replace(/\D/g, '');
 };
 
-const mockResponsaveis = [
+const mockResponsaveisOrig = [
   { id: 1, userId: "1", nome: "João Silva" },
   { id: 2, userId: "2", nome: "Maria Santos" },
   { id: 3, userId: "3", nome: "Pedro Oliveira" },
   { id: 4, userId: "4", nome: "Ana Costa" },
 ];
 
-const mockColaboradores = [
+const mockColaboradoresOrig = [
   { id: 1, userId: "1", nome: "João Silva" },
   { id: 2, userId: "2", nome: "Maria Santos" },
   { id: 3, userId: "3", nome: "Pedro Oliveira" },
@@ -55,80 +123,121 @@ const mockColaboradores = [
   { id: 6, userId: "6", nome: "Mariana Lima" },
 ];
 
+const mockPessoas = [
+  { pessoaId: "1", nome: "João Silva (Docente)" },
+  { pessoaId: "2", nome: "Maria Santos (Administrativo)" },
+  { pessoaId: "3", nome: "Pedro Oliveira (Docente)" },
+  { pessoaId: "4", nome: "Ana Costa (Gestor)" },
+  { pessoaId: "5", nome: "Lucas Ferreira (Docente)" },
+  { pessoaId: "6", nome: "Mariana Lima (Administrativo)" },
+];
+
+const mockEixosTematicos: EixoTematico[] = [
+  { id: 1, numero: 1, nome: "Eixo 1: Ensino de Qualidade" },
+  { id: 2, numero: 2, nome: "Eixo 2: Pesquisa e Inovação" },
+  { id: 3, numero: 3, nome: "Eixo 3: Extensão e Comunidade" },
+  { id: 4, numero: 4, nome: "Eixo 4: Gestão e Infraestrutura" },
+];
+
+const mockPrioridadesAcao: PrioridadeAcao[] = [
+  { id: 1, grau: 1, descricao: "Prioridade Alta" },
+  { id: 2, grau: 2, descricao: "Prioridade Média" },
+  { id: 3, grau: 3, descricao: "Prioridade Baixa" },
+];
+
 const ProjectForm: React.FC = () => {
-  const [projectId, setProjectId] = useState<string>("");
-  const [nome, setNome] = useState<string>("");
+  const [tema, setTema] = useState<string>("");
+  const [nomeProjeto, setNomeProjeto] = useState<string>("");
   const [ano, setAno] = useState<number>(new Date().getFullYear());
   const [origem, setOrigem] = useState<string>("");
-  const [descricao, setDescricao] = useState<string>("");
-  const [justificativa, setJustificativa] = useState<string>("");
-  const [dataInicial, setDataInicial] = useState<string>("");
+  const [oQueSeraFeito, setOQueSeraFeito] = useState<string>("");
+  const [porQueSeraFeito, setPorQueSeraFeito] = useState<string>("");
+  const [dataInicio, setDataInicio] = useState<string>("");
   const [dataFinal, setDataFinal] = useState<string>("");
-  const [custo, setCusto] = useState<string>("");
+  const [custoEstimado, setCustoEstimado] = useState<string>("");
   const [fonteRecursos, setFonteRecursos] = useState<string>("");
-  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([
-    { id: 0, userId: "", nome: "" },
+  const [eixoId, setEixoId] = useState<string>("");
+  const [prioridadeId, setPrioridadeId] = useState<string>("");
+  const [objetivosInstitucionaisReferenciados, setObjetivosInstitucionaisReferenciados] = useState<string>("");
+  const [obrigatorioInclusao, setObrigatorioInclusao] = useState<boolean>(false);
+  const [obrigatorioSustentabilidade, setObrigatorioSustentabilidade] = useState<boolean>(false);
+  const [pessoasProjeto, setPessoasProjeto] = useState<ProjetoPessoa[]>([
+    { id: 0, pessoaId: "", nome: "", papel: PapelProjeto.Responsavel },
   ]);
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([
-    { id: 0, userId: "", nome: "", cargaHorariaSemanal: "", tipoCargaHoraria: "" },
-  ]);
-  const [etapas, setEtapas] = useState<Etapa[]>([
-    { id: 0, descricao: "", dataInicio: "", dataFim: "" },
+  const [etapasProcesso, setEtapasProcesso] = useState<EtapaProcesso[]>([
+    { id: 0, descricao: "", statusVerificacao: StatusVerificacao.Pendente },
   ]);
   const [situacaoProblema, setSituacaoProblema] = useState<string[]>([""]);
+  const [aquisicoes, setAquisicoes] = useState<AquisicaoItem[]>([
+  ]);
 
-  const handleAddResponsavel = () => {
-    setResponsaveis([...responsaveis, { id: responsaveis.length, userId: "", nome: "" }]);
-  };
-
-  const handleAddColaborador = () => {
-    setColaboradores([
-      ...colaboradores,
+  const handleAddPessoaProjeto = (papel: PapelProjeto) => {
+    setPessoasProjeto([
+      ...pessoasProjeto,
       {
-        id: colaboradores.length,
-        userId: "",
+        id: pessoasProjeto.length,
+        pessoaId: "",
         nome: "",
-        cargaHorariaSemanal: "",
-        tipoCargaHoraria: "",
+        papel: papel,
+        ...(papel === PapelProjeto.Colaborador && { cargaHorariaSemanal: "", tipoVinculoHAE: "" }),
       },
     ]);
   };
 
-  const handleColaboradorChange = (
+  const handlePessoaProjetoChange = (
     index: number,
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target;
-    const newColaboradores = [...colaboradores];
-    newColaboradores[index] = { ...newColaboradores[index], [name]: value };
-    setColaboradores(newColaboradores);
+    const newPessoasProjeto = [...pessoasProjeto];
+    const currentPessoa = newPessoasProjeto[index];
+
+    if (name === "pessoaId") {
+      const selectedPessoa = mockPessoas.find(p => p.pessoaId === value);
+      newPessoasProjeto[index] = {
+        ...currentPessoa,
+        pessoaId: value,
+        nome: selectedPessoa?.nome || "",
+      };
+    } else {
+      newPessoasProjeto[index] = { ...currentPessoa, [name]: value };
+    }
+    setPessoasProjeto(newPessoasProjeto);
   };
 
-  const handleRemoveColaborador = (index: number) => {
-    const newColaboradores = colaboradores.filter((_, i) => i !== index);
-    setColaboradores(newColaboradores);
+  const handleRemovePessoaProjeto = (index: number) => {
+    const newPessoasProjeto = pessoasProjeto.filter((_, i) => i !== index);
+    setPessoasProjeto(newPessoasProjeto);
   };
 
-  const handleAddEtapa = () => {
-    setEtapas([
-      ...etapas,
-      { id: etapas.length, descricao: "", dataInicio: "", dataFim: "" },
+  const handleAddEtapaProcesso = () => {
+    setEtapasProcesso([
+      ...etapasProcesso,
+      {
+        id: etapasProcesso.length,
+        descricao: "",
+        statusVerificacao: StatusVerificacao.Pendente,
+        entregavelLinkSei: "",
+        numeroRef: "",
+        dataVerificacaoPrevista: "",
+        dataVerificacaoRealizada: "",
+      },
     ]);
   };
 
-  const handleEtapaChange = (
+  const handleEtapaProcessoChange = (
     index: number,
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = event.target;
-    const newEtapas = [...etapas];
-    newEtapas[index] = { ...newEtapas[index], [name]: value };
-    setEtapas(newEtapas);
+    const newEtapasProcesso = [...etapasProcesso];
+    newEtapasProcesso[index] = { ...newEtapasProcesso[index], [name]: value };
+    setEtapasProcesso(newEtapasProcesso);
   };
 
-  const handleRemoveEtapa = (index: number) => {
-    const newEtapas = etapas.filter((_, i) => i !== index);
-    setEtapas(newEtapas);
+  const handleRemoveEtapaProcesso = (index: number) => {
+    const newEtapasProcesso = etapasProcesso.filter((_, i) => i !== index);
+    setEtapasProcesso(newEtapasProcesso);
   };
 
   const handleAddSituacaoProblema = () => {
@@ -149,23 +258,85 @@ const ProjectForm: React.FC = () => {
     setSituacaoProblema(newSituacaoProblema);
   };
 
+  const handleAddAquisicao = () => {
+    setAquisicoes([
+      ...aquisicoes,
+      {
+        id: aquisicoes.length,
+        tipoAnexo: "",
+        descricaoItem: "",
+        unidadeMedida: "",
+        quantidade: "1",
+        justificativa: "",
+        valorUnitarioEstimado: "0",
+        valorTotalEstimado: "0",
+      },
+    ]);
+  };
+
+  const handleAquisicaoChange = (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = event.target;
+    const newAquisicoes = [...aquisicoes];
+    let updatedAquisicao = { ...newAquisicoes[index], [name]: value };
+
+    if (name === "quantidade" || name === "valorUnitarioEstimado") {
+        const qtd = parseFloat(name === "quantidade" ? value : updatedAquisicao.quantidade) || 0;
+        const valorUnit = parseFloat(name === "valorUnitarioEstimado" ? parseCurrencyInput(value) : parseCurrencyInput(updatedAquisicao.valorUnitarioEstimado || '0')) / 100;
+        updatedAquisicao.valorTotalEstimado = (qtd * valorUnit).toFixed(2);
+    }
+    if (name === "valorUnitarioEstimado") {
+        updatedAquisicao.valorUnitarioEstimado = parseCurrencyInput(value);
+    }
+
+
+    newAquisicoes[index] = updatedAquisicao;
+    setAquisicoes(newAquisicoes);
+  };
+
+  const handleRemoveAquisicao = (index: number) => {
+    const newAquisicoes = aquisicoes.filter((_, i) => i !== index);
+    setAquisicoes(newAquisicoes);
+  };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const formData = {
-      projectId,
-      nome,
+      tema,
+      eixoId: parseInt(eixoId) || null,
+      prioridadeId: parseInt(prioridadeId) || null,
+      oQueSeraFeito,
+      porQueSeraFeito,
+      dataInicio,
+      dataFinal,
+      objetivosInstitucionaisReferenciados,
+      obrigatorioInclusao,
+      obrigatorioSustentabilidade,
+      pessoas: pessoasProjeto.map(p => ({
+        pessoaId: p.pessoaId,
+        papel: p.papel,
+        cargaHorariaSemanal: p.cargaHorariaSemanal ? parseInt(p.cargaHorariaSemanal) : undefined,
+        tipoVinculoHAE: p.tipoVinculoHAE
+      })),
+      etapas: etapasProcesso.map(e => ({
+        ...e,
+        dataVerificacaoPrevista: e.dataVerificacaoPrevista || null,
+        dataVerificacaoRealizada: e.dataVerificacaoRealizada || null,
+      })),
+      aquisicoes: aquisicoes.map(a => ({
+        ...a,
+        quantidade: parseInt(a.quantidade) || 0,
+        valorUnitarioEstimado: a.valorUnitarioEstimado ? parseFloat(a.valorUnitarioEstimado.replace(/[^\d]/g, '')) / 100 : undefined,
+        valorTotalEstimado: a.valorTotalEstimado ? parseFloat(a.valorTotalEstimado.replace(/[^\d]/g, '')) / 100 : undefined,
+      })),
+      nomeProjeto,
       ano,
       origem,
-      descricao,
-      justificativa,
-      dataInicial,
-      dataFinal,
-      custo: parseFloat(custo) / 100,
+      custoTotalEstimadoProjeto: custoEstimado ? parseFloat(parseCurrencyInput(custoEstimado)) / 100 : 0,
       fonteRecursos,
-      responsavel: responsaveis,
-      colaboradores,
-      etapas,
-      situacaoProblema,
+      situacoesProblema: situacaoProblema,
     };
     console.log("Form Data:", formData);
     //TODO Here you would typically send the form data to your backend
@@ -177,22 +348,22 @@ const ProjectForm: React.FC = () => {
       className="space-y-6 p-4 bg-white shadow-md rounded-lg"
     >
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-        Registro de Projeto
+        Registro de Ação/Projeto
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label
-            htmlFor="projectId"
+            htmlFor="tema"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            ID do Projeto (Tema):
+            ID/Tema do Projeto (Conforme PGA):
           </label>
           <input
             type="text"
-            id="projectId"
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
+            id="tema"
+            value={tema}
+            onChange={(e) => setTema(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
@@ -200,16 +371,16 @@ const ProjectForm: React.FC = () => {
 
         <div>
           <label
-            htmlFor="nome"
+            htmlFor="nomeProjeto"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             Nome do Projeto (Opcional):
           </label>
           <input
             type="text"
-            id="nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            id="nomeProjeto"
+            value={nomeProjeto}
+            onChange={(e) => setNomeProjeto(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
@@ -219,7 +390,7 @@ const ProjectForm: React.FC = () => {
             htmlFor="ano"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Ano:
+            Ano (PGA):
           </label>
           <input
             type="number"
@@ -236,13 +407,12 @@ const ProjectForm: React.FC = () => {
             htmlFor="origem"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Origem:
+            Origem da Demanda (Fonte da Situação Problema):
           </label>
           <select
             id="origem"
             value={origem}
             onChange={(e) => setOrigem(e.target.value)}
-            required
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
           >
             <option value="">Selecione a Origem</option>
@@ -257,17 +427,64 @@ const ProjectForm: React.FC = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label
+            htmlFor="eixoId"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Eixo Temático:
+          </label>
+          <select
+            id="eixoId"
+            value={eixoId}
+            onChange={(e) => setEixoId(e.target.value)}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          >
+            <option value="">Selecione um Eixo Temático</option>
+            {mockEixosTematicos.map((eixo) => (
+              <option key={eixo.id} value={eixo.id}>
+                {eixo.numero} - {eixo.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="prioridadeId"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Prioridade da Ação:
+          </label>
+          <select
+            id="prioridadeId"
+            value={prioridadeId}
+            onChange={(e) => setPrioridadeId(e.target.value)}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          >
+            <option value="">Selecione a Prioridade</option>
+            {mockPrioridadesAcao.map((prio) => (
+              <option key={prio.id} value={prio.id}>
+                {prio.grau} - {prio.descricao}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div>
         <label
-          htmlFor="descricao"
+          htmlFor="oQueSeraFeito"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          O que será feito:
+          O que será feito (Descrição da Ação/Projeto):
         </label>
         <textarea
-          id="descricao"
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
+          id="oQueSeraFeito"
+          value={oQueSeraFeito}
+          onChange={(e) => setOQueSeraFeito(e.target.value)}
           rows={3}
           required
           className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -276,34 +493,89 @@ const ProjectForm: React.FC = () => {
 
       <div>
         <label
-          htmlFor="justificativa"
+          htmlFor="porQueSeraFeito"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Por que será feito:
+          Por que será feito (Justificativa da Ação/Projeto):
         </label>
         <textarea
-          id="justificativa"
-          value={justificativa}
-          onChange={(e) => setJustificativa(e.target.value)}
+          id="porQueSeraFeito"
+          value={porQueSeraFeito}
+          onChange={(e) => setPorQueSeraFeito(e.target.value)}
           rows={3}
           required
+          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="objetivosInstitucionaisReferenciados"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Objetivos Institucionais Referenciados:
+        </label>
+        <textarea
+          id="objetivosInstitucionaisReferenciados"
+          value={objetivosInstitucionaisReferenciados}
+          onChange={(e) => setObjetivosInstitucionaisReferenciados(e.target.value)}
+          rows={3}
           className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex items-start">
+          <div className="flex items-center h-5">
+            <input
+              id="obrigatorioInclusao"
+              name="obrigatorioInclusao"
+              type="checkbox"
+              checked={obrigatorioInclusao}
+              onChange={(e) => setObrigatorioInclusao(e.target.checked)}
+              className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+            />
+          </div>
+          <div className="ml-3 text-sm">
+            <label htmlFor="obrigatorioInclusao" className="font-medium text-gray-700">
+              Obrigatório Inclusão?
+            </label>
+            <p className="text-gray-500">Marque se a ação/projeto promove inclusão.</p>
+          </div>
+        </div>
+        <div className="flex items-start">
+          <div className="flex items-center h-5">
+            <input
+              id="obrigatorioSustentabilidade"
+              name="obrigatorioSustentabilidade"
+              type="checkbox"
+              checked={obrigatorioSustentabilidade}
+              onChange={(e) => setObrigatorioSustentabilidade(e.target.checked)}
+              className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+            />
+          </div>
+          <div className="ml-3 text-sm">
+            <label htmlFor="obrigatorioSustentabilidade" className="font-medium text-gray-700">
+              Obrigatório Sustentabilidade?
+            </label>
+            <p className="text-gray-500">Marque se a ação/projeto promove sustentabilidade.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label
-            htmlFor="dataInicial"
+            htmlFor="dataInicio"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Data Inicial:
+            Data de Início Prevista:
           </label>
           <input
             type="date"
-            id="dataInicial"
-            value={dataInicial}
-            onChange={(e) => setDataInicial(e.target.value)}
+            id="dataInicio"
+            value={dataInicio}
+            onChange={(e) => setDataInicio(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
@@ -313,7 +585,7 @@ const ProjectForm: React.FC = () => {
             htmlFor="dataFinal"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Data Final:
+            Data Final Prevista:
           </label>
           <input
             type="date"
@@ -324,223 +596,126 @@ const ProjectForm: React.FC = () => {
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-        <div>
-          <label
-            htmlFor="custo"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Custo Estimado:
-          </label>
-          <input
-            type="text"
-            id="custo"
-            value={formatCurrency(custo || '0')}
-            onChange={(e) => {
-              const rawValue = parseCurrencyInput(e.target.value);
-              setCusto(rawValue);
-            }}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="fonteRecursos"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Fonte de Recursos:
-          </label>
-          <input
-            type="text"
-            id="fonteRecursos"
-            value={fonteRecursos}
-            onChange={(e) => setFonteRecursos(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
       </div>
 
-      {/* Responsáveis Section */}
       <div className="flex flex-col border-t border-gray-200 pt-6 mt-6">
         <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-          Responsáveis
+          Pessoas Envolvidas no Projeto
         </h3>
-        {responsaveis.map((responsavel, index) => (
+        {pessoasProjeto.map((pessoa, index) => (
           <div
-            key={responsavel.id}
+            key={pessoa.id}
             className="mb-4 p-4 border border-gray-200 rounded-md relative"
           >
             <button
               type="button"
-              onClick={() => {
-                const newResponsaveis = responsaveis.filter(
-                  (_, i) => i !== index
-                );
-                setResponsaveis(newResponsaveis);
-              }}
+              onClick={() => handleRemovePessoaProjeto(index)}
               className="absolute top-2 right-2 text-red-500 hover:text-red-700"
             >
               &times;
             </button>
             <h4 className="text-md font-medium text-gray-800 mb-2">
-              Responsável #{index + 1}
-            </h4>
-            <div>
-              <label
-                htmlFor={`responsavel-${index}`}
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Responsável:
-              </label>
-              <select
-                id={`responsavel-${index}`}
-                value={responsavel.userId}
-                onChange={(e) => {
-                  const newResponsaveis = [...responsaveis];
-                  const selectedUser = mockResponsaveis.find(u => u.userId === e.target.value);
-                  newResponsaveis[index] = {
-                    ...newResponsaveis[index],
-                    userId: e.target.value,
-                    nome: selectedUser?.nome || ''
-                  };
-                  setResponsaveis(newResponsaveis);
-                }}
-                required
-                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="">Selecione um responsável</option>
-                {mockResponsaveis.map((user) => (
-                  <option key={user.id} value={user.userId}>
-                    {user.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={handleAddResponsavel}
-          className="self-end mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Adicionar Responsável
-        </button>
-      </div>
-
-      {/* Colaboradores Section */}
-      <div className="flex flex-col border-t border-gray-200 pt-6 mt-6">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-          Colaboradores
-        </h3>
-        {colaboradores.map((colaborador, index) => (
-          <div
-            key={colaborador.id}
-            className="mb-4 p-4 border border-gray-200 rounded-md relative"
-          >
-            <button
-              type="button"
-              onClick={() => handleRemoveColaborador(index)}
-              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-            >
-              &times;
-            </button>
-            <h4 className="text-md font-medium text-gray-800 mb-2">
-              Colaborador #{index + 1}
+              {pessoa.papel === PapelProjeto.Responsavel ? "Responsável" : "Colaborador"} #{pessoasProjeto.filter(p => p.papel === pessoa.papel).findIndex(p => p.id === pessoa.id) + 1}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label
-                  htmlFor={`userId-${index}`}
+                  htmlFor={`pessoaId-${index}`}
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Colaborador:
+                  Nome:
                 </label>
                 <select
-                  id={`userId-${index}`}
-                  name="userId"
-                  value={colaborador.userId}
-                  onChange={(e) => {
-                    const selectedUser = mockColaboradores.find(u => u.userId === e.target.value);
-                    const updatedColaborador = {
-                      ...colaborador,
-                      userId: e.target.value,
-                      nome: selectedUser?.nome || ''
-                    };
-                    const newColaboradores = [...colaboradores];
-                    newColaboradores[index] = updatedColaborador;
-                    setColaboradores(newColaboradores);
-                  }}
-                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  id={`pessoaId-${index}`}
+                  name="pessoaId"
+                  value={pessoa.pessoaId}
+                  onChange={(e) => handlePessoaProjetoChange(index, e)}
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                 >
-                  <option value="">Selecione um colaborador</option>
-                  {mockColaboradores.map((user) => (
-                    <option key={user.id} value={user.userId}>
-                      {user.nome}
+                  <option value="">Selecione uma pessoa</option>
+                  {mockPessoas.map((p) => (
+                    <option key={p.pessoaId} value={p.pessoaId}>
+                      {p.nome}
                     </option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label
-                  htmlFor={`cargaHorariaSemanal-${index}`}
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Carga Horária Semanal:
-                </label>
-                <input
-                  type="number"
-                  id={`cargaHorariaSemanal-${index}`}
-                  name="cargaHorariaSemanal"
-                  value={colaborador.cargaHorariaSemanal}
-                  onChange={(e) => handleColaboradorChange(index, e)}
-                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor={`tipoCargaHoraria-${index}`}
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Tipo de Carga Horária:
-                </label>
-                <select
-                  id={`tipoCargaHoraria-${index}`}
-                  name="tipoCargaHoraria"
-                  value={colaborador.tipoCargaHoraria}
-                  onChange={(e) => handleColaboradorChange(index, e)}
-                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                  required
-                >
-                  <option value="">Selecione o tipo</option>
-                  <option value={TipoCargaHoraria.HA}>{TipoCargaHoraria.HA}</option>
-                  <option value={TipoCargaHoraria.HAE}>{TipoCargaHoraria.HAE}</option>
-                  <option value={TipoCargaHoraria.H}>{TipoCargaHoraria.H}</option>
-                </select>
-              </div>
+              {pessoa.papel === PapelProjeto.Colaborador && (
+                <>
+                  <div>
+                    <label
+                      htmlFor={`cargaHorariaSemanal-${index}`}
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Carga Horária Semanal (H):
+                    </label>
+                    <input
+                      type="number"
+                      id={`cargaHorariaSemanal-${index}`}
+                      name="cargaHorariaSemanal"
+                      value={pessoa.cargaHorariaSemanal || ""}
+                      onChange={(e) => handlePessoaProjetoChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={`tipoVinculoHae-${index}`}
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Tipo Vínculo HAE:
+                    </label>
+                    <select
+                      id={`tipoVinculoHae-${index}`}
+                      name="tipoVinculoHAE"
+                      value={pessoa.tipoVinculoHAE || ""}
+                      onChange={(e) => handlePessoaProjetoChange(index, e)}
+                      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    >
+                      <option value="">Selecione o tipo</option>
+                      {Object.values(TipoVinculoHAE).map((vinculo) => (
+                        <option key={vinculo} value={vinculo}>
+                          {vinculo === TipoVinculoHAE.NaoSeAplica ? "Não se Aplica" : `HAE ${vinculo}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={handleAddColaborador}
-          className="self-end mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Adicionar Colaborador
-        </button>
+        <div className="flex justify-end space-x-2 mt-2">
+            <button
+            type="button"
+            onClick={() => handleAddPessoaProjeto(PapelProjeto.Responsavel)}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+            Adicionar Responsável
+            </button>
+            <button
+            type="button"
+            onClick={() => handleAddPessoaProjeto(PapelProjeto.Colaborador)}
+            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+            Adicionar Colaborador
+            </button>
+        </div>
       </div>
 
-      {/* Etapas Section */}
       <div className="flex flex-col border-t border-gray-200 pt-6 mt-6">
         <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-          Etapas do Projeto
+          Etapas do Projeto/Processo
         </h3>
-        {etapas.map((etapa, index) => (
+        {etapasProcesso.map((etapa, index) => (
           <div
             key={etapa.id}
             className="mb-4 p-4 border border-gray-200 rounded-md relative"
           >
             <button
               type="button"
-              onClick={() => handleRemoveEtapa(index)}
+              onClick={() => handleRemoveEtapaProcesso(index)}
               className="absolute top-2 right-2 text-red-500 hover:text-red-700"
             >
               &times;
@@ -553,51 +728,261 @@ const ProjectForm: React.FC = () => {
                 htmlFor={`etapa-descricao-${index}`}
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Descrição:
+                Descrição da Etapa:
               </label>
-              <input
-                type="text"
+              <textarea
                 id={`etapa-descricao-${index}`}
                 name="descricao"
                 value={etapa.descricao}
-                onChange={(e) => handleEtapaChange(index, e)}
+                onChange={(e) => handleEtapaProcessoChange(index, e)}
+                rows={2}
                 className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 required
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
               <div>
                 <label
-                  htmlFor={`etapa-dataInicio-${index}`}
+                  htmlFor={`etapa-entregavelLinkSei-${index}`}
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Data de Início:
+                  Entregável (Link SEI):
+                </label>
+                <input
+                  type="url"
+                  id={`etapa-entregavelLinkSei-${index}`}
+                  name="entregavelLinkSei"
+                  value={etapa.entregavelLinkSei || ""}
+                  onChange={(e) => handleEtapaProcessoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`etapa-numeroRef-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Número de Referência:
+                </label>
+                <input
+                  type="text"
+                  id={`etapa-numeroRef-${index}`}
+                  name="numeroRef"
+                  value={etapa.numeroRef || ""}
+                  onChange={(e) => handleEtapaProcessoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label
+                  htmlFor={`etapa-dataVerificacaoPrevista-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Data Verificação Prevista:
                 </label>
                 <input
                   type="date"
-                  id={`etapa-dataInicio-${index}`}
-                  name="dataInicio"
-                  value={etapa.dataInicio}
-                  onChange={(e) => handleEtapaChange(index, e)}
+                  id={`etapa-dataVerificacaoPrevista-${index}`}
+                  name="dataVerificacaoPrevista"
+                  value={etapa.dataVerificacaoPrevista || ""}
+                  onChange={(e) => handleEtapaProcessoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`etapa-dataVerificacaoRealizada-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Data Verificação Realizada:
+                </label>
+                <input
+                  type="date"
+                  id={`etapa-dataVerificacaoRealizada-${index}`}
+                  name="dataVerificacaoRealizada"
+                  value={etapa.dataVerificacaoRealizada || ""}
+                  onChange={(e) => handleEtapaProcessoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`etapa-statusVerificacao-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Status Verificação:
+                </label>
+                <select
+                  id={`etapa-statusVerificacao-${index}`}
+                  name="statusVerificacao"
+                  value={etapa.statusVerificacao}
+                  onChange={(e) => handleEtapaProcessoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  required
+                >
+                  {Object.values(StatusVerificacao).map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={handleAddEtapaProcesso}
+          className="self-end mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Adicionar Etapa
+        </button>
+      </div>
+
+      <div className="flex flex-col border-t border-gray-200 pt-6 mt-6">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+          Aquisições Previstas (Material de Consumo, Permanente, etc.)
+        </h3>
+        {aquisicoes.map((item, index) => (
+          <div
+            key={item.id}
+            className="mb-4 p-4 border border-gray-200 rounded-md relative"
+          >
+            <button
+              type="button"
+              onClick={() => handleRemoveAquisicao(index)}
+              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+            >
+              &times;
+            </button>
+            <h4 className="text-md font-medium text-gray-800 mb-2">
+              Item de Aquisição #{index + 1}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+              <div>
+                <label
+                  htmlFor={`aquisicao-tipoAnexo-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Tipo de Anexo/Item:
+                </label>
+                <select
+                  id={`aquisicao-tipoAnexo-${index}`}
+                  name="tipoAnexo"
+                  value={item.tipoAnexo}
+                  onChange={(e) => handleAquisicaoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  required
+                >
+                  <option value="">Selecione o tipo</option>
+                  {Object.values(TipoAnexo).map((tipo) => (
+                    <option key={tipo} value={tipo}>
+                      {tipo.replace(/([A-Z])/g, ' $1').trim()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label
+                  htmlFor={`aquisicao-descricaoItem-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Descrição do Item:
+                </label>
+                <input
+                  type="text"
+                  id={`aquisicao-descricaoItem-${index}`}
+                  name="descricaoItem"
+                  value={item.descricaoItem}
+                  onChange={(e) => handleAquisicaoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+            </div>
+            <div className="mb-2">
+                <label
+                    htmlFor={`aquisicao-justificativa-${index}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                    Justificativa:
+                </label>
+                <textarea
+                    id={`aquisicao-justificativa-${index}`}
+                    name="justificativa"
+                    value={item.justificativa || ""}
+                    onChange={(e) => handleAquisicaoChange(index, e)}
+                    rows={2}
+                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label
+                  htmlFor={`aquisicao-unidadeMedida-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Unidade Medida:
+                </label>
+                <input
+                  type="text"
+                  id={`aquisicao-unidadeMedida-${index}`}
+                  name="unidadeMedida"
+                  value={item.unidadeMedida || ""}
+                  onChange={(e) => handleAquisicaoChange(index, e)}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`aquisicao-quantidade-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Quantidade:
+                </label>
+                <input
+                  type="number"
+                  id={`aquisicao-quantidade-${index}`}
+                  name="quantidade"
+                  value={item.quantidade}
+                  onChange={(e) => handleAquisicaoChange(index, e)}
+                  min="0"
                   className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 />
               </div>
               <div>
                 <label
-                  htmlFor={`etapa-dataFim-${index}`}
+                  htmlFor={`aquisicao-valorUnitario-${index}`}
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Data de Fim:
+                  Valor Unitário (R$):
                 </label>
                 <input
-                  type="date"
-                  id={`etapa-dataFim-${index}`}
-                  name="dataFim"
-                  value={etapa.dataFim}
-                  onChange={(e) => handleEtapaChange(index, e)}
+                  type="text"
+                  id={`aquisicao-valorUnitario-${index}`}
+                  name="valorUnitarioEstimado"
+                  value={formatCurrency(item.valorUnitarioEstimado || '0')}
+                  onChange={(e) => handleAquisicaoChange(index, e)}
                   className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  required
+                />
+              </div>
+               <div>
+                <label
+                  htmlFor={`aquisicao-valorTotal-${index}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Valor Total (R$):
+                </label>
+                <input
+                  type="text"
+                  id={`aquisicao-valorTotal-${index}`}
+                  name="valorTotalEstimado"
+                  value={formatCurrency(item.valorTotalEstimado || '0')}
+                  readOnly
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-50"
                 />
               </div>
             </div>
@@ -605,17 +990,16 @@ const ProjectForm: React.FC = () => {
         ))}
         <button
           type="button"
-          onClick={handleAddEtapa}
+          onClick={handleAddAquisicao}
           className="self-end mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          Adicionar Etapa
+          Adicionar Item de Aquisição
         </button>
       </div>
 
-      {/* Situação Problema Section */}
       <div className="flex flex-col border-t border-gray-200 pt-6 mt-6">
         <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-          Situação Problema / Oportunidade de Melhoria
+          Situação Problema / Oportunidade de Melhoria Associada
         </h3>
         {situacaoProblema.map((situacao, index) => (
           <div key={index} className="flex items-center mb-2">
@@ -623,9 +1007,8 @@ const ProjectForm: React.FC = () => {
               type="text"
               value={situacao}
               onChange={(e) => handleSituacaoProblemaChange(index, e)}
-              placeholder={`Descrição #${index + 1}`}
+              placeholder={`Descrição da Situação/Oportunidade #${index + 1}`}
               className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mr-2"
-              required
             />
             <button
               type="button"
@@ -650,7 +1033,7 @@ const ProjectForm: React.FC = () => {
           type="submit"
           className="px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         >
-          Registrar Projeto
+          Registrar Ação/Projeto
         </button>
       </div>
     </form>
