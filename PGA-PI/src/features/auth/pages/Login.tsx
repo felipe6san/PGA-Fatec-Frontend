@@ -9,10 +9,11 @@ export const Login = (): JSX.Element => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
+    email: "",
+    senha: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -22,17 +23,29 @@ export const Login = (): JSX.Element => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
     
-    const success = login(credentials.username, credentials.password);
-    
-    if (success) {
-      navigate("/");
-    } else {
-      setError("Credenciais inválidas. Tente novamente.");
+    try {
+      const success = await login(credentials.email, credentials.senha);
+      
+      if (success) {
+        navigate("/");
+      } else {
+        setError("Credenciais inválidas. Tente novamente.");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Erro ao tentar fazer login. Tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleRequestAccess = () => {
+    // TODO: Implementar lógica para solicitação de registro de usuário
+    alert("Funcionalidade de solicitação de registro será implementada em uma versão futura!");
   };
 
   return (
@@ -76,31 +89,32 @@ export const Login = (): JSX.Element => {
               <form onSubmit={handleSubmit}>
                 <div className="mb-6">
                   <label
-                    htmlFor="username"
+                    htmlFor="email"
                     className="block font-['Source_Sans_3',Helvetica] font-normal text-[#2D3748] text-[26px] mb-2"
                   >
-                    Usuário
+                    Email
                   </label>
                   <Input
-                    id="username"
-                    value={credentials.username}
+                    id="email"
+                    type="email"
+                    value={credentials.email}
                     onChange={handleChange}
-                    placeholder="Digite seu nome de usuário"
+                    placeholder="Digite seu email"
                     className="h-[59px] text-[26px] font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a]"
                   />
                 </div>
 
                 <div className="mb-8">
                   <label
-                    htmlFor="password"
+                    htmlFor="senha"
                     className="block font-['Source_Sans_3',Helvetica] font-normal text-[#2D3748] text-[26px] mb-2"
                   >
                     Senha
                   </label>
                   <Input
-                    id="password"
+                    id="senha"
                     type="password"
-                    value={credentials.password}
+                    value={credentials.senha}
                     onChange={handleChange}
                     placeholder="Digite sua senha"
                     className="h-[59px] text-[26px] font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a]"
@@ -109,10 +123,22 @@ export const Login = (): JSX.Element => {
 
                 <Button 
                   type="submit"
+                  disabled={isLoading}
                   className="w-full h-[57px] bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-extrabold text-white text-[26px] transition-colors duration-200"
                 >
-                  Entrar
+                  {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
+                
+                <div className="mt-4 text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleRequestAccess}
+                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-[18px]"
+                  >
+                    Solicitar acesso ao sistema
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>

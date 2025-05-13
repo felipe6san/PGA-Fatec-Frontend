@@ -1,20 +1,17 @@
 import { createContext, useContext } from "react";
-
-type User = {
-  username: string;
-} | null;
+import { UserData } from "../features/auth/services/authService";
 
 type AuthContextType = {
   isAuthenticated: boolean;
-  user: User;
-  login: (username: string, password: string) => boolean;
+  user: UserData | null;
+  login: (email: string, senha: string) => Promise<boolean>;
   logout: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   user: null,
-  login: () => false,
+  login: async () => false,
   logout: () => {},
 });
 
