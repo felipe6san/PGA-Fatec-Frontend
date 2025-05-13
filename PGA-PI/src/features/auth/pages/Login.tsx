@@ -5,6 +5,9 @@ import { Card, CardContent } from "@components/ui/card";
 import { Input } from "@components/ui/input";
 import { useAuth } from "@context/AuthContext";
 import { logoImage, bgImage } from "@/assets";
+import { AlertCircle, Info, XCircle } from "lucide-react";
+
+type ErrorType = "credentials" | "server" | "connection" | "validation" | null;
 
 export const Login = (): JSX.Element => {
   const navigate = useNavigate();
@@ -13,7 +16,8 @@ export const Login = (): JSX.Element => {
     email: "",
     senha: "",
   });
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorType, setErrorType] = useState<ErrorType>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,11 +26,45 @@ export const Login = (): JSX.Element => {
       ...prev,
       [id]: value,
     }));
+    // Reset error messages when user starts typing
+    if (errorType) {
+      setErrorType(null);
+      setErrorMessage("");
+    }
+  };
+
+  const validateForm = (): boolean => {
+    if (!credentials.email) {
+      setErrorType("validation");
+      setErrorMessage("Por favor, informe seu email.");
+      return false;
+    }
+
+    if (!credentials.email.includes('@')) {
+      setErrorType("validation");
+      setErrorMessage("Por favor, informe um email válido.");
+      return false;
+    }
+
+    if (!credentials.senha) {
+      setErrorType("validation");
+      setErrorMessage("Por favor, informe sua senha.");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErrorMessage("");
+    setErrorType(null);
+    
+    // Validate form before submitting
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -35,10 +73,31 @@ export const Login = (): JSX.Element => {
       if (success) {
         navigate("/");
       } else {
-        setError("Credenciais inválidas. Tente novamente.");
+        setErrorType("credentials");
+        setErrorMessage("Email ou senha incorretos. Verifique suas credenciais e tente novamente.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Erro ao tentar fazer login. Tente novamente.");
+      if (err.response) {
+        // API respondeu com erro
+        if (err.response.status === 401 || err.response.status === 403) {
+          setErrorType("credentials");
+          setErrorMessage("Email ou senha incorretos. Verifique suas credenciais e tente novamente.");
+        } else if (err.response.status >= 500) {
+          setErrorType("server");
+          setErrorMessage("Erro no servidor. Por favor, tente novamente mais tarde.");
+        } else {
+          setErrorType("server");
+          setErrorMessage(err.response.data?.message || "Ocorreu um erro durante o login. Tente novamente.");
+        }
+      } else if (err.request) {
+        // Sem resposta da API - problema de conexão
+        setErrorType("connection");
+        setErrorMessage("Não foi possível conectar ao servidor. Verifique sua conexão de internet.");
+      } else {
+        // Erro na configuração da requisição
+        setErrorType("server");
+        setErrorMessage("Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -49,49 +108,83 @@ export const Login = (): JSX.Element => {
     alert("Funcionalidade de solicitação de registro será implementada em uma versão futura!");
   };
 
-  return (
-    <div className="bg-white flex flex-row justify-center w-full min-h-screen">
-      <div className="bg-white overflow-hidden w-full max-w-[1728px] relative">
-        <div className="absolute inset-0">
-          <img
-            className="w-full h-full object-cover blur-[6.85px]"
-            alt="Votorantim inaugura"
-            src={bgImage}
-          />
-        </div>
+  // Renderiza a mensagem de erro com ícone apropriado
+  const renderErrorMessage = () => {
+    if (!errorMessage) return null;
 
-        <div className="relative flex flex-col items-center justify-center min-h-screen py-10">
+    let icon;
+    let bgColor = "bg-red-100";
+    let textColor = "text-red-700";
+    let borderColor = "border-red-200";
+
+    switch (errorType) {
+      case "credentials":
+        icon = <XCircle className="h-5 w-5" />;
+        break;
+      case "server":
+        icon = <AlertCircle className="h-5 w-5" />;
+        break;
+      case "connection":
+        icon = <AlertCircle className="h-5 w-5" />;
+        break;
+      case "validation":
+        icon = <Info className="h-5 w-5" />;
+        bgColor = "bg-yellow-100";
+        textColor = "text-yellow-700";
+        borderColor = "border-yellow-200";
+        break;
+      default:
+        icon = <AlertCircle className="h-5 w-5" />;
+    }
+
+    return (
+      <div className={`mb-6 p-4 ${bgColor} ${textColor} rounded-lg border ${borderColor} flex items-start`}>
+        <span className="mr-2 flex-shrink-0 mt-0.5">{icon}</span>
+        <span>{errorMessage}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-white">
+      <div className="fixed inset-0 z-0">
+        <img
+          className="w-full h-full object-cover"
+          alt="Fatec Votorantim"
+          src={bgImage}
+        />
+        <div className="absolute inset-0 backdrop-blur-[4px] bg-black/20"></div>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-[644px] mx-auto">
           <img
-            className="w-[324px] h-auto mb-6"
-            alt="Fatec votorantim"
+            className="w-[324px] h-auto mx-auto mb-6"
+            alt="Fatec Votorantim"
             src={logoImage}
           />
 
-          <h1 className="font-['Source_Sans_3',Helvetica] font-extrabold text-[#ae0f0a] text-[32px] text-center mb-8">
+          <h1 className="font-['Source_Sans_3',Helvetica] font-extrabold text-white text-3xl md:text-4xl text-center mb-8 drop-shadow-lg">
             Plano de Gestão Anual - PGA 2025
           </h1>
 
-          <Card className="w-full max-w-[644px] bg-white shadow-[0px_0px_25px_#00000033] rounded-[21px]">
-            <CardContent className="p-10">
-              <h2 className="font-['Source_Sans_3',Helvetica] font-extrabold text-[#2D3748] text-5xl text-center mb-6">
+          <Card className="w-full bg-white/95 shadow-[0px_0px_25px_#00000055] rounded-[21px] backdrop-blur-sm">
+            <CardContent className="p-6 md:p-10">
+              <h2 className="font-['Source_Sans_3',Helvetica] font-extrabold text-[#2D3748] text-4xl md:text-5xl text-center mb-6">
                 Login
               </h2>
 
-              <p className="font-['Source_Sans_3',Helvetica] font-normal text-[#4A5568] text-[26px] text-center mb-8">
+              <p className="font-['Source_Sans_3',Helvetica] font-normal text-[#4A5568] text-xl md:text-2xl text-center mb-8">
                 Entre com suas credenciais para acessar o sistema.
               </p>
 
-              {error && (
-                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-                  {error}
-                </div>
-              )}
+              {renderErrorMessage()}
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-6">
                   <label
                     htmlFor="email"
-                    className="block font-['Source_Sans_3',Helvetica] font-normal text-[#2D3748] text-[26px] mb-2"
+                    className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg md:text-xl mb-2"
                   >
                     Email
                   </label>
@@ -101,14 +194,16 @@ export const Login = (): JSX.Element => {
                     value={credentials.email}
                     onChange={handleChange}
                     placeholder="Digite seu email"
-                    className="h-[59px] text-[26px] font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a]"
+                    className={`h-[59px] text-lg md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
+                      errorType === "validation" && !credentials.email ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
 
                 <div className="mb-8">
                   <label
                     htmlFor="senha"
-                    className="block font-['Source_Sans_3',Helvetica] font-normal text-[#2D3748] text-[26px] mb-2"
+                    className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg md:text-xl mb-2"
                   >
                     Senha
                   </label>
@@ -118,24 +213,26 @@ export const Login = (): JSX.Element => {
                     value={credentials.senha}
                     onChange={handleChange}
                     placeholder="Digite sua senha"
-                    className="h-[59px] text-[26px] font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a]"
+                    className={`h-[59px] text-lg md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
+                      errorType === "validation" && !credentials.senha ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
 
                 <Button 
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-[57px] bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-extrabold text-white text-[26px] transition-colors duration-200"
+                  className="w-full h-[57px] bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-extrabold text-white text-xl md:text-2xl transition-colors duration-200"
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
                 
-                <div className="mt-4 text-center">
+                <div className="mt-6 text-center">
                   <Button
                     type="button"
                     variant="link"
                     onClick={handleRequestAccess}
-                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-[18px]"
+                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-base md:text-lg"
                   >
                     Solicitar acesso ao sistema
                   </Button>
