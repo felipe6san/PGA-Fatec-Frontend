@@ -1,11 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Layout } from "./components/layout/Layout";
-import { Login } from "./features/auth/pages/Login";
-import { Home } from "./features/dashboard/pages/Home";
-import { Projects } from "./features/projects/pages/Projects";
-import { AddProject } from "./features/projects/pages/AddProject";
-import { Settings } from "./features/settings/pages/Settings";
-import { useAuth } from "./hooks/useAuth";
+import { Layout } from "@components/layout/Layout";
+import { Login } from "@features/auth/pages/Login";
+import { Home } from "@features/dashboard/pages/Home";
+import { Projects } from "@features/projects/pages/Projects";
+import { AddProject } from "@features/projects/pages/AddProject";
+import { Settings } from "@features/settings/pages/Settings";
+import { useAuth } from "@hooks/useAuth";
 
 // Componente para rotas protegidas
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -45,4 +45,4 @@ export const Router = (): JSX.Element => {
       <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
     </Routes>
   );
-};
+}; 

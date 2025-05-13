@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent } from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { useAuth } from "../../../hooks/useAuth";
+import { Button } from "@components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { Input } from "@components/ui/input";
+import { useAuth } from "@context/AuthContext";
+import { logoImage, bgImage } from "@/assets";
 
 export const Login = (): JSX.Element => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ export const Login = (): JSX.Element => {
           <img
             className="w-full h-full object-cover blur-[6.85px]"
             alt="Votorantim inaugura"
-            src="/votorantim-inaugura-1047641-1.png"
+            src={bgImage}
           />
         </div>
 
@@ -63,7 +64,7 @@ export const Login = (): JSX.Element => {
           <img
             className="w-[324px] h-auto mb-6"
             alt="Fatec votorantim"
-            src="/fatec-votorantim-1.png"
+            src={logoImage}
           />
 
           <h1 className="font-['Source_Sans_3',Helvetica] font-extrabold text-[#ae0f0a] text-[32px] text-center mb-8">
