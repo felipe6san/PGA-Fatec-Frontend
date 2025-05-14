@@ -12,10 +12,10 @@ export const Header = (): JSX.Element => {
         
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-600">
-            Olá, {user?.username}
+            Olá, {user?.nome}
           </div>
           <div className="h-8 w-8 rounded-full bg-[#ae0f0a] text-white flex items-center justify-center font-medium">
-            {user?.username.charAt(0).toUpperCase()}
+            {user?.nome.charAt(0).toUpperCase()}
           </div>
         </div>
       </div>

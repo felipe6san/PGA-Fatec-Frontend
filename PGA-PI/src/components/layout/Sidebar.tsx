@@ -26,7 +26,7 @@ export const Sidebar = (): JSX.Element => {
         <div className="mb-6 pb-6 border-b border-gray-200">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-700">PGA 2025</h3>
-            <p className="text-sm text-gray-500">Bem-vindo, {user?.username}</p>
+            <p className="text-sm text-gray-500">Bem-vindo, {user?.nome}</p>
           </div>
         </div>
         
