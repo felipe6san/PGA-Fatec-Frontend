@@ -1,6 +1,3 @@
-import api from '@lib/api';
-import { API_ENDPOINTS } from '@lib/config';
-
 export interface LoginCredentials {
   email: string;
   senha: string;
@@ -14,22 +11,33 @@ export interface UserData {
 
 export interface LoginResponse {
   access_token: string;
+  user: UserData;
 }
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<UserData> {
     try {
-      const response = await api.post<LoginResponse>(API_ENDPOINTS.LOGIN, credentials);
+      const response = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(credentials)
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha na autenticação');
+      }
+      console.log('Login response:', response);
       
-      // Armazenar token JWT
-      const { access_token } = response.data;
-      localStorage.setItem('accessToken', access_token);
+      const data: LoginResponse = await response.json();
       
-      // Decodificar o token para obter dados do usuário
-      const userData = parseJwt(access_token);
+      const userData = parseJwt(data.access_token);
+      localStorage.setItem('token', data.access_token);
       localStorage.setItem('userData', JSON.stringify(userData));
       
-      return userData;
+      return data.user;
     } catch (error) {
       console.error('Erro durante o login:', error);
       throw error;
@@ -37,12 +45,12 @@ export const authService = {
   },
   
   logout(): void {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userData');
   },
   
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('accessToken');
+    return !!localStorage.getItem('token');
   },
   
   getCurrentUser(): UserData | null {
@@ -67,4 +75,4 @@ function parseJwt(token: string): UserData {
     console.error('Erro ao decodificar token JWT:', e);
     return { pessoa_id: 0, email: '', nome: '' };
   }
-} 
+}
