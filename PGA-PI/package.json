@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "source": "./index.html",
   "type": "module",
-  "name": "anima-project",
+  "name": "pga-fatec",
   "description": "Projeto para facilitar o desenvolvimento do PGA das Fatecs",
   "scripts": {
     "dev": "vite",
