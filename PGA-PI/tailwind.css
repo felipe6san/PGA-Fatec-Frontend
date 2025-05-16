@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+3:300,400,800");
 
+/* TODO: MELHORAR A RESPONSIVIDADE */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
