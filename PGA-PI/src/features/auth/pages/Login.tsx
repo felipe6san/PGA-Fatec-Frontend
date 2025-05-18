@@ -6,6 +6,8 @@ import { Input } from "@components/ui/input";
 import { useAuth } from "@context/AuthContext";
 import { logoImage, bgImage } from "@/assets";
 import { AlertCircle, Info, XCircle } from "lucide-react";
+import { Modal } from "@components/ui/modal";
+import api from "@lib/api";
 
 type ErrorType = "credentials" | "server" | "connection" | "validation" | null;
 
@@ -19,6 +21,7 @@ export const Login = (): JSX.Element => {
   const [errorMessage, setErrorMessage] = useState("");
   const [errorType, setErrorType] = useState<ErrorType>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingReset, setIsLoadingReset] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -26,7 +29,7 @@ export const Login = (): JSX.Element => {
       ...prev,
       [id]: value,
     }));
-    // Reset error messages when user starts typing
+
     if (errorType) {
       setErrorType(null);
       setErrorMessage("");
@@ -40,7 +43,7 @@ export const Login = (): JSX.Element => {
       return false;
     }
 
-    if (!credentials.email.includes('@')) {
+    if (!credentials.email.includes("@")) {
       setErrorType("validation");
       setErrorMessage("Por favor, informe um email válido.");
       return false;
@@ -59,56 +62,100 @@ export const Login = (): JSX.Element => {
     e.preventDefault();
     setErrorMessage("");
     setErrorType(null);
-    
-    // Validate form before submitting
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       const success = await login(credentials.email, credentials.senha);
-      
+
       if (success) {
         navigate("/");
       } else {
         setErrorType("credentials");
-        setErrorMessage("Email ou senha incorretos. Verifique suas credenciais e tente novamente.");
+        setErrorMessage(
+          "Email ou senha incorretos. Verifique suas credenciais e tente novamente."
+        );
       }
     } catch (err: any) {
       if (err.response) {
-        // API respondeu com erro
         if (err.response.status === 401 || err.response.status === 403) {
           setErrorType("credentials");
-          setErrorMessage("Email ou senha incorretos. Verifique suas credenciais e tente novamente.");
+          setErrorMessage(
+            "Email ou senha incorretos. Verifique suas credenciais e tente novamente."
+          );
         } else if (err.response.status >= 500) {
           setErrorType("server");
-          setErrorMessage("Erro no servidor. Por favor, tente novamente mais tarde.");
+          setErrorMessage(
+            "Erro no servidor. Por favor, tente novamente mais tarde."
+          );
         } else {
           setErrorType("server");
-          setErrorMessage(err.response.data?.message || "Ocorreu um erro durante o login. Tente novamente.");
+          setErrorMessage(
+            err.response.data?.message ||
+              "Ocorreu um erro durante o login. Tente novamente."
+          );
         }
       } else if (err.request) {
-        // Sem resposta da API - problema de conexão
         setErrorType("connection");
-        setErrorMessage("Não foi possível conectar ao servidor. Verifique sua conexão de internet.");
+        setErrorMessage(
+          "Não foi possível conectar ao servidor. Verifique sua conexão de internet."
+        );
       } else {
-        // Erro na configuração da requisição
         setErrorType("server");
-        setErrorMessage("Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.");
+        setErrorMessage(
+          "Ocorreu um erro ao tentar fazer login. Por favor, tente novamente."
+        );
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRequestAccess = () => {
-    // TODO: Implementar lógica para solicitação de registro de usuário
-    alert("Funcionalidade de solicitação de registro será implementada em uma versão futura!");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: "" });
+
+  const handleResetPassword = async () => {
+    if (!resetEmail || !resetEmail.includes('@')) {
+      setResetStatus({ type: 'error', message: 'Por favor, insira um email válido.' });
+      return;
+    }
+
+    setIsLoadingReset(true);
+    try {
+      await api.post('/users/reset-password', { email: resetEmail });
+      setResetStatus({ 
+        type: 'success', 
+        message: 'Email de recuperação enviado. Por favor, verifique sua caixa de entrada.' 
+      });
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setResetStatus({ type: null, message: '' });
+      }, 3000);
+    } catch (error) {
+      setResetStatus({ 
+        type: 'error', 
+        message: 'Erro ao enviar email de recuperação. Tente novamente.' 
+      });
+    } finally {
+      setIsLoadingReset(false);
+    }
   };
 
-  // Renderiza a mensagem de erro com ícone apropriado
+  const handleForgotPassword = () => {
+    setIsModalOpen(true);
+  };
+
+  const [isRequestAccessModalOpen, setIsRequestAccessModalOpen] = useState(false);
+
+  const handleRequestAccess = () => {
+    setIsRequestAccessModalOpen(true);
+  };
+
   const renderErrorMessage = () => {
     if (!errorMessage) return null;
 
@@ -133,12 +180,13 @@ export const Login = (): JSX.Element => {
         textColor = "text-yellow-700";
         borderColor = "border-yellow-200";
         break;
-      default:
         icon = <AlertCircle className="h-5 w-5" />;
     }
 
     return (
-      <div className={`mb-6 p-4 ${bgColor} ${textColor} rounded-lg border ${borderColor} flex items-start`}>
+      <div
+        className={`mb-6 p-4 ${bgColor} ${textColor} rounded-lg border ${borderColor} flex items-start`}
+      >
         <span className="mr-2 flex-shrink-0 mt-0.5">{icon}</span>
         <span>{errorMessage}</span>
       </div>
@@ -195,12 +243,14 @@ export const Login = (): JSX.Element => {
                     onChange={handleChange}
                     placeholder="Digite seu email"
                     className={`h-[59px] text-lg md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
-                      errorType === "validation" && !credentials.email ? "border-red-500" : ""
+                      errorType === "validation" && !credentials.email
+                        ? "border-red-500"
+                        : ""
                     }`}
                   />
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-1">
                   <label
                     htmlFor="senha"
                     className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg md:text-xl mb-2"
@@ -214,19 +264,32 @@ export const Login = (): JSX.Element => {
                     onChange={handleChange}
                     placeholder="Digite sua senha"
                     className={`h-[59px] text-lg md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
-                      errorType === "validation" && !credentials.senha ? "border-red-500" : ""
+                      errorType === "validation" && !credentials.senha
+                        ? "border-red-500"
+                        : ""
                     }`}
                   />
                 </div>
 
-                <Button 
+                <div className="mb-6 text-end">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleForgotPassword}
+                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-base md:text-lg"
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </div>
+
+                <Button
                   type="submit"
                   disabled={isLoading}
                   className="w-full h-[57px] bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-extrabold text-white text-xl md:text-2xl transition-colors duration-200"
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
-                
+
                 <div className="mt-6 text-center">
                   <Button
                     type="button"
@@ -242,6 +305,80 @@ export const Login = (): JSX.Element => {
           </Card>
         </div>
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Recuperação de Senha">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleResetPassword();
+        }}>
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Digite seu email para receber as instruções de recuperação de senha.
+            </p>
+            
+            {resetStatus.message && (
+              <div 
+                className={`p-4 rounded-lg ${
+                  resetStatus.type === 'success' 
+                    ? 'bg-green-100 text-green-700 border border-green-200' 
+                    : 'bg-red-100 text-red-700 border border-red-200'
+                }`}
+              >
+                {resetStatus.message}
+              </div>
+            )}
+
+            <div>
+              <label 
+                htmlFor="reset-email"
+                className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg mb-2"
+              >
+                Email
+              </label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="Digite seu email cadastrado"
+                className="h-[59px] text-lg font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a]"
+              />
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <Button
+                type="submit"
+                disabled={isLoadingReset}
+                className="h-[57px] px-6 bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-bold text-white text-lg transition-colors duration-200"
+              >
+                {isLoadingReset ? "Enviando..." : "Enviar"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal 
+        isOpen={isRequestAccessModalOpen} 
+        onClose={() => setIsRequestAccessModalOpen(false)} 
+        title="Solicitar Acesso"
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <Info className="w-16 h-16 text-[#ae0f0a]" />
+            <p className="text-lg font-['Source_Sans_3',Helvetica] text-gray-700">
+              Funcionalidade de solicitação de registro será implementada em uma versão futura!
+            </p>
+            <Button
+              type="button"
+              onClick={() => setIsRequestAccessModalOpen(false)}
+              className="h-[57px] px-6 bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-bold text-white text-lg transition-colors duration-200"
+            >
+              Entendi
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
