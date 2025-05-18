@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { logoImage } from "@/assets";
 import { useAuth } from "../../hooks/useAuth";
 import { 
   Home, 
@@ -6,7 +7,6 @@ import {
   PlusCircle, 
   Settings, 
   LogOut,
-  Menu
 } from "lucide-react";
 
 const navItems = [
@@ -16,7 +16,6 @@ const navItems = [
   { path: "/settings", label: "Configurações", icon: Settings },
 ];
 
-// Define props for Sidebar
 interface SidebarProps {
   isExpanded: boolean;
   toggleSidebar: () => void;
@@ -29,8 +28,8 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    if (window.innerWidth < 768) { // Se for mobile
-      toggleSidebar(); // Fecha o menu após clicar
+    if (window.innerWidth < 768) {
+      toggleSidebar();
     }
   };
   
@@ -56,7 +55,7 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
           <div className="p-6">
             <div className="flex items-center justify-center mb-8">
               <img 
-                src="/img/fatec-votorantim-1.png" 
+                src={logoImage}
                 alt="Fatec Votorantim" 
                 className={`transition-all duration-300 ${isExpanded ? "w-40" : "w-12"}`}
               />
