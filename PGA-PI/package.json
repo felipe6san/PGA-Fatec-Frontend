@@ -2,8 +2,7 @@
   "version": "1.0.0",
   "source": "./index.html",
   "type": "module",
-  "name": "anima-project",
-  "homepage": "https://vfavretto.github.io/PGA-Fatec-Frontend",
+  "name": "pga-fatec",
   "description": "Projeto para facilitar o desenvolvimento do PGA das Fatecs",
   "scripts": {
     "dev": "vite",
@@ -13,6 +12,7 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
+    "axios": "^1.9.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "2.1.1",
     "lucide-react": "^0.453.0",

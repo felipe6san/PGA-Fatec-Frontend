@@ -11,4 +11,18 @@ export default defineConfig({
       plugins: [tailwind()],
     },
   },
+  resolve: {
+    alias: {
+      '@': '/src',
+      '@components': '/src/components',
+      '@features': '/src/features',
+      '@hooks': '/src/hooks',
+      '@lib': '/src/lib',
+      '@routes': '/src/routes',
+      '@utils': '/src/utils',
+      '@types': '/src/types',
+      '@assets': '/src/assets',
+      '@context': '/src/context'
+    }
+  }
 });
