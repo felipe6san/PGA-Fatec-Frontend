@@ -45,7 +45,7 @@ export const Header = ({
     <header
       className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-transform duration-300
         ${!showHeader && isMobile ? "-translate-y-full" : "translate-y-0"}
-        ${isExpanded ? "md:ml-64" : "md:ml-20"}
+        ${isExpanded ? "md:ml-0" : "md:ml-20"}
       `}
     >
       <div className="h-full px-4 flex items-center justify-between">
