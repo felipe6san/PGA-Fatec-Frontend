@@ -10,6 +10,7 @@
     <a href="#mer">MER</a>  |  
     <a href="#prototipos">Protótipos & Documentação</a>  |  
     <a href="#tecnologias">Tecnologias</a>  |  
+    <a href="#script">Script</a>  |  
     <a href="#equipe">Equipe</a>
 </p>
 
@@ -18,15 +19,16 @@
 ## :page_facing_up: Sobre o Projeto
   Projeto de plataforma digital que centraliza e facilita o Planejamento de Gestão Anual (PGA) das Faculdades de Tecnologia (Fatecs), promovendo uma gestão mais eficiente, organizada e colaborativa. A plataforma permite que as equipes gestoras registrem, monitorem e avaliem ações e projetos estratégicos, alinhando-os às prioridades institucionais do Centro Paula Souza e às demandas locais da unidade. A inclusão de diferentes atores, como coordenadores, docentes e parceiros, amplia o alcance do projeto, transformando-o em um hub abrangente para a integração de esforços em prol da excelência acadêmica, inovação e responsabilidade social. O PGA Digital não apenas simplifica processos, mas aspira a ser um catalisador para transformações positivas no ecossistema educacional, unindo diversos agentes para enfrentar os desafios contemporâneos de maneira colaborativa e inovadora.
 
-### :link: Projeto disponível para visualização em [PGA Fatec]()
+### :link: Projeto disponível para visualização em [Plano de Gestão Anual Fatec]()
 
 → [Voltar ao topo](#topo)
 
 <span id="mer">
   
 ## :bookmark_tabs: MER
-
-Acesse o [MER](https://i.imgur.com/aW09a8m.png)
+  O Modelo Entidade-Relacionamento foi desenvolvido para representar de forma estruturada os dados envolvidos no planejamento e na gestão anual das Fatecs.
+  
+![MER](https://i.imgur.com/aW09a8m.png)
 
 
 → [Voltar ao topo](#topo)
@@ -40,7 +42,9 @@ Acesse o [MER](https://i.imgur.com/aW09a8m.png)
 
 ## Protótipo de Alta Fidelidade
 
-![Protótipo alta fidelidade](https://i.imgur.com/3kYJQDt.png)
+![Protótipo alta fidelidade](https://i.imgur.com/vqTm6Yx.png)
+
+![Protótipo alta fidelidade](https://i.imgur.com/N3pyQsX.png)
 
 #### O Protótipo foi construido usando o [Figma](https://www.figma.com/design/fGjaMNQejB1JcliVylMCJf/PGA?node-id=7-5&t=uPFd3fqHqdSqladm-0)
 
@@ -55,6 +59,15 @@ Acesse o [MER](https://i.imgur.com/aW09a8m.png)
 |![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)|![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)|
 |![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)|![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)|
 |![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)|![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)|
+
+→ [Voltar ao topo](#topo)
+
+<span id="script">
+
+
+## :dart: Script
+
+
 
 → [Voltar ao topo](#topo)
 
