@@ -64,8 +64,9 @@ export const Layout = (): JSX.Element => {
         toggleSidebar={toggleSidebar}
       />
       
-      <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out
-        ${isSidebarExpanded ? "md:ml-64" : "md:ml-20"}`}
+      {/* Ajustado as margens aqui */}
+      <div className={`flex flex-col flex-1 transition-all duration-300
+        ${isSidebarExpanded ? "md:ml-[16rem]" : "md:ml-[5rem]"}`}
       >
         <Header 
           toggleSidebar={toggleSidebar} 
@@ -73,7 +74,7 @@ export const Layout = (): JSX.Element => {
           isExpanded={isSidebarExpanded}
         />
         
-        <main className="flex-1 overflow-auto pt-4 md:pt-6">
+        <main className="flex-1 overflow-auto">
           <div className="container mx-auto px-4 md:px-6">
             <Outlet />
           </div>
