@@ -40,6 +40,7 @@ export const Login = (): JSX.Element => {
     if (!credentials.email) {
       setErrorType("validation");
       setErrorMessage("Por favor, informe seu email.");
+      console.log(bgImage, logoImage);
       return false;
     }
 
@@ -117,29 +118,36 @@ export const Login = (): JSX.Element => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-  const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: "" });
+  const [resetStatus, setResetStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
 
   const handleResetPassword = async () => {
-    if (!resetEmail || !resetEmail.includes('@')) {
-      setResetStatus({ type: 'error', message: 'Por favor, insira um email válido.' });
+    if (!resetEmail || !resetEmail.includes("@")) {
+      setResetStatus({
+        type: "error",
+        message: "Por favor, insira um email válido.",
+      });
       return;
     }
 
     setIsLoadingReset(true);
     try {
-      await api.post('/users/reset-password', { email: resetEmail });
-      setResetStatus({ 
-        type: 'success', 
-        message: 'Email de recuperação enviado. Por favor, verifique sua caixa de entrada.' 
+      await api.post("/users/reset-password", { email: resetEmail });
+      setResetStatus({
+        type: "success",
+        message:
+          "Email de recuperação enviado. Por favor, verifique sua caixa de entrada.",
       });
       setTimeout(() => {
         setIsModalOpen(false);
-        setResetStatus({ type: null, message: '' });
+        setResetStatus({ type: null, message: "" });
       }, 3000);
     } catch (error) {
-      setResetStatus({ 
-        type: 'error', 
-        message: 'Erro ao enviar email de recuperação. Tente novamente.' 
+      setResetStatus({
+        type: "error",
+        message: "Erro ao enviar email de recuperação. Tente novamente.",
       });
     } finally {
       setIsLoadingReset(false);
@@ -150,7 +158,8 @@ export const Login = (): JSX.Element => {
     setIsModalOpen(true);
   };
 
-  const [isRequestAccessModalOpen, setIsRequestAccessModalOpen] = useState(false);
+  const [isRequestAccessModalOpen, setIsRequestAccessModalOpen] =
+    useState(false);
 
   const handleRequestAccess = () => {
     setIsRequestAccessModalOpen(true);
@@ -180,7 +189,6 @@ export const Login = (): JSX.Element => {
         textColor = "text-yellow-700";
         borderColor = "border-yellow-200";
         break;
-        icon = <AlertCircle className="h-5 w-5" />;
     }
 
     return (
@@ -195,6 +203,7 @@ export const Login = (): JSX.Element => {
 
   return (
     <div className="min-h-screen w-full bg-white">
+      {/* Background com blur */}
       <div className="fixed inset-0 z-0">
         <img
           className="w-full h-full object-cover"
@@ -204,35 +213,41 @@ export const Login = (): JSX.Element => {
         <div className="absolute inset-0 backdrop-blur-[4px] bg-black/20"></div>
       </div>
 
+      {/* Conteúdo principal */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-[644px] mx-auto">
+          {/* Logo responsivo */}
           <img
-            className="w-[324px] h-auto mx-auto mb-6"
+            className="w-[200px] md:w-[324px] h-auto mx-auto mb-4 md:mb-6"
             alt="Fatec Votorantim"
             src={logoImage}
           />
 
-          <h1 className="font-['Source_Sans_3',Helvetica] font-extrabold text-white text-3xl md:text-4xl text-center mb-8 drop-shadow-lg">
+          {/* Título responsivo */}
+          <h1 className="font-['Source_Sans_3',Helvetica] font-extrabold text-white text-2xl md:text-4xl text-center mb-6 md:mb-8 drop-shadow-lg px-2">
             Plano de Gestão Anual - PGA 2025
           </h1>
 
-          <Card className="w-full bg-white/95 shadow-[0px_0px_25px_#00000055] rounded-[21px] backdrop-blur-sm">
-            <CardContent className="p-6 md:p-10">
-              <h2 className="font-['Source_Sans_3',Helvetica] font-extrabold text-[#2D3748] text-4xl md:text-5xl text-center mb-6">
+          {/* Card principal */}
+          <Card className="w-full bg-white/95 shadow-[0px_0px_25px_#00000055] rounded-[16px] md:rounded-[21px] backdrop-blur-sm">
+            <CardContent className="p-4 md:p-10">
+              {/* Títulos responsivos */}
+              <h2 className="font-['Source_Sans_3',Helvetica] font-extrabold text-[#2D3748] text-3xl md:text-5xl text-center mb-4 md:mb-6">
                 Login
               </h2>
 
-              <p className="font-['Source_Sans_3',Helvetica] font-normal text-[#4A5568] text-xl md:text-2xl text-center mb-8">
+              <p className="font-['Source_Sans_3',Helvetica] font-normal text-[#4A5568] text-lg md:text-2xl text-center mb-6 md:mb-8 px-2">
                 Entre com suas credenciais para acessar o sistema.
               </p>
 
               {renderErrorMessage()}
 
-              <form onSubmit={handleSubmit}>
-                <div className="mb-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                {/* Campos de formulário */}
+                <div>
                   <label
                     htmlFor="email"
-                    className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg md:text-xl mb-2"
+                    className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-base md:text-xl mb-2"
                   >
                     Email
                   </label>
@@ -242,7 +257,7 @@ export const Login = (): JSX.Element => {
                     value={credentials.email}
                     onChange={handleChange}
                     placeholder="Digite seu email"
-                    className={`h-[59px] text-lg md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
+                    className={`h-[50px] md:h-[59px] text-base md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
                       errorType === "validation" && !credentials.email
                         ? "border-red-500"
                         : ""
@@ -250,10 +265,10 @@ export const Login = (): JSX.Element => {
                   />
                 </div>
 
-                <div className="mb-1">
+                <div>
                   <label
                     htmlFor="senha"
-                    className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg md:text-xl mb-2"
+                    className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-base md:text-xl mb-2"
                   >
                     Senha
                   </label>
@@ -263,7 +278,7 @@ export const Login = (): JSX.Element => {
                     value={credentials.senha}
                     onChange={handleChange}
                     placeholder="Digite sua senha"
-                    className={`h-[59px] text-lg md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
+                    className={`h-[50px] md:h-[59px] text-base md:text-xl font-['Source_Sans_3',Helvetica] text-[#4A5568] bg-white rounded-lg border-[#E2E8F0] focus:border-[#ae0f0a] focus:ring-[#ae0f0a] ${
                       errorType === "validation" && !credentials.senha
                         ? "border-red-500"
                         : ""
@@ -271,31 +286,34 @@ export const Login = (): JSX.Element => {
                   />
                 </div>
 
-                <div className="mb-6 text-end">
+                {/* Link Esqueci senha */}
+                <div className="text-end">
                   <Button
                     type="button"
                     variant="link"
                     onClick={handleForgotPassword}
-                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-base md:text-lg"
+                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-sm md:text-lg p-0"
                   >
                     Esqueci minha senha
                   </Button>
                 </div>
 
+                {/* Botão de login */}
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-[57px] bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-extrabold text-white text-xl md:text-2xl transition-colors duration-200"
+                  className="w-full h-[50px] md:h-[57px] bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-extrabold text-white text-lg md:text-2xl transition-colors duration-200"
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
 
-                <div className="mt-6 text-center">
+                {/* Link Solicitar acesso */}
+                <div className="text-center pt-2">
                   <Button
                     type="button"
                     variant="link"
                     onClick={handleRequestAccess}
-                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-base md:text-lg"
+                    className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-sm md:text-lg p-0"
                   >
                     Solicitar acesso ao sistema
                   </Button>
@@ -306,22 +324,31 @@ export const Login = (): JSX.Element => {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Recuperação de Senha">
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleResetPassword();
-        }}>
+      {/* Modal de Recuperação de Senha */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Recuperação de Senha"
+        className="max-w-[90%] md:max-w-md mx-auto"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleResetPassword();
+          }}
+        >
           <div className="space-y-4">
             <p className="text-gray-600">
-              Digite seu email para receber as instruções de recuperação de senha.
+              Digite seu email para receber as instruções de recuperação de
+              senha.
             </p>
-            
+
             {resetStatus.message && (
-              <div 
+              <div
                 className={`p-4 rounded-lg ${
-                  resetStatus.type === 'success' 
-                    ? 'bg-green-100 text-green-700 border border-green-200' 
-                    : 'bg-red-100 text-red-700 border border-red-200'
+                  resetStatus.type === "success"
+                    ? "bg-green-100 text-green-700 border border-green-200"
+                    : "bg-red-100 text-red-700 border border-red-200"
                 }`}
               >
                 {resetStatus.message}
@@ -329,7 +356,7 @@ export const Login = (): JSX.Element => {
             )}
 
             <div>
-              <label 
+              <label
                 htmlFor="reset-email"
                 className="block font-['Source_Sans_3',Helvetica] font-medium text-[#2D3748] text-lg mb-2"
               >
@@ -358,16 +385,19 @@ export const Login = (): JSX.Element => {
         </form>
       </Modal>
 
-      <Modal 
-        isOpen={isRequestAccessModalOpen} 
-        onClose={() => setIsRequestAccessModalOpen(false)} 
+      {/* Modal de Solicitação de Acesso */}
+      <Modal
+        isOpen={isRequestAccessModalOpen}
+        onClose={() => setIsRequestAccessModalOpen(false)}
         title="Solicitar Acesso"
+        className="max-w-[90%] md:max-w-md mx-auto"
       >
         <div className="space-y-4">
           <div className="flex flex-col items-center text-center space-y-4">
             <Info className="w-16 h-16 text-[#ae0f0a]" />
             <p className="text-lg font-['Source_Sans_3',Helvetica] text-gray-700">
-              Funcionalidade de solicitação de registro será implementada em uma versão futura!
+              Funcionalidade de solicitação de registro será implementada em uma
+              versão futura!
             </p>
             <Button
               type="button"
