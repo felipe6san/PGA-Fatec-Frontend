@@ -46,9 +46,11 @@ jobs:
       run: |
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
-        if [ -z "$(git tag)" ]; then
+        if ! git ls-remote --tags origin | grep -q "refs/tags/v0.0.0"; then
           git tag -a v0.0.0 -m "Initial release"
           git push origin v0.0.0
+        else
+          echo "Tag v0.0.0 já existe no remoto, pulando criação."
         fi
 
     - name: Calculate and generate new version for main
