@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '@lib/config';
+import { API_URL, BASE_ROUTE } from '@lib/config';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -24,14 +24,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token inválido ou expirado - fazer logout
+    if (error.response?.status === 401 && 
+        !window.location.pathname.includes('/login')) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('userData');
-      window.location.href = '/login';
+      window.location.href = `${BASE_ROUTE}login`;
     }
     return Promise.reject(error);
   }
 );
 
-export default api; 
+export default api;
