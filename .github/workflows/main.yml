@@ -175,3 +175,5 @@ jobs:
         folder: PGA-PI/dist # Build output folder
         branch: gh-pages # The branch to deploy to
         token: ${{ secrets.GH_TOKEN }} 
+        clean: true # Clean the target branch before deploying
+        commit-message: "deploy: Release ${{ env.new_version }}"
