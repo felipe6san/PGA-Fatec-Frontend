@@ -10,13 +10,6 @@ import {
 } from "lucide-react";
 import { Tooltip } from "../ui/tooltip";
 
-const navItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/projects", label: "Projetos", icon: ClipboardList },
-  { path: "/add-project", label: "Adicionar Projeto", icon: PlusCircle },
-  { path: "/settings", label: "Configurações", icon: Settings },
-];
-
 interface SidebarProps {
   isExpanded: boolean;
   toggleSidebar: () => void;
@@ -27,13 +20,118 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const handleNavigation = (path: string) => {
+  const navItems = [
+    {
+      label: "Visão Geral",
+      path: "/dashboard",
+      icon: Home,
+    },
+    {
+      label: "Projetos",
+      path: "/projects",
+      icon: ClipboardList,
+      subItems: [
+        { 
+          label: "Anexo 1", 
+          path: "/projects/anexo/1",
+          subItems: [
+            { label: "Anexo 1.1", path: "/projects/anexo/1/1" },
+            { label: "Anexo 1.2", path: "/projects/anexo/1/2" },
+            { label: "Anexo 1.3", path: "/projects/anexo/1/3" }
+          ]
+        },
+        { 
+          label: "Anexo 2", 
+          path: "/projects/anexo/2",
+          subItems: [
+            { label: "Anexo 2.1", path: "/projects/anexo/2/1" },
+            { label: "Anexo 2.2", path: "/projects/anexo/2/2" },
+            { label: "Anexo 2.3", path: "/projects/anexo/2/3" }
+          ]
+        },
+        { 
+          label: "Anexo 3", 
+          path: "/projects/anexo/3",
+          subItems: [
+            { label: "Anexo 3.1", path: "/projects/anexo/3/1" },
+            { label: "Anexo 3.2", path: "/projects/anexo/3/2" },
+            { label: "Anexo 3.3", path: "/projects/anexo/3/3" }
+          ]
+        },
+        { 
+          label: "Anexo 4", 
+          path: "/projects/anexo/4",
+          subItems: [
+            { label: "Anexo 4.1", path: "/projects/anexo/4/1" },
+            { label: "Anexo 4.2", path: "/projects/anexo/4/2" },
+            { label: "Anexo 4.3", path: "/projects/anexo/4/3" }
+          ]
+        },
+        { 
+          label: "Anexo 5", 
+          path: "/projects/anexo/5",
+          subItems: [
+            { label: "Anexo 5.1", path: "/projects/anexo/5/1" },
+            { label: "Anexo 5.2", path: "/projects/anexo/5/2" },
+            { label: "Anexo 5.3", path: "/projects/anexo/5/3" }
+          ]
+        },
+        { 
+          label: "Anexo 6", 
+          path: "/projects/anexo/6",
+          subItems: [
+            { label: "Anexo 6.1", path: "/projects/anexo/6/1" },
+            { label: "Anexo 6.2", path: "/projects/anexo/6/2" },
+            { label: "Anexo 6.3", path: "/projects/anexo/6/3" }
+          ]
+        }
+      ]
+    },
+    {
+      label: "Adicionar Projeto",
+      path: "/projects/new",
+      icon: PlusCircle,
+    },
+    {
+      label: "Configurações",
+      path: "/settings",
+      icon: Settings,
+    }
+  ];
+
+  // Previne o comportamento padrão e navega programaticamente
+  const handleNavigation = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
     navigate(path);
     if (window.innerWidth < 768) {
       toggleSidebar();
     }
   };
-  
+
+  // Renderiza os subitens quando o item pai está expandido
+  const renderSubItems = (item: any) => {
+    if (!isExpanded || !item.subItems) return null;
+
+    return (
+      <div className="pl-8 mt-1 space-y-1">
+        {item.subItems.map((subItem: any) => (
+          <button
+            key={subItem.path}
+            onClick={(e) => handleNavigation(e, subItem.path)}
+            className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-colors
+              ${location.pathname === subItem.path
+                ? "bg-[#ae0f0a]/10 text-[#ae0f0a]"
+                : "text-gray-600 hover:bg-gray-50"
+              }
+            `}
+          >
+            {subItem.label}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Overlay para mobile */}
@@ -77,25 +175,27 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
           {/* Menu de navegação com tooltips */}
           <nav className="flex-1 px-4 space-y-1">
             {navItems.map((item) => (
-              <Tooltip 
-                key={item.path}
-                content={item.label}
-                show={!isExpanded}
-              >
-                <button
-                  onClick={() => handleNavigation(item.path)}
-                  className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors
-                    ${location.pathname === item.path
-                      ? "bg-[#ae0f0a] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                    }
-                    ${!isExpanded && "justify-center"}
-                  `}
+              <div key={item.path}>
+                <Tooltip 
+                  content={item.label}
+                  show={!isExpanded}
                 >
-                  <item.icon className={`${isExpanded ? "mr-3" : ""} h-6 w-6`} /> {/* Aumentado de h-5 w-5 para h-6 w-6 */}
-                  {isExpanded && <span>{item.label}</span>}
-                </button>
-              </Tooltip>
+                  <button
+                    onClick={(e) => handleNavigation(e, item.path)}
+                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors
+                      ${location.pathname === item.path
+                        ? "bg-[#ae0f0a] text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                      }
+                      ${!isExpanded && "justify-center"}
+                    `}
+                  >
+                    <item.icon className={`${isExpanded ? "mr-3" : ""} h-6 w-6`} />
+                    {isExpanded && <span>{item.label}</span>}
+                  </button>
+                </Tooltip>
+                {renderSubItems(item)}
+              </div>
             ))}
           </nav>
 

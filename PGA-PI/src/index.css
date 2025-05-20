@@ -1,1 +1,25 @@
-@import "../tailwind.css"; 
+@import "../tailwind.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm p-6;
+  }
+  
+  .page-title {
+    @apply text-2xl font-semibold text-gray-900 mb-6;
+  }
+
+  .project-card {
+    @apply bg-white rounded-lg shadow-sm p-6 border border-gray-200;
+  }
+}

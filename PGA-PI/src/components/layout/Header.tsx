@@ -42,41 +42,21 @@ export const Header = ({
   }, [lastScrollY]);
 
   return (
-    <header
-      className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-all duration-300
-        ${!showHeader && isMobile ? "-translate-y-full" : "translate-y-0"}
-        ${isExpanded ? "md:ml-0" : "md:ml-0"}
-      `}
-    >
-      <div className="h-full px-4 flex items-center justify-between">
+    <header className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-all duration-300`}>
+      <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {/* Botão mobile */}
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors md:hidden"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <Menu className="h-6 w-6 text-gray-700" />
+            <Menu className="h-5 w-5 text-gray-700" />
           </button>
-
-          {/* Botão desktop com setas */}
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors hidden md:flex items-center justify-center"
-          >
-            {isExpanded ? (
-              <ChevronLeft className="h-6 w-6 text-gray-700" />
-            ) : (
-              <ChevronRight className="h-6 w-6 text-gray-700" />
-            )}
-          </button>
+          <h1 className="text-xl font-semibold text-gray-900">PGA 2025</h1>
         </div>
 
-        {/* Info do usuário */}
         <div className="flex items-center space-x-4">
-          <span className="hidden md:inline text-sm font-medium text-gray-700">
-            {user?.nome}
-          </span>
-          <div className="h-8 w-8 rounded-full bg-[#ae0f0a] text-white flex items-center justify-center font-medium">
+          <span className="text-sm text-gray-600">{user?.nome}</span>
+          <div className="h-8 w-8 rounded-full bg-[#ae0f0a] text-white flex items-center justify-center">
             {user?.nome?.charAt(0).toUpperCase()}
           </div>
         </div>

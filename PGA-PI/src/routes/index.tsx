@@ -7,6 +7,9 @@ import { Projects } from "@features/projects/pages/Projects";
 import { AddProject } from "@features/projects/pages/AddProject";
 import { Settings } from "@features/settings/pages/Settings";
 import { useAuth } from "@hooks/useAuth";
+import { SelectAnexo } from "@features/projects/pages/SelectAnexo";
+import { SelectSubAnexo } from "@features/projects/pages/SelectSubAnexo";
+import { SelectProjectType } from "@features/projects/pages/SelectProjectType";
 
 // Componente para rotas protegidas
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -40,8 +43,23 @@ export const Router = (): JSX.Element => {
         }
       >
         <Route index element={<Home />} />
-        <Route path="projects" element={<Projects />} />
-        <Route path="add-project" element={<AddProject />} />
+        <Route path="dashboard" element={<Home />} />
+
+        {/* Rotas de visualização de projetos */}
+        <Route path="projects">
+          <Route index element={<SelectAnexo />} />
+          <Route path="anexo/:anexoId" element={<SelectSubAnexo />} />
+          <Route path="anexo/:anexoId/:subId" element={<Projects />} />
+        </Route>
+
+        {/* Rotas de criação de projetos */}
+        <Route path="projects/new">
+          <Route index element={<SelectAnexo />} />
+          <Route path="anexo/:anexoId" element={<SelectSubAnexo />} />
+          <Route path="anexo/:anexoId/:subId" element={<SelectProjectType />} />
+          <Route path="anexo/:anexoId/:subId/:type" element={<AddProject />} />
+        </Route>
+
         <Route path="settings" element={<Settings />} />
       </Route>
 
