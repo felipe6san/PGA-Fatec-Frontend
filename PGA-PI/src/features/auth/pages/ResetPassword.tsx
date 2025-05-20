@@ -5,6 +5,7 @@ import { Input } from "@components/ui/input";
 import { Card, CardContent } from "@components/ui/card";
 import api from "@lib/api";
 import { logoImage, bgImage } from "@/assets";
+import { ROUTES } from "@/utils/constants";
 
 export const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -49,7 +50,7 @@ export const ResetPassword = () => {
       
       setSuccess(true);
       setTimeout(() => {
-        navigate('/login');
+        navigate(ROUTES.LOGIN);
       }, 3000);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Erro ao redefinir senha');
@@ -147,7 +148,7 @@ export const ResetPassword = () => {
                     <Button
                       type="button"
                       variant="link"
-                      onClick={() => navigate('/login')}
+                      onClick={() => navigate(ROUTES.LOGIN)}
                       className="font-['Source_Sans_3',Helvetica] text-[#ae0f0a] hover:text-[#8e0c08] text-base md:text-lg"
                     >
                       Voltar para o login

@@ -1,4 +1,5 @@
 // Constantes da aplicação
+import { BASE_ROUTE } from '@lib/config';
 
 // Constantes de paginação
 export const DEFAULT_PAGE_SIZE = 10;
@@ -11,11 +12,12 @@ export const DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
 
 // Constantes de navegação
 export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  PROJECTS: '/projects',
-  ADD_PROJECT: '/add-project',
-  SETTINGS: '/settings',
+  HOME: `${BASE_ROUTE}`,
+  LOGIN: `${BASE_ROUTE}login`,
+  PROJECTS: `${BASE_ROUTE}projects`,
+  ADD_PROJECT: `${BASE_ROUTE}add-project`,
+  SETTINGS: `${BASE_ROUTE}settings`,
+  RESET_PASSWORD: `${BASE_ROUTE}reset-password`,
 };
 
 // Constantes para mensagens de erro comuns
@@ -26,4 +28,4 @@ export const ERROR_MESSAGES = {
   NOT_FOUND: 'O recurso solicitado não foi encontrado.',
   VALIDATION: 'Há erros nos dados fornecidos. Verifique e tente novamente.',
   NETWORK: 'Erro de conexão. Verifique sua internet e tente novamente.',
-}; 
+};
