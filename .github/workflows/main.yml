@@ -34,6 +34,8 @@ jobs:
 
     - name: Build project
       run: npm run build
+      env:
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
       working-directory: ./PGA-PI
 
     # Versionamento Semântico
@@ -46,9 +48,11 @@ jobs:
       run: |
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
-        if [ -z "$(git tag)" ]; then
+        if ! git ls-remote --tags origin | grep -q "refs/tags/v0.0.0"; then
           git tag -a v0.0.0 -m "Initial release"
           git push origin v0.0.0
+        else
+          echo "Tag v0.0.0 já existe no remoto, pulando criação."
         fi
 
     - name: Calculate and generate new version for main
@@ -173,3 +177,5 @@ jobs:
         folder: PGA-PI/dist # Build output folder
         branch: gh-pages # The branch to deploy to
         token: ${{ secrets.GH_TOKEN }} 
+        clean: true # Clean the target branch before deploying
+        commit-message: "deploy: Release ${{ env.new_version }}"

@@ -7,10 +7,10 @@
 
 <p align="center">
     <a href="#sobre">Sobre</a>  |  
-    <a href="#backlog">Backlog & User Stories</a>  |  
-    <a href="#mer">MER & Collections</a>  |  
+    <a href="#mer">MER</a>  |  
     <a href="#prototipos">Protótipos & Documentação</a>  |  
     <a href="#tecnologias">Tecnologias</a>  |  
+    <a href="#script">Script</a>  |  
     <a href="#equipe">Equipe</a>
 </p>
 
@@ -19,43 +19,16 @@
 ## :page_facing_up: Sobre o Projeto
   Projeto de plataforma digital que centraliza e facilita o Planejamento de Gestão Anual (PGA) das Faculdades de Tecnologia (Fatecs), promovendo uma gestão mais eficiente, organizada e colaborativa. A plataforma permite que as equipes gestoras registrem, monitorem e avaliem ações e projetos estratégicos, alinhando-os às prioridades institucionais do Centro Paula Souza e às demandas locais da unidade. A inclusão de diferentes atores, como coordenadores, docentes e parceiros, amplia o alcance do projeto, transformando-o em um hub abrangente para a integração de esforços em prol da excelência acadêmica, inovação e responsabilidade social. O PGA Digital não apenas simplifica processos, mas aspira a ser um catalisador para transformações positivas no ecossistema educacional, unindo diversos agentes para enfrentar os desafios contemporâneos de maneira colaborativa e inovadora.
 
-> _Projeto baseado na metodologia ágil SCRUM, procurando desenvolver a Proatividade, Autonomia, Colaboração e Entrega de Resultados_
-
-### :link: Projeto disponível para visualização em [PGA](https://lumina3-0.vercel.app/)
-
-→ [Voltar ao topo](#topo)
-
-<span id="backlog">
-  
-## :dart: Backlog e User Stories
-<details>
-   <summary>Clique aqui para visualizar o Backlog</summary>
-    <br>
-    <div align="center">
-    <img src="" alt="Backlog">
-    </div>
-</details>
-
-<details>
-   <summary>Clique aqui para visualizar as User Stories</summary>
-    <br>
-  <div align="center">
-    <img src="" alt="User Stories">
-  </div>
-</details>
+### :link: Projeto disponível para visualização em [Plano de Gestão Anual Fatec]()
 
 → [Voltar ao topo](#topo)
 
 <span id="mer">
   
-## :bookmark_tabs: MER e Collections
-
-Acesse o [MER]()
-
-Acesse nossas collections:
-
-- [COLLECTION GERAL]()
-
+## :bookmark_tabs: MER
+  O Modelo Entidade-Relacionamento foi desenvolvido para representar de forma estruturada os dados envolvidos no planejamento e na gestão anual das Fatecs.
+  
+![MER](https://i.imgur.com/aW09a8m.png)
 
 
 → [Voltar ao topo](#topo)
@@ -65,11 +38,13 @@ Acesse nossas collections:
 ## 💻 Protótipos e Documentação
   No planejamento do projeto, foram criados wireframes e mockups para a idealização do layout da interface. Após a validação pelo cliente, esses elementos foram implementados em um protótipo, permitindo a interação do usuário com a interface.
   
-  Além disso, outras documentações, como fluxos de dados, diagramas de classe e de uso, modelagem do banco de dados e arquitetura do sistema, foram organizadas e compiladas em um [PDF]().
+  Além disso, outras documentações, como fluxos de dados, modelagem do banco de dados e arquitetura do sistema, foram organizadas e compiladas em um [PDF]().
 
 ## Protótipo de Alta Fidelidade
 
-![Protótipo alta fidelidade](https://i.imgur.com/3kYJQDt.png)
+![Protótipo alta fidelidade](https://i.imgur.com/vqTm6Yx.png)
+
+![Protótipo alta fidelidade](https://i.imgur.com/N3pyQsX.png)
 
 #### O Protótipo foi construido usando o [Figma](https://www.figma.com/design/fGjaMNQejB1JcliVylMCJf/PGA?node-id=7-5&t=uPFd3fqHqdSqladm-0)
 
@@ -80,11 +55,19 @@ Acesse nossas collections:
 ## :open_file_folder: Tecnologias
 
 |    Front-End     |     Back-End     | 
-| :-----------: | :------------------------------------ | 
-| ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) | 	![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) |
-| ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white) | ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=white) |
-| 	![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white) | 	![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white) |
-|   ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)   | ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white) |
+| :-----------: | :------------------------------------: | 
+|![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)|![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)|
+|![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)|![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)|
+|![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)|![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)|
+
+→ [Voltar ao topo](#topo)
+
+<span id="script">
+
+
+## :dart: Script
+
+
 
 → [Voltar ao topo](#topo)
 
