@@ -1,5 +1,5 @@
 {
-  "version": "0.0.3",
+  "version": "0.0.4",
   "source": "./index.html",
   "type": "module",
   "name": "pga-fatec",
