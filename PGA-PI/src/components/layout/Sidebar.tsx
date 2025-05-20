@@ -9,12 +9,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { Tooltip } from "../ui/tooltip";
+import { ROUTES } from "@/utils/constants";
 
 const navItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/projects", label: "Projetos", icon: ClipboardList },
-  { path: "/add-project", label: "Adicionar Projeto", icon: PlusCircle },
-  { path: "/settings", label: "Configurações", icon: Settings },
+  { path: ROUTES.HOME, label: "Home", icon: Home },
+  { path: ROUTES.PROJECTS, label: "Projetos", icon: ClipboardList },
+  { path: ROUTES.ADD_PROJECT, label: "Adicionar Projeto", icon: PlusCircle },
+  { path: ROUTES.SETTINGS, label: "Configurações", icon: Settings },
 ];
 
 interface SidebarProps {

@@ -7,13 +7,15 @@ import { Projects } from "@features/projects/pages/Projects";
 import { AddProject } from "@features/projects/pages/AddProject";
 import { Settings } from "@features/settings/pages/Settings";
 import { useAuth } from "@hooks/useAuth";
+import { BASE_ROUTE } from "@lib/config";
+import { ROUTES } from "@utils/constants";
 
 // Componente para rotas protegidas
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   return children;
@@ -25,14 +27,14 @@ export const Router = (): JSX.Element => {
   return (
     <Routes>
       <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        path={`${BASE_ROUTE}login`}
+        element={isAuthenticated ? <Navigate to={ROUTES.HOME} replace /> : <Login />}
       />
 
-      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path={`${BASE_ROUTE}reset-password`} element={<ResetPassword />} />
 
       <Route
-        path="/"
+        path={BASE_ROUTE}
         element={
           <PrivateRoute>
             <Layout />
@@ -40,14 +42,14 @@ export const Router = (): JSX.Element => {
         }
       >
         <Route index element={<Home />} />
-        <Route path="projects" element={<Projects />} />
-        <Route path="add-project" element={<AddProject />} />
-        <Route path="settings" element={<Settings />} />
+        <Route path={`${BASE_ROUTE}projects`} element={<Projects />} />
+        <Route path={`${BASE_ROUTE}add-project`} element={<AddProject />} />
+        <Route path={`${BASE_ROUTE}settings`} element={<Settings />} />
       </Route>
 
       <Route
         path="*"
-        element={<Navigate to={isAuthenticated ? "/" : "/login"} />}
+        element={<Navigate to={isAuthenticated ? ROUTES.HOME : ROUTES.LOGIN} />}
       />
     </Routes>
   );
