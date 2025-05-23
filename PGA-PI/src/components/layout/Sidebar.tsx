@@ -144,7 +144,7 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-50
+        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 will-change-transform z-50
           ${isExpanded ? "w-64" : "w-24"}
           ${!isExpanded ? "-translate-x-full md:translate-x-0" : "translate-x-0"}
         `}
@@ -156,9 +156,12 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
               <img 
                 src={isExpanded ? logoImage : logoMini}
                 alt="Fatec Votorantim" 
-                className={`transition-all duration-300 ${
-                  isExpanded ? "w-40" : "w-16"  // Aumentado de w-12 para w-16
-                }`}
+                className="transition-opacity duration-300"
+                style={{ 
+                  width: isExpanded ? '160px' : '64px',
+                  maxHeight: '80px',
+                  objectFit: 'contain'
+                }}
               />
             </div>
             

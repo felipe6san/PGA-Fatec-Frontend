@@ -33,19 +33,19 @@ export const Layout = (): JSX.Element => {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-
+    
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && isSidebarExpanded) {
-      setIsSidebarExpanded(false);
-    } else if (isRightSwipe && !isSidebarExpanded) {
+    
+    // Abrir sidebar em swipe da esquerda para a direita
+    if (isRightSwipe && isMobile && !isSidebarExpanded) {
       setIsSidebarExpanded(true);
     }
-
-    setTouchEnd(null);
-    setTouchStart(null);
+    // Fechar sidebar em swipe da direita para a esquerda
+    else if (isLeftSwipe && isMobile && isSidebarExpanded) {
+      setIsSidebarExpanded(false);
+    }
   };
 
   const toggleSidebar = () => {
@@ -53,23 +53,30 @@ export const Layout = (): JSX.Element => {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar 
-        isExpanded={isSidebarExpanded} 
-        toggleSidebar={toggleSidebar}
-      />
-      
-      <div className={`flex flex-col flex-1 transition-all duration-300
-        ${isSidebarExpanded ? "md:ml-[16rem]" : "md:ml-[5rem]"}`}
-      >
+    <div 
+      className="flex h-screen bg-gray-50"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Sidebar */}
+      <Sidebar isExpanded={isSidebarExpanded} toggleSidebar={toggleSidebar} />
+
+      {/* Conteúdo principal */}
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Header 
           toggleSidebar={toggleSidebar} 
-          isMobile={isMobile}
+          isMobile={isMobile} 
           isExpanded={isSidebarExpanded}
         />
         
-        <main className="flex-1 overflow-auto p-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+        {/* Área de conteúdo */}
+        <main 
+          className={`flex-1 overflow-auto p-4 sm:p-6 transition-all duration-300 ${
+            isSidebarExpanded && !isMobile ? "md:ml-64" : "md:ml-24"
+          }`}
+        >
+          <div className="container mx-auto p-0">
             <Outlet />
           </div>
         </main>

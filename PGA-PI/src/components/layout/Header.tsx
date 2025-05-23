@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useState, useRef, TouchEvent } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Menu, ChevronLeft, ChevronRight, Settings, User, LogOut, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +27,10 @@ export const Header = ({
   // Estados para controlar a exibição dos modais
   const [isPreferencesModalOpen, setIsPreferencesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  
+  // Estados para controlar o gesto de swipe
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   // Fecha o menu quando clicar fora dele
   useEffect(() => {
@@ -75,11 +79,9 @@ export const Header = ({
     
     switch (action) {
       case "preferences":
-        // Abre o modal de preferências em vez de navegar
         setIsPreferencesModalOpen(true);
         break;
       case "profile":
-        // Abre o modal de perfil em vez de navegar
         setIsProfileModalOpen(true);
         break;
       case "logout":
@@ -91,41 +93,66 @@ export const Header = ({
     }
   };
 
+  // Handlers para gesto de swipe
+  const handleTouchStart = (e: TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isRightSwipe && isMobile && !isExpanded) {
+      toggleSidebar();
+    }
+    else if (isLeftSwipe && isMobile && isExpanded) {
+      toggleSidebar();
+    }
+    
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   return (
     <>
-      <header className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-all duration-300 ${showHeader ? 'transform-none' : '-translate-y-full'}`}>
-        <div className="h-full px-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {isMobile ? (
-              // Versão mobile: Ícone de menu hambúrguer
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label="Toggle mobile menu"
-              >
+      <header 
+        className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-all duration-300 ${showHeader ? 'transform-none' : '-translate-y-full'} ${!isMobile && isExpanded ? 'ml-60' : 'ml-20'}`}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="h-full px-2 sm:px-4 md:px-6 flex items-center justify-between">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label={isMobile ? "Toggle mobile menu" : (isExpanded ? "Recolher menu" : "Expandir menu")}
+            >
+              {isMobile ? (
                 <Menu className="h-5 w-5 text-gray-700" />
-              </button>
-            ) : (
-              // Versão desktop: Ícones de chevron para expandir/colapsar
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
-              >
-                {isExpanded ? (
-                  <ChevronLeft className="h-5 w-5 text-gray-700" />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-gray-700" />
-                )}
-              </button>
-            )}
-            <h1 className="text-xl font-semibold text-gray-900">PGA 2025</h1>
+              ) : isExpanded ? (
+                <ChevronLeft className="h-5 w-5 text-gray-700" />
+              ) : (
+                <ChevronRight className="h-5 w-5 text-gray-700" />
+              )}
+            </button>
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">PGA 2025</h1>
           </div>
 
-          <div className="flex items-center space-x-4 relative">
-            <span className="text-sm text-gray-600">{user?.nome}</span>
+          <div className="flex items-center space-x-2 sm:space-x-4 relative">
+            <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline-block truncate max-w-[100px] md:max-w-none">
+              {user?.nome}
+            </span>
             <div 
-              className="h-8 w-8 rounded-full bg-[#ae0f0a] text-white flex items-center justify-center cursor-pointer hover:bg-[#8e0c08] transition-colors"
+              className="h-8 w-8 rounded-full bg-[#ae0f0a] text-white flex items-center justify-center cursor-pointer hover:bg-[#8e0c08] transition-colors flex-shrink-0"
               onClick={handleUserMenuClick}
               aria-haspopup="true"
               aria-expanded={showUserMenu}
@@ -142,6 +169,12 @@ export const Header = ({
                 aria-orientation="vertical"
                 aria-labelledby="user-menu"
               >
+                {/* Mostrar o nome do usuário apenas no menu em mobile */}
+                {isMobile && (
+                  <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
+                    {user?.nome}
+                  </div>
+                )}
                 <button
                   onClick={() => handleMenuItemClick('preferences')}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
