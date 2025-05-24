@@ -10,7 +10,7 @@ import {
   StatusVerificacao,
   TipoAnexo,
   TipoVinculoHAE,
-} from "../../dashboard/components/projectFormTypes";
+} from "../components/projectFormTypes";
 
 interface DisplayableAcaoProjeto {
   id: number;

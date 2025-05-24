@@ -7,8 +7,10 @@ import {
   PlusCircle, 
   Settings, 
   LogOut,
+  FileText
 } from "lucide-react";
 import { Tooltip } from "../ui/tooltip";
+import { BASE_ROUTE } from "@lib/config";
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -23,78 +25,22 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
   const navItems = [
     {
       label: "Visão Geral",
-      path: "/dashboard",
+      path: `${BASE_ROUTE}dashboard`,
       icon: Home,
     },
     {
       label: "Projetos",
-      path: "/projects",
+      path: `${BASE_ROUTE}projects/list`,
       icon: ClipboardList,
-      subItems: [
-        { 
-          label: "Anexo 1", 
-          path: "/projects/anexo/1",
-          subItems: [
-            { label: "Anexo 1.1", path: "/projects/anexo/1/1" },
-            { label: "Anexo 1.2", path: "/projects/anexo/1/2" },
-            { label: "Anexo 1.3", path: "/projects/anexo/1/3" }
-          ]
-        },
-        { 
-          label: "Anexo 2", 
-          path: "/projects/anexo/2",
-          subItems: [
-            { label: "Anexo 2.1", path: "/projects/anexo/2/1" },
-            { label: "Anexo 2.2", path: "/projects/anexo/2/2" },
-            { label: "Anexo 2.3", path: "/projects/anexo/2/3" }
-          ]
-        },
-        { 
-          label: "Anexo 3", 
-          path: "/projects/anexo/3",
-          subItems: [
-            { label: "Anexo 3.1", path: "/projects/anexo/3/1" },
-            { label: "Anexo 3.2", path: "/projects/anexo/3/2" },
-            { label: "Anexo 3.3", path: "/projects/anexo/3/3" }
-          ]
-        },
-        { 
-          label: "Anexo 4", 
-          path: "/projects/anexo/4",
-          subItems: [
-            { label: "Anexo 4.1", path: "/projects/anexo/4/1" },
-            { label: "Anexo 4.2", path: "/projects/anexo/4/2" },
-            { label: "Anexo 4.3", path: "/projects/anexo/4/3" }
-          ]
-        },
-        { 
-          label: "Anexo 5", 
-          path: "/projects/anexo/5",
-          subItems: [
-            { label: "Anexo 5.1", path: "/projects/anexo/5/1" },
-            { label: "Anexo 5.2", path: "/projects/anexo/5/2" },
-            { label: "Anexo 5.3", path: "/projects/anexo/5/3" }
-          ]
-        },
-        { 
-          label: "Anexo 6", 
-          path: "/projects/anexo/6",
-          subItems: [
-            { label: "Anexo 6.1", path: "/projects/anexo/6/1" },
-            { label: "Anexo 6.2", path: "/projects/anexo/6/2" },
-            { label: "Anexo 6.3", path: "/projects/anexo/6/3" }
-          ]
-        }
-      ]
     },
     {
-      label: "Adicionar Projeto",
-      path: "/projects/new",
+      label: "Criar Formulário",
+      path: `${BASE_ROUTE}projects`,
       icon: PlusCircle,
     },
     {
       label: "Configurações",
-      path: "/settings",
+      path: `${BASE_ROUTE}settings`,
       icon: Settings,
     }
   ];
