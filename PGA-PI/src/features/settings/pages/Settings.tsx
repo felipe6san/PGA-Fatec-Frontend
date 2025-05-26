@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent } from "../../../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Toaster } from "../../../components/ui/toaster";
@@ -50,31 +50,31 @@ export const Settings = (): JSX.Element => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <PgaTabSelector activeTab={activeTab} onTabChange={setActiveTab} />
             
-            <TabsContent value="pessoas">
+            <TabsContent value="pessoas" isActive={activeTab === "pessoas"}>
               <PessoasConfig />
             </TabsContent>
             
-            <TabsContent value="eixos">
+            <TabsContent value="eixos" isActive={activeTab === "eixos"}>
               <EixosConfig />
             </TabsContent>
             
-            <TabsContent value="temas">
+            <TabsContent value="temas" isActive={activeTab === "temas"}>
               <TemasConfig />
             </TabsContent>
             
-            <TabsContent value="prioridades">
+            <TabsContent value="prioridades" isActive={activeTab === "prioridades"}>
               <PrioridadesConfig />
             </TabsContent>
             
-            <TabsContent value="entregaveis">
+            <TabsContent value="entregaveis" isActive={activeTab === "entregaveis"}>
               <EntregaveisConfig />
             </TabsContent>
             
-            <TabsContent value="situacoes">
+            <TabsContent value="situacoes" isActive={activeTab === "situacoes"}>
               <SituacoesConfig />
             </TabsContent>
             
-            <TabsContent value="cargahoraria">
+            <TabsContent value="cargahoraria" isActive={activeTab === "cargahoraria"}>
               <CargaHorariaConfig />
             </TabsContent>
           </Tabs>

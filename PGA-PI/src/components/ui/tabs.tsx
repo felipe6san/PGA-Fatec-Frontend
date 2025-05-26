@@ -1,15 +1,27 @@
 import * as React from "react";
 import { cn } from "../../lib/utils";
 
+const TabsContext = React.createContext<{
+  value?: string;
+  onValueChange?: (value: string) => void;
+}>({});
+
 const Tabs = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("w-full", className)}
-    {...props}
-  />
+  React.HTMLAttributes<HTMLDivElement> & {
+    value?: string;
+    onValueChange?: (value: string) => void;
+  }
+>(({ className, value, onValueChange, children, ...props }, ref) => (
+  <TabsContext.Provider value={{ value, onValueChange }}>
+    <div
+      ref={ref}
+      className={cn("w-full", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  </TabsContext.Provider>
 ));
 Tabs.displayName = "Tabs";
 
@@ -55,17 +67,22 @@ const TabsContent = React.forwardRef<
     value: string;
     isActive?: boolean;
   }
->(({ className, value, isActive, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-      !isActive && "hidden",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, value, isActive, ...props }, ref) => {
+  const context = React.useContext(TabsContext);
+  const shouldShow = isActive !== undefined ? isActive : context.value === value;
+  
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+        !shouldShow && "hidden",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 TabsContent.displayName = "TabsContent";
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }; 
