@@ -41,9 +41,9 @@ const mockEixosTematicos: EixoTematico[] = [
 ];
 
 const mockPrioridadesAcao: PrioridadeAcao[] = [
-  { id: 1, grau: 1, descricao: "Prioridade Alta" },
-  { id: 2, grau: 2, descricao: "Prioridade Média" },
-  { id: 3, grau: 3, descricao: "Prioridade Baixa" },
+  { id: 1, grau: 1, descricao: "Prioridade Alta", tipo_gestao: "Regulação" },
+  { id: 2, grau: 2, descricao: "Prioridade Média", tipo_gestao: "Estratégico" },
+  { id: 3, grau: 3, descricao: "Prioridade Baixa", tipo_gestao: "Operacional" },
 ];
 
 const mockEntregavel = [
@@ -131,12 +131,12 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
   const [etapasProcesso, setEtapasProcesso] = useState<EtapaProcesso[]>([
     { id: 0, descricao: "", statusVerificacao: StatusVerificacao.Pendente },
   ]);
-  const [situacoesProblema, setSituacoesProblema] = useState<Array<{
-    id: string;
-    descricao: string;
-  }>>([
-    { id: "", descricao: "" }
-  ]);
+  const [situacoesProblema, setSituacoesProblema] = useState<
+    Array<{
+      id: string;
+      descricao: string;
+    }>
+  >([{ id: "", descricao: "" }]);
   const [aquisicoes, setAquisicoes] = useState<AquisicaoItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
@@ -243,19 +243,23 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const { value } = event.target;
-    const situacao = mockSituacoesProblema.find(s => s.id.toString() === value);
-    
+    const situacao = mockSituacoesProblema.find(
+      (s) => s.id.toString() === value
+    );
+
     const newSituacoesProblema = [...situacoesProblema];
-    newSituacoesProblema[index] = { 
-      id: value, 
-      descricao: situacao ? `${situacao.codigo} - ${situacao.descricao}` : "" 
+    newSituacoesProblema[index] = {
+      id: value,
+      descricao: situacao ? `${situacao.codigo} - ${situacao.descricao}` : "",
     };
-    
+
     setSituacoesProblema(newSituacoesProblema);
   };
 
   const handleRemoveSituacaoProblema = (index: number) => {
-    const newSituacoesProblema = situacoesProblema.filter((_, i) => i !== index);
+    const newSituacoesProblema = situacoesProblema.filter(
+      (_, i) => i !== index
+    );
     setSituacoesProblema(newSituacoesProblema);
   };
 
@@ -354,7 +358,9 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
         ? parseFloat(parseCurrencyInput(custoEstimado)) / 100
         : 0,
       fonteRecursos,
-      situacoesProblema: situacoesProblema.map(sit => sit.descricao).filter(s => s),
+      situacoesProblema: situacoesProblema
+        .map((sit) => sit.descricao)
+        .filter((s) => s),
     };
     console.log("Form Data:", formData);
     //TODO Here you would typically send the form data to your backend
@@ -427,25 +433,24 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
 
         <div>
           <label
-            htmlFor="origem"
+            htmlFor="prioridadeId"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Origem da Demanda (Fonte da Situação Problema):
+            Prioridade/Origem da Ação:
           </label>
           <select
-            id="origem"
-            value={origem}
-            onChange={(e) => setOrigem(e.target.value)}
+            id="prioridadeId"
+            value={prioridadeId}
+            onChange={(e) => setPrioridadeId(e.target.value)}
+            required
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
           >
-            <option value="">Selecione a Origem</option>
-            <option value="CPA">
-              CPA (Relatório da Comissão Própria de Avaliação da Unidade)
-            </option>
-            <option value="Outra">Outra</option>
-            <option value="CEE">
-              CEE (Relatório Circunstanciado do Conselho Estadual de Educação)
-            </option>
+            <option value="">Selecione a Prioridade/Origem</option>
+            {mockPrioridadesAcao.map((prio) => (
+              <option key={prio.id} value={prio.id}>
+                {prio.grau} - {prio.descricao} ({prio.tipo_gestao})
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -478,7 +483,7 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
             htmlFor="prioridadeId"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Prioridade da Ação:
+            Prioridade/Origem da Ação:
           </label>
           <select
             id="prioridadeId"
@@ -487,10 +492,10 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
             required
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
           >
-            <option value="">Selecione a Prioridade</option>
+            <option value="">Selecione a Prioridade/Origem</option>
             {mockPrioridadesAcao.map((prio) => (
               <option key={prio.id} value={prio.id}>
-                {prio.grau} - {prio.descricao}
+                {prio.grau} - {prio.descricao} ({prio.tipo_gestao})
               </option>
             ))}
           </select>
