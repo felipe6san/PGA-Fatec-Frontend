@@ -7,16 +7,10 @@ import {
   PlusCircle, 
   Settings, 
   LogOut,
+  FileText
 } from "lucide-react";
 import { Tooltip } from "../ui/tooltip";
-import { ROUTES } from "@/utils/constants";
-
-const navItems = [
-  { path: ROUTES.HOME, label: "Home", icon: Home },
-  { path: ROUTES.PROJECTS, label: "Projetos", icon: ClipboardList },
-  { path: ROUTES.ADD_PROJECT, label: "Adicionar Projeto", icon: PlusCircle },
-  { path: ROUTES.SETTINGS, label: "Configurações", icon: Settings },
-];
+import { BASE_ROUTE } from "@lib/config";
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -28,13 +22,62 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const handleNavigation = (path: string) => {
+  const navItems = [
+    {
+      label: "Visão Geral",
+      path: `${BASE_ROUTE}dashboard`,
+      icon: Home,
+    },
+    {
+      label: "Projetos",
+      path: `${BASE_ROUTE}projects/list`,
+      icon: ClipboardList,
+    },
+    {
+      label: "Criar Formulário",
+      path: `${BASE_ROUTE}projects`,
+      icon: PlusCircle,
+    },
+    {
+      label: "Configurações",
+      path: `${BASE_ROUTE}settings`,
+      icon: Settings,
+    }
+  ];
+
+  // Previne o comportamento padrão e navega programaticamente
+  const handleNavigation = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
     navigate(path);
     if (window.innerWidth < 768) {
       toggleSidebar();
     }
   };
-  
+
+  // Renderiza os subitens quando o item pai está expandido
+  const renderSubItems = (item: any) => {
+    if (!isExpanded || !item.subItems) return null;
+
+    return (
+      <div className="pl-8 mt-1 space-y-1">
+        {item.subItems.map((subItem: any) => (
+          <button
+            key={subItem.path}
+            onClick={(e) => handleNavigation(e, subItem.path)}
+            className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-colors
+              ${location.pathname === subItem.path
+                ? "bg-[#ae0f0a]/10 text-[#ae0f0a]"
+                : "text-gray-600 hover:bg-gray-50"
+              }
+            `}
+          >
+            {subItem.label}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Overlay para mobile */}
@@ -47,7 +90,7 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out z-50
+        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 will-change-transform z-50
           ${isExpanded ? "w-64" : "w-24"}
           ${!isExpanded ? "-translate-x-full md:translate-x-0" : "translate-x-0"}
         `}
@@ -59,9 +102,12 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
               <img 
                 src={isExpanded ? logoImage : logoMini}
                 alt="Fatec Votorantim" 
-                className={`transition-all duration-300 ${
-                  isExpanded ? "w-40" : "w-16"  // Aumentado de w-12 para w-16
-                }`}
+                className="transition-opacity duration-300"
+                style={{ 
+                  width: isExpanded ? '160px' : '64px',
+                  maxHeight: '80px',
+                  objectFit: 'contain'
+                }}
               />
             </div>
             
@@ -78,25 +124,27 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
           {/* Menu de navegação com tooltips */}
           <nav className="flex-1 px-4 space-y-1">
             {navItems.map((item) => (
-              <Tooltip 
-                key={item.path}
-                content={item.label}
-                show={!isExpanded}
-              >
-                <button
-                  onClick={() => handleNavigation(item.path)}
-                  className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors
-                    ${location.pathname === item.path
-                      ? "bg-[#ae0f0a] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                    }
-                    ${!isExpanded && "justify-center"}
-                  `}
+              <div key={item.path}>
+                <Tooltip 
+                  content={item.label}
+                  show={!isExpanded}
                 >
-                  <item.icon className={`${isExpanded ? "mr-3" : ""} h-6 w-6`} /> {/* Aumentado de h-5 w-5 para h-6 w-6 */}
-                  {isExpanded && <span>{item.label}</span>}
-                </button>
-              </Tooltip>
+                  <button
+                    onClick={(e) => handleNavigation(e, item.path)}
+                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors
+                      ${location.pathname === item.path
+                        ? "bg-[#ae0f0a] text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                      }
+                      ${!isExpanded && "justify-center"}
+                    `}
+                  >
+                    <item.icon className={`${isExpanded ? "mr-3" : ""} h-6 w-6`} />
+                    {isExpanded && <span>{item.label}</span>}
+                  </button>
+                </Tooltip>
+                {renderSubItems(item)}
+              </div>
             ))}
           </nav>
 

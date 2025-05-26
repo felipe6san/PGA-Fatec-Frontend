@@ -1,3 +1,5 @@
+import { BASE_ROUTE } from '@lib/config';
+
 // Constantes da aplicação
 import { BASE_ROUTE } from '@lib/config';
 
@@ -15,9 +17,8 @@ export const ROUTES = {
   HOME: `${BASE_ROUTE}`,
   LOGIN: `${BASE_ROUTE}login`,
   PROJECTS: `${BASE_ROUTE}projects`,
-  ADD_PROJECT: `${BASE_ROUTE}add-project`,
+  ADD_PROJECT: `${BASE_ROUTE}projects/new`,
   SETTINGS: `${BASE_ROUTE}settings`,
-  RESET_PASSWORD: `${BASE_ROUTE}reset-password`,
 };
 
 // Constantes para mensagens de erro comuns

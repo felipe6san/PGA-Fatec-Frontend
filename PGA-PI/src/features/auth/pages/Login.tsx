@@ -8,7 +8,7 @@ import { logoImage, bgImage } from "@/assets";
 import { AlertCircle, Info, XCircle } from "lucide-react";
 import { Modal } from "@components/ui/modal";
 import api from "@lib/api";
-import { ROUTES } from "@/utils/constants";
+import { BASE_ROUTE } from "@/lib";
 
 type ErrorType = "credentials" | "server" | "connection" | "validation" | null;
 
@@ -75,7 +75,7 @@ export const Login = (): JSX.Element => {
       const success = await login(credentials.email, credentials.senha);
 
       if (success) {
-        navigate(ROUTES.HOME);
+        navigate(`${BASE_ROUTE}dashboard`);
       } else {
         setErrorType("credentials");
         setErrorMessage(
