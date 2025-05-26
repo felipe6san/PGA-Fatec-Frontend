@@ -1,120 +1,87 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader } from "../../dashboard/components/cardDashboard";
+import { Tabs, TabsContent } from "../../../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
+import { Toaster } from "../../../components/ui/toaster";
+import { PessoasConfig } from "../components/PessoasConfig";
+import { EixosConfig } from "../components/EixosConfig";
+import { TemasConfig } from "../components/TemasConfig";
+import { PrioridadesConfig } from "../components/PrioridadesConfig";
+import { EntregaveisConfig } from "../components/EntregaveisConfig";
+import { SituacoesConfig } from "../components/SituacoesConfig";
+import { CargaHorariaConfig } from "../components/CargaHorariaConfig";
+import { PgaTabSelector } from "../components/PgaTabSelector";
+import { Cog, Settings as SettingsIcon } from "lucide-react";
 
 export const Settings = (): JSX.Element => {
-  const [settings, setSettings] = useState({
-    notifications: true,
-    emailUpdates: false,
-    theme: "light",
-    language: "pt-BR",
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    setSettings((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
-  };
+  const [activeTab, setActiveTab] = useState("pessoas");
 
   return (
-    <>
-      <h1 className="font-extrabold text-black text-[32px] text-center mb-[30px]">
-        Configurações
-      </h1>
+    <div className="container mx-auto py-6">
+      <div className="flex items-center justify-center mb-6">
+        <SettingsIcon className="h-8 w-8 mr-3 text-[#ae0f0a]" />
+        <h1 className="font-extrabold text-black text-[32px] text-center">
+          Configurações do PGA
+        </h1>
+      </div>
 
-      <Card className="w-full shadow-[0px_0px_25px_#00000026] rounded-xl">
+      {/* Descrição principal */}
+      <p className="text-gray-600 text-center max-w-2xl mx-auto mb-8">
+        Gerencie os dados básicos utilizados no sistema do Plano de Gestão Anual. 
+        Estas configurações serão utilizadas em todo o sistema.
+      </p>
+
+      {/* Configurações do PGA */}
+      <Card className="w-full shadow-[0px_0px_25px_#00000026] rounded-xl border-t-4 border-t-[#ae0f0a]">
         <CardHeader className="bg-neutral-100 rounded-t-xl py-[15px] px-6">
-          <h2 className="font-normal text-black text-[28px]">
-            Preferências do Sistema
-          </h2>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-6">
+          <div className="flex items-center">
+            <Cog className="h-6 w-6 mr-2 text-[#ae0f0a]" />
             <div>
-              <h3 className="text-lg font-medium mb-4">Notificações</h3>
-              <div className="space-y-3">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="notifications"
-                    checked={settings.notifications}
-                    onChange={handleChange}
-                    className="rounded border-gray-300"
-                  />
-                  <span>Ativar notificações do sistema</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="emailUpdates"
-                    checked={settings.emailUpdates}
-                    onChange={handleChange}
-                    className="rounded border-gray-300"
-                  />
-                  <span>Receber atualizações por e-mail</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-4">Aparência</h3>
-              <div>
-                <label
-                  htmlFor="theme"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Tema
-                </label>
-                <select
-                  id="theme"
-                  name="theme"
-                  value={settings.theme}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                >
-                  <option value="light">Claro</option>
-                  <option value="dark">Escuro</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-4">Idioma</h3>
-              <div>
-                <label
-                  htmlFor="language"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Selecionar idioma
-                </label>
-                <select
-                  id="language"
-                  name="language"
-                  value={settings.language}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                >
-                  <option value="pt-BR">Português (Brasil)</option>
-                  <option value="en">English</option>
-                  <option value="es">Español</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <button
-                type="button"
-                className="px-4 py-2 bg-[#ae0f0a] text-white rounded-md hover:bg-[#910c08]"
-              >
-                Salvar Alterações
-              </button>
+              <CardTitle className="font-normal text-black text-[28px]">
+                Gerenciar Configurações do Sistema
+              </CardTitle>
+              <CardDescription>
+                Utilize as abas abaixo para configurar os diferentes aspectos do sistema
+              </CardDescription>
             </div>
           </div>
+        </CardHeader>
+        
+        <CardContent className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <PgaTabSelector activeTab={activeTab} onTabChange={setActiveTab} />
+            
+            <TabsContent value="pessoas">
+              <PessoasConfig />
+            </TabsContent>
+            
+            <TabsContent value="eixos">
+              <EixosConfig />
+            </TabsContent>
+            
+            <TabsContent value="temas">
+              <TemasConfig />
+            </TabsContent>
+            
+            <TabsContent value="prioridades">
+              <PrioridadesConfig />
+            </TabsContent>
+            
+            <TabsContent value="entregaveis">
+              <EntregaveisConfig />
+            </TabsContent>
+            
+            <TabsContent value="situacoes">
+              <SituacoesConfig />
+            </TabsContent>
+            
+            <TabsContent value="cargahoraria">
+              <CargaHorariaConfig />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
-    </>
+      
+      <Toaster />
+    </div>
   );
 };
