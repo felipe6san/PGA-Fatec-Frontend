@@ -40,7 +40,6 @@ export function useForm<T extends Record<string, any>>(
       
       let parsedValue: any = value;
       
-      // Converter valores baseados no tipo do campo
       if (type === 'number') {
         parsedValue = value === '' ? '' : Number(value);
       } else if (type === 'checkbox') {

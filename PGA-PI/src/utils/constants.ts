@@ -1,18 +1,13 @@
 import { BASE_ROUTE } from '@lib/config';
 
-// Constantes da aplicação
-import { BASE_ROUTE } from '@lib/config';
 
-// Constantes de paginação
 export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
 
-// Constantes de data e hora
 export const DATE_FORMAT = 'dd/MM/yyyy';
 export const TIME_FORMAT = 'HH:mm';
 export const DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
 
-// Constantes de navegação
 export const ROUTES = {
   HOME: `${BASE_ROUTE}`,
   LOGIN: `${BASE_ROUTE}login`,
@@ -21,7 +16,6 @@ export const ROUTES = {
   SETTINGS: `${BASE_ROUTE}settings`,
 };
 
-// Constantes para mensagens de erro comuns
 export const ERROR_MESSAGES = {
   GENERIC: 'Ocorreu um erro. Tente novamente mais tarde.',
   UNAUTHORIZED: 'Sessão expirada. Por favor, faça login novamente.',
