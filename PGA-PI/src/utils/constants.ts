@@ -1,6 +1,7 @@
 import { BASE_ROUTE } from '@lib/config';
 
 // Constantes da aplicação
+import { BASE_ROUTE } from '@lib/config';
 
 // Constantes de paginação
 export const DEFAULT_PAGE_SIZE = 10;
