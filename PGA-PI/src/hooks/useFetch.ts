@@ -13,9 +13,6 @@ interface UseFetchReturn<T> extends FetchState<T> {
   resetState: () => void;
 }
 
-/**
- * Hook para gerenciar requisições HTTP
- */
 export function useFetch<T = any>(
   url: string,
   options?: AxiosRequestConfig,
@@ -44,7 +41,6 @@ export function useFetch<T = any>(
         const error = err as Error | AxiosError;
         
         if ('response' in error) {
-          // É um erro de axios
           const axiosError = error as AxiosError<any>;
           setState({
             data: null,
@@ -52,7 +48,6 @@ export function useFetch<T = any>(
             error: axiosError.response?.data?.message || 'Ocorreu um erro na requisição',
           });
         } else {
-          // É um erro genérico
           setState({
             data: null,
             loading: false,

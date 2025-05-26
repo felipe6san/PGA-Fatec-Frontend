@@ -58,8 +58,6 @@ export const Router = (): JSX.Element => {
         />
         <Route path="dashboard" element={<Home />} />
 
-        {/* Rotas de visualização e criação */}
-        {/* Rotas de projetos */}
         <Route path="projects">
           <Route index element={<SelectAnexo />} />
           <Route path="list" element={<Projects />} />
@@ -68,7 +66,6 @@ export const Router = (): JSX.Element => {
           <Route path="anexo/:anexoId/:subId" element={<Projects />} />
         </Route>
 
-        {/* Rotas de anexos */}
         <Route path="anexos">
           <Route path="new" element={<AnexoForm />} />
         </Route>

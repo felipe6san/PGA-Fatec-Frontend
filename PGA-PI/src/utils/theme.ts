@@ -1,4 +1,3 @@
-// Utilitários relacionados ao tema da aplicação
 
 /**
  * Tipo de tema
