@@ -64,4 +64,5 @@ export interface PrioridadeAcao {
   id: number; // Corresponds to prioridade_id
   grau: number;
   descricao: string;
+  tipo_gestao: string;
 } 
