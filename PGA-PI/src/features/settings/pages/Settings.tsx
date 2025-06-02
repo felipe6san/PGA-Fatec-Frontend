@@ -32,7 +32,7 @@ export const Settings = (): JSX.Element => {
 
       {/* Configurações do PGA */}
       <Card className="w-full shadow-[0px_0px_25px_#00000026] rounded-xl border-t-4 border-t-[#ae0f0a]">
-        <CardHeader className="bg-neutral-100 rounded-t-xl py-[15px] px-6">
+        <CardHeader className="bg-white-100 rounded-t-xl py-[15px] px-6">
           <div className="flex items-center">
             <Cog className="h-6 w-6 mr-2 text-[#ae0f0a]" />
             <div>

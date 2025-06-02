@@ -68,7 +68,7 @@ export const UpcomingDeadlines = ({ deadlines }: UpcomingDeadlinesProps) => {
 
   return (
     <Card className="shadow-[0px_0px_25px_#00000026] rounded-xl">
-      <CardHeader className="bg-neutral-100 rounded-t-xl py-3 md:py-[15px] px-4 md:px-6">
+      <CardHeader className="bg-white-100 rounded-t-xl py-3 md:py-[15px] px-4 md:px-6">
         <h2 className="font-normal text-black text-xl md:text-[28px]">
           Próximas Datas Importantes
         </h2>

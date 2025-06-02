@@ -1,0 +1,617 @@
+/* Configurações de Acessibilidade */
+
+/* Alto Contraste */
+.high-contrast {
+  filter: contrast(150%) brightness(1.2);
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.high-contrast input,
+.high-contrast button,
+.high-contrast select,
+.high-contrast textarea {
+  border: 2px solid #000 !important;
+}
+
+.high-contrast a {
+  text-decoration: underline !important;
+  color: #0000EE !important;
+}
+
+.high-contrast a:visited {
+  color: #551A8B !important;
+}
+
+.high-contrast button:focus,
+.high-contrast input:focus,
+.high-contrast select:focus,
+.high-contrast textarea:focus {
+  outline: 3px solid #ff0000 !important;
+  outline-offset: 2px !important;
+}
+
+/* TEMA ESCURO MELHORADO */
+.dark {
+  /* Variáveis de cores para o tema escuro */
+  --dark-bg-primary: #0f1419;
+  --dark-bg-secondary: #1a1f2e;
+  --dark-bg-tertiary: #252a3a;
+  --dark-bg-card: #1e2433;
+  --dark-bg-hover: #2a3441;
+  --dark-bg-active: #343b4a;
+  
+  --dark-text-primary: #f0f6fc;
+  --dark-text-secondary: #c9d1d9;
+  --dark-text-muted: #8b949e;
+  --dark-text-subtle: #6e7681;
+  
+  --dark-border-primary: #30363d;
+  --dark-border-secondary: #21262d;
+  --dark-border-muted: #373e47;
+  
+  --dark-accent: #ae0f0a;
+  --dark-accent-hover: #d73027;
+  --dark-accent-light: rgba(174, 15, 10, 0.1);
+  
+  --dark-success: #238636;
+  --dark-warning: #d29922;
+  --dark-error: #f85149;
+}
+
+/* Aplicação do tema escuro */
+.dark {
+  background-color: var(--dark-bg-primary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark body {
+  background-color: var(--dark-bg-primary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark header,
+.dark nav,
+.dark aside {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* Backgrounds - AJUSTES ESPECÍFICOS PARA OS PROBLEMAS DAS IMAGENS */
+.dark .bg-white {
+  background-color: var(--dark-bg-card) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--dark-bg-hover) !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: var(--dark-bg-active) !important;
+}
+
+.dark .bg-gray-300 {
+  background-color: var(--dark-bg-active) !important;
+}
+
+/* CORREÇÕES ESPECÍFICAS PARA CARDS E CONTAINERS */
+.dark [class*="bg-white"],
+.dark [class*="bg-gray-50"],
+.dark [class*="bg-gray-100"] {
+  background-color: var(--dark-bg-card) !important;
+}
+
+.dark .rounded-lg,
+.dark .rounded,
+.dark .rounded-md {
+  background-color: var(--dark-bg-card) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* Textos - MELHOR CONTRASTE */
+.dark .text-gray-900 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark .text-gray-800 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--dark-text-subtle) !important;
+}
+
+.dark .text-gray-400 {
+  color: var(--dark-text-subtle) !important;
+}
+
+.dark .text-gray-300 {
+  color: var(--dark-text-muted) !important;
+}
+
+/* BADGES E TAGS - CORES ESPECÍFICAS PARA TEMA ESCURO */
+.dark .bg-red-100 {
+  background-color: rgba(248, 81, 73, 0.2) !important;
+}
+
+.dark .bg-red-200 {
+  background-color: rgba(248, 81, 73, 0.3) !important;
+}
+
+.dark .text-red-800,
+.dark .text-red-700,
+.dark .text-red-600 {
+  color: #ffa8a3 !important;
+}
+
+.dark .bg-yellow-100 {
+  background-color: rgba(210, 153, 34, 0.2) !important;
+}
+
+.dark .bg-yellow-200 {
+  background-color: rgba(210, 153, 34, 0.3) !important;
+}
+
+.dark .text-yellow-800,
+.dark .text-yellow-700,
+.dark .text-yellow-600 {
+  color: #f2cc60 !important;
+}
+
+.dark .bg-green-100 {
+  background-color: rgba(35, 134, 54, 0.2) !important;
+}
+
+.dark .bg-green-200 {
+  background-color: rgba(35, 134, 54, 0.3) !important;
+}
+
+.dark .text-green-800,
+.dark .text-green-700,
+.dark .text-green-600 {
+  color: #7ee787 !important;
+}
+
+.dark .bg-blue-100 {
+  background-color: rgba(33, 136, 255, 0.2) !important;
+}
+
+.dark .bg-blue-200 {
+  background-color: rgba(33, 136, 255, 0.3) !important;
+}
+
+.dark .text-blue-800,
+.dark .text-blue-700,
+.dark .text-blue-600 {
+  color: #79c0ff !important;
+}
+
+/* BARRAS DE PROGRESSO */
+.dark .bg-red-500,
+.dark .bg-red-600 {
+  background-color: var(--dark-error) !important;
+}
+
+.dark .bg-green-500,
+.dark .bg-green-600 {
+  background-color: var(--dark-success) !important;
+}
+
+.dark .bg-yellow-500,
+.dark .bg-yellow-600 {
+  background-color: var(--dark-warning) !important;
+}
+
+/* Bordas */
+.dark .border-gray-200 {
+  border-color: var(--dark-border-primary) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--dark-border-muted) !important;
+}
+
+.dark .border-gray-100 {
+  border-color: var(--dark-border-secondary) !important;
+}
+
+/* Elementos de formulário */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border-primary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  background-color: var(--dark-bg-hover) !important;
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 3px var(--dark-accent-light) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--dark-text-subtle) !important;
+}
+
+/* Botões */
+.dark button:hover:not(:disabled) {
+  background-color: var(--dark-bg-hover) !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--dark-bg-hover) !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: var(--dark-bg-active) !important;
+}
+
+.dark .hover\:bg-gray-300:hover {
+  background-color: var(--dark-bg-active) !important;
+}
+
+/* CORREÇÕES ESPECÍFICAS PARA ELEMENTOS PROBLEMÁTICOS */
+
+/* Cards de data/deadline */
+.dark .deadline-card,
+.dark .date-card,
+.dark [class*="deadline"],
+.dark [class*="date"] {
+  background-color: var(--dark-bg-card) !important;
+  border-color: var(--dark-border-primary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Containers de lista */
+.dark .list-container,
+.dark .project-list,
+.dark [class*="list"] {
+  background-color: var(--dark-bg-card) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* Progress bars específicas */
+.dark .progress-bar {
+  background-color: var(--dark-bg-active) !important;
+}
+
+.dark .progress-fill {
+  background-color: var(--dark-accent) !important;
+}
+
+/* Status indicators */
+.dark .status-indicator {
+  background-color: var(--dark-bg-hover) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Sombras */
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .ring-black {
+  --tw-ring-color: var(--dark-border-primary) !important;
+}
+
+.dark .ring-opacity-5 {
+  --tw-ring-opacity: 0.15 !important;
+}
+
+/* Componentes específicos */
+.dark .card,
+.dark .project-card {
+  background-color: var(--dark-bg-card) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* Modal e overlays */
+.dark [role="dialog"],
+.dark .modal {
+  background-color: var(--dark-bg-card) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* Divisores */
+.dark hr,
+.dark .border-t {
+  border-color: var(--dark-border-primary) !important;
+}
+
+/* Links */
+.dark a {
+  color: var(--dark-accent-hover) !important;
+}
+
+.dark a:hover {
+  color: var(--dark-accent) !important;
+}
+
+/* CLASSES GENÉRICAS PARA COBRIR MAIS CASOS */
+.dark div,
+.dark section,
+.dark article,
+.dark aside {
+  /* Se o elemento tem background branco ou cinza claro, substituir */
+}
+
+.dark div[class*="bg-white"],
+.dark section[class*="bg-white"],
+.dark article[class*="bg-white"],
+.dark div[class*="bg-gray"],
+.dark section[class*="bg-gray"],
+.dark article[class*="bg-gray"] {
+  background-color: var(--dark-bg-card) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Scrollbar customizada para tema escuro */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--dark-bg-secondary);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--dark-border-muted);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-text-subtle);
+}
+
+/* Redução de Movimento */
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.reduce-motion *:before,
+.reduce-motion *:after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Focus visível para navegação por teclado */
+.accessibility-focus:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+  outline: 3px solid #ae0f0a !important;
+  outline-offset: 2px !important;
+}
+
+.dark .accessibility-focus:focus,
+.dark button:focus,
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus,
+.dark a:focus {
+  outline: 3px solid var(--dark-accent-hover) !important;
+  outline-offset: 2px !important;
+}
+
+/* Melhorias para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Classe para mostrar apenas quando tem foco (para skip links) */
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: revert;
+  margin: revert;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Tamanhos de fonte responsivos */
+@media (max-width: 768px) {
+  html[style*="font-size"] {
+    font-size: calc(var(--base-font-size, 16px) * 0.9) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html[style*="font-size"] {
+    font-size: calc(var(--base-font-size, 16px) * 0.8) !important;
+  }
+}
+
+/* Alto contraste + Modo escuro */
+.high-contrast.dark {
+  filter: contrast(200%) brightness(0.9);
+}
+
+.high-contrast.dark * {
+  border-color: var(--dark-text-secondary) !important;
+}
+
+/* Indicadores visuais melhorados */
+.accessibility-indicator {
+  position: relative;
+}
+
+.accessibility-indicator::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.accessibility-indicator:focus::after {
+  border-color: #ae0f0a;
+}
+
+.dark .accessibility-indicator:focus::after {
+  border-color: var(--dark-accent-hover);
+}
+
+/* Botões de acessibilidade */
+.accessibility-toggle {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.accessibility-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dark .accessibility-toggle:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.reduce-motion .accessibility-toggle:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Texto com melhor legibilidade */
+.high-contrast p,
+.high-contrast span,
+.high-contrast div {
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
+}
+
+/* Links com melhor visibilidade */
+.high-contrast a:hover {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+}
+
+.dark.high-contrast a:hover {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+}
+
+/* Melhorias específicas para componentes do modal */
+.dark .accessibility-help {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+.dark .accessibility-help kbd {
+  background-color: var(--dark-bg-active) !important;
+  color: var(--dark-text-secondary) !important;
+  border: 1px solid var(--dark-border-muted) !important;
+}
+
+/* Ajustes para temas do sistema */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    color-scheme: dark;
+  }
+  
+  :root:not(.light):not(.dark) .bg-white {
+    background-color: var(--dark-bg-primary) !important;
+    color: var(--dark-text-primary) !important;
+  }
+}
+
+/* Ajustes para prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  :root:not(.reduce-motion) * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Melhorias para tabelas no tema escuro */
+.dark table {
+  background-color: var(--dark-bg-card) !important;
+}
+
+.dark th {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+  border-color: var(--dark-border-primary) !important;
+}
+
+.dark td {
+  border-color: var(--dark-border-primary) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark tbody tr:hover {
+  background-color: var(--dark-bg-hover) !important;
+}
+
+/* Melhorias para listas e navegação */
+.dark ul,
+.dark ol {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark li {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Estado de loading e disabled */
+.dark .opacity-50 {
+  opacity: 0.6 !important;
+}
+
+.dark .disabled\:opacity-50:disabled {
+  opacity: 0.4 !important;
+}
+
+.dark .cursor-not-allowed {
+  cursor: not-allowed !important;
+} 
