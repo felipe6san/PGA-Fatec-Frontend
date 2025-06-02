@@ -159,7 +159,7 @@ export const Projects = (): JSX.Element => {
       </h1>
 
       <Card className="w-full shadow-[0px_0px_25px_#00000026] rounded-xl">
-        <CardHeader className="bg-neutral-100 rounded-t-xl py-[15px] px-6">
+        <CardHeader className="bg-white-100 rounded-t-xl py-[15px] px-6">
           <h2 className="font-normal text-black text-[28px]">
             Lista de Ações/Projetos ({projectsData.length})
           </h2>

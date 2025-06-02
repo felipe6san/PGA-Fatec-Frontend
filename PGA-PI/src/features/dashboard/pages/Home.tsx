@@ -11,7 +11,6 @@ import {
   Clock, 
   TrendingUp, 
   Building2, 
-  User, 
   Calendar,
   BarChart3,
   Target,
