@@ -5,6 +5,17 @@
 
 </div>
 
+<div align="center">
+
+[![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)](https://github.com/vfavretto/PGA-Fatec-Frontend/releases) 
+[![Language](https://img.shields.io/badge/Language-TypeScript%20%7C%20React-yellow.svg)](https://www.typescriptlang.org/) 
+[![Linting](https://img.shields.io/badge/Linting-eslint%20%7C%20prettier-green.svg)](https://eslint.org/) 
+[![Build Tool](https://img.shields.io/badge/Build%20Tool-Vite-blueviolet)](https://vitejs.dev/) 
+[![Framework](https://img.shields.io/badge/Framework-React-teal)](https://react.dev/) 
+[![CSS Framework](https://img.shields.io/badge/CSS%20Framework-Tailwind%20CSS-indigo)](https://tailwindcss.com/) 
+
+</div>
+
 <p align="center">
     <a href="#sobre">Sobre</a>  |  
     <a href="#mer">MER</a>  |  
