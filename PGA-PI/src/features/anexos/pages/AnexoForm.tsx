@@ -1,24 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@/hooks/useForm";
 import { BASE_ROUTE } from "@/lib/config";
-import api from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
-
-// Enum que representa os tipos de anexo
-enum AnexoProjetoUm {
-  Anexo1 = "1",
-  Anexo2 = "2",
-  Anexo3 = "3",
-  Anexo4 = "4"
-}
+import { anexoService } from '../services/anexoService';
+import { projectService } from '../../projects/services/projectService';
+import { AnexoProjetoUm, AcaoProjeto } from '@/types/api';
 
 // Interface do formulário de anexo
 interface AnexoFormData {
   item: string;
-  projeto: string;
+  projetoId: string;
   denominacaoOuEspecificacao: string;
   quantidade: number;
   precoTotalEstimado: string;
@@ -30,15 +23,14 @@ export const AnexoForm = () => {
   const anexoType = searchParams.get("type");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [projetos, setProjetos] = useState<Array<{id: string, tema: string}>>([]);
-  const { user } = useAuth();
+  const [projetos, setProjetos] = useState<AcaoProjeto[]>([]);
   
   // Validação do formulário
   const validate = (values: AnexoFormData) => {
     const errors: Partial<Record<keyof AnexoFormData, string>> = {};
     
     if (!values.item) errors.item = "Item é obrigatório";
-    if (!values.projeto) errors.projeto = "Projeto é obrigatório";
+    if (!values.projetoId) errors.projetoId = "Projeto é obrigatório";
     if (!values.denominacaoOuEspecificacao) errors.denominacaoOuEspecificacao = "Denominação/especificação é obrigatória";
     if (!values.quantidade || values.quantidade <= 0) errors.quantidade = "Quantidade deve ser maior que zero";
     if (!values.precoTotalEstimado) errors.precoTotalEstimado = "Preço total estimado é obrigatório";
@@ -49,7 +41,7 @@ export const AnexoForm = () => {
   // Formulário
   const { values, errors, handleChange, handleBlur, setFieldValue } = useForm<AnexoFormData>({
     item: "",
-    projeto: "",
+    projetoId: "",
     denominacaoOuEspecificacao: "",
     quantidade: 1,
     precoTotalEstimado: ""
@@ -59,16 +51,8 @@ export const AnexoForm = () => {
   useEffect(() => {
     const fetchProjetos = async () => {
       try {
-        // Em produção, substituir por chamada à API real
-        // const response = await api.get('/projetos');
-        // setProjetos(response.data);
-        
-        // Mock para desenvolvimento
-        setProjetos([
-          { id: "1", tema: "Modernização dos Laboratórios de Informática" },
-          { id: "2", tema: "Implementação de Programa de Mentoria Estudantil" },
-          { id: "3", tema: "Melhoria da Infraestrutura de Redes" },
-        ]);
+        const projetos = await projectService.getAll();
+        setProjetos(projetos);
       } catch (error) {
         console.error("Erro ao carregar projetos:", error);
         setErrorMessage("Não foi possível carregar a lista de projetos.");
@@ -130,14 +114,15 @@ export const AnexoForm = () => {
         .replace(",", ".");
       
       const anexoData = {
-        ...values,
+        item: values.item,
+        projetoId: values.projetoId,
+        denominacaoOuEspecificacao: values.denominacaoOuEspecificacao,
+        quantidade: values.quantidade,
         precoTotalEstimado: parseFloat(precoValue),
-        flag: anexoType // Envia o tipo de anexo automaticamente
+        flag: anexoType as AnexoProjetoUm
       };
       
-      // Em produção, substituir por chamada à API real
-      // await api.post('/anexos', anexoData);
-      console.log("Dados do anexo sendo enviados:", anexoData);
+      await anexoService.create(anexoData);
       
       // Redirecionar após salvamento bem-sucedido
       navigate(`${BASE_ROUTE}projects/list`);
@@ -181,30 +166,30 @@ export const AnexoForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label 
-                  htmlFor="projeto" 
+                  htmlFor="projetoId" 
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Projeto Vinculado:
                 </label>
                 <select
-                  id="projeto"
-                  name="projeto"
-                  value={values.projeto}
+                  id="projetoId"
+                  name="projetoId"
+                  value={values.projetoId}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full p-3 border rounded-lg focus:ring-2 ${
-                    errors.projeto ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
+                    errors.projetoId ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
                   }`}
                 >
                   <option value="">Selecione um projeto</option>
                   {projetos.map(projeto => (
-                    <option key={projeto.id} value={projeto.id}>
+                    <option key={projeto.acao_projeto_id} value={projeto.acao_projeto_id.toString()}>
                       {projeto.tema}
                     </option>
                   ))}
                 </select>
-                {errors.projeto && (
-                  <p className="mt-1 text-sm text-red-600">{errors.projeto}</p>
+                {errors.projetoId && (
+                  <p className="mt-1 text-sm text-red-600">{errors.projetoId}</p>
                 )}
               </div>
 

@@ -1,0 +1,169 @@
+// Enums do backend
+export enum TipoUsuario {
+  ADMINISTRADOR = 'ADMINISTRADOR',
+  GESTOR = 'GESTOR',
+  DOCENTE = 'DOCENTE',
+  FUNCIONARIO = 'FUNCIONARIO'
+}
+
+export enum AnexoProjetoUm {
+  ANEXO1 = '1',
+  ANEXO2 = '2', 
+  ANEXO3 = '3',
+  ANEXO4 = '4'
+}
+
+export enum StatusVerificacao {
+  PENDENTE = 'Pendente',
+  OK = 'OK',
+  REQUER_ACAO = 'RequerAcao'
+}
+
+// Interfaces das entidades
+export interface User {
+  pessoa_id: number;
+  nome: string;
+  email?: string;
+  nome_usuario?: string;
+  tipo_usuario: TipoUsuario;
+  createdAt?: Date;
+}
+
+export interface EixoTematico {
+  eixo_id: number;
+  numero: number;
+  nome: string;
+  descricao?: string;
+}
+
+export interface PrioridadeAcao {
+  prioridade_id: number;
+  grau: number;
+  descricao: string;
+  tipo_gestao: string;
+  detalhes?: string;
+}
+
+export interface Tema {
+  tema_id: number;
+  tema_num: number;
+  eixo_id: number;
+  descricao: string;
+}
+
+export interface AcaoProjeto {
+  acao_projeto_id: number;
+  pga_id: number;
+  eixo_id: number;
+  prioridade_id: number;
+  tema: string;
+  o_que_sera_feito: string;
+  por_que_sera_feito: string;
+  data_inicio?: Date;
+  data_final?: Date;
+  objetivos_institucionais_referenciados?: string;
+  obrigatorio_inclusao: boolean;
+  obrigatorio_sustentabilidade: boolean;
+  
+  // Relacionamentos
+  eixo?: EixoTematico;
+  prioridade?: PrioridadeAcao;
+  aquisicoes?: Attachment1[];
+  etapas?: any[];
+  pessoas?: any[];
+}
+
+export interface Attachment1 {
+  id: string;
+  item: string;
+  projeto?: AcaoProjeto;
+  projetoId?: string;
+  denominacaoOuEspecificacao: string;
+  quantidade: number;
+  precoTotalEstimado: number;
+  flag: AnexoProjetoUm;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface EntregavelLinkSei {
+  entregavel_id: number;
+  entregavel_numero: string;
+  descricao: string;
+  detalhes?: string;
+}
+
+export interface SituacaoProblema {
+  situacao_id: number;
+  pga_id: number;
+  descricao: string;
+  fonte?: string;
+}
+
+export interface TipoVinculoHAE {
+  id: number;
+  sigla: string;
+  descricao: string;
+  detalhes?: string;
+}
+
+// DTOs para criação/atualização
+export interface CreateAttachment1Dto {
+  item: string;
+  projetoId: string;
+  denominacaoOuEspecificacao: string;
+  quantidade: number;
+  precoTotalEstimado: number;
+  flag: AnexoProjetoUm;
+}
+
+export interface UpdateAttachment1Dto {
+  item?: string;
+  projetoId?: string;
+  denominacaoOuEspecificacao?: string;
+  quantidade?: number;
+  precoTotalEstimado?: number;
+  flag?: AnexoProjetoUm;
+}
+
+export interface CreateProject1Dto {
+  pga_id: number;
+  eixo_id: number;
+  prioridade_id: number;
+  tema: string;
+  o_que_sera_feito: string;
+  por_que_sera_feito: string;
+  data_inicio?: string;
+  data_final?: string;
+  objetivos_institucionais_referenciados?: string;
+  obrigatorio_inclusao: boolean;
+  obrigatorio_sustentabilidade: boolean;
+}
+
+export interface UpdateProject1Dto {
+  pga_id?: number;
+  eixo_id?: number;
+  prioridade_id?: number;
+  tema?: string;
+  o_que_sera_feito?: string;
+  por_que_sera_feito?: string;
+  data_inicio?: string;
+  data_final?: string;
+  objetivos_institucionais_referenciados?: string;
+  obrigatorio_inclusao?: boolean;
+  obrigatorio_sustentabilidade?: boolean;
+}
+
+// Tipos de resposta da API
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  status?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+} 
