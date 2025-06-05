@@ -19,7 +19,6 @@ export enum StatusVerificacao {
   REQUER_ACAO = 'RequerAcao'
 }
 
-// Interfaces das entidades
 export interface User {
   pessoa_id: number;
   nome: string;
