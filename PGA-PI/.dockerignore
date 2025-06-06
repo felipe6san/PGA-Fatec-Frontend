@@ -9,4 +9,6 @@ README.md
 coverage
 .vscode
 .DS_Store
-*.log 
+*.log
+test-docker.sh
+docker-compose.yml 

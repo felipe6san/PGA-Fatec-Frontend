@@ -54,9 +54,41 @@ jobs:
 
     - name: Test Docker image
       run: |
+        # Start container
         docker run -d -p 8080:80 --name test-container pga-frontend:${{ github.sha }}
-        sleep 10
-        curl -f http://localhost:8080/health || exit 1
+        
+        # Wait for container to be ready with retry logic
+        echo "Waiting for container to start..."
+        for i in {1..30}; do
+          if docker ps | grep -q test-container && curl -f http://localhost:8080/health >/dev/null 2>&1; then
+            echo "Container is ready!"
+            break
+          fi
+          echo "Attempt $i: Container not ready yet, waiting..."
+          sleep 2
+        done
+        
+        # Final health check
+        echo "Final health check..."
+        curl -f http://localhost:8080/health || {
+          echo "Health check failed. Container logs:"
+          docker logs test-container
+          docker stop test-container
+          docker rm test-container
+          exit 1
+        }
+        
+        # Test main page
+        echo "Testing main page..."
+        curl -f http://localhost:8080/ >/dev/null || {
+          echo "Main page test failed. Container logs:"
+          docker logs test-container
+          docker stop test-container
+          docker rm test-container
+          exit 1
+        }
+        
+        echo "All tests passed!"
         docker stop test-container
         docker rm test-container
       working-directory: ./PGA-PI
