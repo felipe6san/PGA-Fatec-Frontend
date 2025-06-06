@@ -23,6 +23,16 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GH_TOKEN }}
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      if: github.ref == 'refs/heads/main'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
@@ -36,6 +46,19 @@ jobs:
       run: npm run build
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      working-directory: ./PGA-PI
+
+    - name: Build Docker image
+      run: docker build -t pga-frontend:${{ github.sha }} .
+      working-directory: ./PGA-PI
+
+    - name: Test Docker image
+      run: |
+        docker run -d -p 8080:80 --name test-container pga-frontend:${{ github.sha }}
+        sleep 10
+        curl -f http://localhost:8080/health || exit 1
+        docker stop test-container
+        docker rm test-container
       working-directory: ./PGA-PI
 
     # Versionamento Semântico
@@ -168,6 +191,14 @@ jobs:
         elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
           git push origin develop
         fi
+
+    - name: Push Docker image to Docker Hub
+      if: github.ref == 'refs/heads/main' && env.new_version != ''
+      run: |
+        docker tag pga-frontend:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/pga-frontend:${{ env.new_version }}
+        docker tag pga-frontend:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/pga-frontend:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/pga-frontend:${{ env.new_version }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/pga-frontend:latest
 
     # Deploy to GitHub Pages (only for main branch)
     - name: Deploy to GitHub Pages
