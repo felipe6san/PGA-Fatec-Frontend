@@ -1,4 +1,5 @@
 @import "../tailwind.css";
+@import "./styles/accessibility.css";
 
 @tailwind base;
 @tailwind components;
@@ -7,12 +8,32 @@
 @layer base {
   body {
     @apply bg-gray-50;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Tema escuro base */
+  .dark body {
+    background-color: #0f1419 !important;
+    color: #f0f6fc !important;
+  }
+
+  /* Transições suaves para mudança de tema */
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+
+  /* Desabilitar transições quando redução de movimento está ativa */
+  .reduce-motion * {
+    transition: none !important;
   }
 }
 
 @layer components {
   .card {
     @apply bg-white rounded-lg shadow-sm p-6;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
   }
   
   .page-title {
@@ -21,5 +42,131 @@
 
   .project-card {
     @apply bg-white rounded-lg shadow-sm p-6 border border-gray-200;
+    transition: all 0.2s ease;
+  }
+
+  /* Versões do tema escuro para componentes */
+  .dark .card {
+    background-color: #1e2433 !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .dark .project-card {
+    background-color: #1e2433 !important;
+    border-color: #30363d !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .dark .project-card:hover {
+    background-color: #252a3a !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* CORREÇÕES ESPECÍFICAS PARA OS ELEMENTOS DAS IMAGENS */
+  
+  /* Cards de deadline/próximas datas */
+  .dark .bg-red-50,
+  .dark .bg-red-100 {
+    background-color: rgba(248, 81, 73, 0.15) !important;
+    color: #ffa8a3 !important;
+  }
+
+  .dark .bg-yellow-50,
+  .dark .bg-yellow-100 {
+    background-color: rgba(210, 153, 34, 0.15) !important;
+    color: #f2cc60 !important;
+  }
+
+  .dark .bg-green-50,
+  .dark .bg-green-100 {
+    background-color: rgba(35, 134, 54, 0.15) !important;
+    color: #7ee787 !important;
+  }
+
+  /* Badges de status */
+  .dark .badge {
+    background-color: #252a3a !important;
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+  }
+
+  /* Progress bars */
+  .dark .progress-bar-bg {
+    background-color: #252a3a !important;
+  }
+
+  .dark .progress-bar-fill {
+    background-color: #f85149 !important;
+  }
+}
+
+@layer utilities {
+  /* Utilities específicas para acessibilidade */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+
+  .dark .focus-ring {
+    @apply focus:ring-red-400 focus:ring-offset-gray-800;
+  }
+
+  /* Skip link styling */
+  .skip-link {
+    @apply absolute -top-40 left-6 bg-red-600 text-white px-4 py-2 rounded-lg z-50 focus:top-6;
+    transition: top 0.2s ease;
+  }
+
+  /* SOBRESCRITAS ESPECÍFICAS PARA TEMA ESCURO */
+  
+  /* Força background escuro em todos os containers principais */
+  .dark [class*="container"],
+  .dark [class*="wrapper"],
+  .dark [class*="section"] {
+    background-color: #1e2433 !important;
+    color: #f0f6fc !important;
+  }
+
+  /* Força texto claro em todos os textos */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #f0f6fc !important;
+  }
+
+  .dark p, .dark span, .dark div {
+    color: #c9d1d9 !important;
+  }
+
+  /* Força cores específicas para badges comuns */
+  .dark .text-red-500,
+  .dark .text-red-600,
+  .dark .text-red-700,
+  .dark .text-red-800 {
+    color: #ffa8a3 !important;
+  }
+
+  .dark .text-yellow-500,
+  .dark .text-yellow-600,
+  .dark .text-yellow-700,
+  .dark .text-yellow-800 {
+    color: #f2cc60 !important;
+  }
+
+  .dark .text-green-500,
+  .dark .text-green-600,
+  .dark .text-green-700,
+  .dark .text-green-800 {
+    color: #7ee787 !important;
+  }
+
+  /* Força backgrounds escuros em elementos Tailwind comuns */
+  .dark .bg-white,
+  .dark .bg-gray-50,
+  .dark .bg-gray-100,
+  .dark .bg-gray-200 {
+    background-color: #1e2433 !important;
+  }
+
+  .dark .bg-gray-300,
+  .dark .bg-gray-400 {
+    background-color: #252a3a !important;
   }
 }
