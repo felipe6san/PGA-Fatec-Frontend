@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -6,73 +6,196 @@ import {
 } from "../../../components/ui/table";
 import { Input } from "../../../components/ui/input";
 import { Card } from "../../../components/ui/card";
-import { Plus, Search, AlertCircle, FileText } from "lucide-react";
+import { Plus, Search, AlertCircle, FileText, Loader2 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
-
-interface Entregavel {
-  id: number;
-  numero: string;  // Campo adicionado para o número do entregável
-  descricao: string;
-  detalhes?: string;
-}
+import { entregaveisService } from "../services/entregaveisService";
+import { EntregavelLinkSei } from "@/types/api";
+import { useToast } from "../../../components/ui/use-toast";
+import { Modal } from "../../../components/ui/modal";
+import { Trash2, AlertTriangle } from "lucide-react";
 
 export const EntregaveisConfig = () => {
-  const [entregaveis, setEntregaveis] = useState<Entregavel[]>([
-    { id: 1, numero: "01", descricao: "Solicitação Material Permanente", detalhes: "" },
-    { id: 2, numero: "02", descricao: "Solicitação Material Consumo", detalhes: "" },
-    { id: 3, numero: "03", descricao: "Solicitação Reagente Químico", detalhes: "" },
-    { id: 4, numero: "04", descricao: "Solicitação Livros", detalhes: "" },
-    { id: 5, numero: "05", descricao: "Solicitação de Software", detalhes: "" },
-    { id: 6, numero: "06", descricao: "Portaria", detalhes: "" },
-    { id: 7, numero: "07", descricao: "Edital", detalhes: "" },
-    { id: 8, numero: "08", descricao: "Parecer", detalhes: "" },
-    { id: 9, numero: "09", descricao: "Memorando", detalhes: "" },
-    { id: 10, numero: "99", descricao: "Outros", detalhes: "" },
-  ]);
+  const [entregaveis, setEntregaveis] = useState<EntregavelLinkSei[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingAdd, setLoadingAdd] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const [novoEntregavel, setNovoEntregavel] = useState<Entregavel>({ 
-    id: 0, 
-    numero: "", 
+  const [novoEntregavel, setNovoEntregavel] = useState<{ 
+    entregavel_numero: string; 
+    descricao: string;
+    detalhes: string;
+  }>({ 
+    entregavel_numero: "", 
     descricao: "",
     detalhes: ""
   });
   
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
-  const handleAddEntregavel = () => {
-    if (!novoEntregavel.numero || !novoEntregavel.descricao) {
-      alert("Preencha o número e a descrição do entregável");
+  // Carrega dados iniciais
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const entregaveisData = await entregaveisService.getAll();
+      setEntregaveis(entregaveisData);
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+      setError('Erro ao carregar dados. Verifique se o backend está rodando.');
+      
+      // Fallback para dados mock em caso de erro
+      setEntregaveis([
+        { entregavel_id: 1, entregavel_numero: "01", descricao: "Solicitação Material Permanente", detalhes: "" },
+        { entregavel_id: 2, entregavel_numero: "02", descricao: "Solicitação Material Consumo", detalhes: "" },
+        { entregavel_id: 3, entregavel_numero: "03", descricao: "Solicitação Reagente Químico", detalhes: "" },
+        { entregavel_id: 4, entregavel_numero: "04", descricao: "Solicitação Livros", detalhes: "" },
+        { entregavel_id: 5, entregavel_numero: "05", descricao: "Solicitação de Software", detalhes: "" },
+        { entregavel_id: 6, entregavel_numero: "06", descricao: "Portaria", detalhes: "" },
+        { entregavel_id: 7, entregavel_numero: "07", descricao: "Edital", detalhes: "" },
+        { entregavel_id: 8, entregavel_numero: "08", descricao: "Parecer", detalhes: "" },
+        { entregavel_id: 9, entregavel_numero: "09", descricao: "Memorando", detalhes: "" },
+        { entregavel_id: 10, entregavel_numero: "99", descricao: "Outros", detalhes: "" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddEntregavel = async () => {
+    if (!novoEntregavel.entregavel_numero || !novoEntregavel.descricao) {
+      toast({
+        variant: "destructive",
+        title: "Campos obrigatórios",
+        description: "Preencha o número e a descrição do entregável",
+      });
       return;
     }
 
-    if (entregaveis.some(e => e.numero === novoEntregavel.numero)) {
-      alert(`Já existe um entregável com o número ${novoEntregavel.numero}`);
+    // Verifica se já existe um entregável com o mesmo número
+    if (entregaveis.some(e => e.entregavel_numero === novoEntregavel.entregavel_numero)) {
+      toast({
+        variant: "destructive",
+        title: "Número já existe",
+        description: `Já existe um entregável com o número ${novoEntregavel.entregavel_numero}`,
+      });
       return;
     }
 
-    const id = entregaveis.length > 0 ? Math.max(...entregaveis.map(e => e.id)) + 1 : 1;
-    setEntregaveis([...entregaveis, { ...novoEntregavel, id }]);
-    setNovoEntregavel({ id: 0, numero: "", descricao: "", detalhes: "" });
+    try {
+      setLoadingAdd(true);
+      
+      const novoEntregavelCreated = await entregaveisService.create({
+        entregavel_numero: novoEntregavel.entregavel_numero,
+        descricao: novoEntregavel.descricao,
+        detalhes: novoEntregavel.detalhes
+      });
+      
+      setEntregaveis([...entregaveis, novoEntregavelCreated]);
+      setNovoEntregavel({ entregavel_numero: "", descricao: "", detalhes: "" });
+      
+      toast({
+        variant: "success",
+        title: "Entregável adicionado!",
+        description: `"${novoEntregavel.descricao}" foi adicionado com sucesso`,
+      });
+      
+    } catch (err) {
+      console.error('Erro ao adicionar entregável:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao adicionar",
+        description: "Não foi possível adicionar o entregável. Tente novamente.",
+      });
+    } finally {
+      setLoadingAdd(false);
+    }
   };
 
-  const handleRemoveEntregavel = (id: number) => {
-    setEntregaveis(entregaveis.filter(e => e.id !== id));
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [entregavelToDelete, setEntregavelToDelete] = useState<EntregavelLinkSei | null>(null);
+  const [loadingRemove, setLoadingRemove] = useState(false);
+
+  const handleRemoveEntregavel = async (id: number) => {
+    const entregavel = entregaveis.find(e => e.entregavel_id === id);
+    setEntregavelToDelete(entregavel || null);
+    setShowDeleteModal(true);
   };
 
-  const handleUpdateDetalhes = (id: number, detalhes: string) => {
-    setEntregaveis(entregaveis.map(entregavel => 
-      entregavel.id === id ? { ...entregavel, detalhes } : entregavel
-    ));
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setEntregavelToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!entregavelToDelete) return;
+    
+    try {
+      setLoadingRemove(true);
+      
+      await entregaveisService.delete(entregavelToDelete.entregavel_id);
+      setEntregaveis(entregaveis.filter(e => e.entregavel_id !== entregavelToDelete.entregavel_id));
+      
+      toast({
+        variant: "success",
+        title: "Entregável removido",
+        description: `"${entregavelToDelete.descricao}" foi removido com sucesso`,
+      });
+      
+      handleCloseDeleteModal();
+    } catch (err) {
+      console.error('Erro ao remover entregável:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao remover",
+        description: "Não foi possível remover o entregável. Tente novamente.",
+      });
+    } finally {
+      setLoadingRemove(false);
+    }
+  };
+
+  const handleUpdateDetalhes = async (id: number, detalhes: string) => {
+    try {
+      const entregavel = entregaveis.find(e => e.entregavel_id === id);
+      if (!entregavel) return;
+
+      await entregaveisService.update(id, { detalhes });
+      
+      setEntregaveis(entregaveis.map(e => 
+        e.entregavel_id === id ? { ...e, detalhes } : e
+      ));
+    } catch (err) {
+      console.error('Erro ao atualizar detalhes:', err);
+    }
   };
   
   const filteredEntregaveis = entregaveis.filter(entregavel => 
-    entregavel.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entregavel.entregavel_numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
     entregavel.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (entregavel.detalhes && entregavel.detalhes.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin text-[#ae0f0a]" />
+          <span className="text-lg text-gray-600">Carregando entregáveis...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header com indicador de erro */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -82,6 +205,12 @@ export const EntregaveisConfig = () => {
           <p className="text-sm text-gray-500 mt-1">
             Configure os tipos de entregáveis que podem ser anexados aos projetos
           </p>
+          {error && (
+            <div className="flex items-center mt-2 text-amber-600">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-500">{filteredEntregaveis.length} registros</span>
@@ -103,9 +232,10 @@ export const EntregaveisConfig = () => {
             <Input
               id="numero"
               placeholder="Ex: 10"
-              value={novoEntregavel.numero}
-              onChange={e => setNovoEntregavel({ ...novoEntregavel, numero: e.target.value })}
+              value={novoEntregavel.entregavel_numero}
+              onChange={e => setNovoEntregavel({ ...novoEntregavel, entregavel_numero: e.target.value })}
               className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
             />
           </div>
           
@@ -119,6 +249,7 @@ export const EntregaveisConfig = () => {
               value={novoEntregavel.descricao}
               onChange={e => setNovoEntregavel({ ...novoEntregavel, descricao: e.target.value })}
               className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
             />
           </div>
         </div>
@@ -134,6 +265,7 @@ export const EntregaveisConfig = () => {
             onChange={e => setNovoEntregavel({ ...novoEntregavel, detalhes: e.target.value })}
             className="w-full resize-y bg-white border-gray-300"
             rows={2}
+            disabled={loadingAdd}
           />
         </div>
         
@@ -141,8 +273,19 @@ export const EntregaveisConfig = () => {
           <Button 
             onClick={handleAddEntregavel} 
             className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center"
+            disabled={loadingAdd}
           >
-            <Plus className="h-4 w-4 mr-1" /> Adicionar Entregável
+            {loadingAdd ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                Adicionando...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar Entregável
+              </>
+            )}
           </Button>
         </div>
       </Card>
@@ -176,12 +319,12 @@ export const EntregaveisConfig = () => {
               </TableHeader>
               <TableBody>
                 {filteredEntregaveis
-                  .sort((a, b) => a.numero.localeCompare(b.numero))
+                  .sort((a, b) => a.entregavel_numero.localeCompare(b.entregavel_numero))
                   .map(entregavel => (
-                    <TableRow key={entregavel.id} className="hover:bg-gray-50">
+                    <TableRow key={entregavel.entregavel_id} className="hover:bg-gray-50">
                       <TableCell>
                         <Badge variant="outline" className="bg-gray-100 border-gray-300 text-gray-800 font-semibold">
-                          {entregavel.numero}
+                          {entregavel.entregavel_numero}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium text-gray-700">
@@ -190,7 +333,7 @@ export const EntregaveisConfig = () => {
                       <TableCell>
                         <textarea
                           value={entregavel.detalhes || ""}
-                          onChange={(e) => handleUpdateDetalhes(entregavel.id, e.target.value)}
+                          onChange={(e) => handleUpdateDetalhes(entregavel.entregavel_id, e.target.value)}
                           placeholder="Adicione detalhes sobre este entregável..."
                           className="w-full resize-none min-h-[50px] text-sm bg-white border-gray-200"
                           rows={1}
@@ -200,7 +343,7 @@ export const EntregaveisConfig = () => {
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={() => handleRemoveEntregavel(entregavel.id)}
+                          onClick={() => handleRemoveEntregavel(entregavel.entregavel_id)}
                           className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
                         >
                           Remover
@@ -222,6 +365,76 @@ export const EntregaveisConfig = () => {
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        title="Confirmar Remoção"
+        className="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="bg-red-100 rounded-full p-3">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Esta ação não pode ser desfeita. O entregável será removido permanentemente do sistema.
+            </p>
+          </div>
+          
+          {entregavelToDelete && (
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <Badge variant="outline" className="bg-gray-100 border-gray-300 text-gray-800 font-semibold">
+                  {entregavelToDelete.entregavel_numero}
+                </Badge>
+                <div>
+                  <p className="font-medium text-gray-900">{entregavelToDelete.descricao}</p>
+                  <p className="text-sm text-gray-500">Entregável</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-900">
+              Tem certeza que deseja remover este entregável?
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={handleCloseDeleteModal}
+              disabled={loadingRemove}
+              className="min-w-[100px]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={loadingRemove}
+              className="bg-[#ae0f0a] hover:bg-[#910c08] min-w-[100px]"
+            >
+              {loadingRemove ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removendo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

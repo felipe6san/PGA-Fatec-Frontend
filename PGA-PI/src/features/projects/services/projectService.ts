@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/config';
 import { 
   AcaoProjeto, 
   CreateProject1Dto, 
@@ -10,52 +11,52 @@ export class ProjectService {
 
   async getAll(): Promise<AcaoProjeto[]> {
     try {
-      const response = await api.get(this.baseUrl);
+      const response = await api.get<AcaoProjeto[]>(API_ENDPOINTS.PROJECTS);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar projetos:', error);
-      throw error;
+      throw new Error('Falha ao carregar projetos');
     }
   }
 
   async getById(id: number): Promise<AcaoProjeto> {
     try {
-      const response = await api.get(`${this.baseUrl}/${id}`);
+      const response = await api.get<AcaoProjeto>(`${API_ENDPOINTS.PROJECTS}/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao buscar projeto ${id}:`, error);
-      throw error;
+      console.error('Erro ao buscar projeto:', error);
+      throw new Error('Falha ao carregar projeto');
     }
   }
 
   async create(data: CreateProject1Dto): Promise<AcaoProjeto> {
     try {
-      const response = await api.post(this.baseUrl, data);
+      const response = await api.post<AcaoProjeto>(API_ENDPOINTS.PROJECTS, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar projeto:', error);
-      throw error;
+      throw new Error('Falha ao criar projeto');
     }
   }
 
   async update(id: number, data: UpdateProject1Dto): Promise<AcaoProjeto> {
     try {
-      const response = await api.put(`${this.baseUrl}/${id}`, data);
+      const response = await api.put<AcaoProjeto>(`${API_ENDPOINTS.PROJECTS}/${id}`, data);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao atualizar projeto ${id}:`, error);
-      throw error;
+      console.error('Erro ao atualizar projeto:', error);
+      throw new Error('Falha ao atualizar projeto');
     }
   }
 
   async delete(id: number): Promise<void> {
     try {
-      await api.delete(`${this.baseUrl}/${id}`);
+      await api.delete(`${API_ENDPOINTS.PROJECTS}/${id}`);
     } catch (error) {
-      console.error(`Erro ao deletar projeto ${id}:`, error);
-      throw error;
+      console.error('Erro ao deletar projeto:', error);
+      throw new Error('Falha ao deletar projeto');
     }
   }
 }
 
-export const projectService = new ProjectService(); 
+export const projectService = new ProjectService();

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -6,81 +6,179 @@ import {
 } from "../../../components/ui/table";
 import { Input } from "../../../components/ui/input";
 import { Card } from "../../../components/ui/card";
-import { Plus, Search, AlertCircle, AlertTriangle } from "lucide-react";
+import { Plus, Search, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
-
-interface SituacaoProblema {
-  id: number;
-  codigo: string;
-  descricao: string;
-  fonte: string;
-}
+import { situacoesService } from "../services/situacoesService";
+import { SituacaoProblema } from "@/types/api";
+import { toast } from "@/components/ui/use-toast";
+import { Modal } from "../../../components/ui/modal";
+import { Trash2 } from "lucide-react";
 
 export const SituacoesConfig = () => {
-  const [situacoes, setSituacoes] = useState<SituacaoProblema[]>([
-    {
-      id: 1,
-      codigo: "cat 0.1.01",
-      descricao: "Metodologia de ensino, desempenho de alunos, evasão",
-      fonte: "CPA"
-    },
-    {
-      id: 2,
-      codigo: "cat 0.1.02",
-      descricao: "Manutenção e conservação predial",
-      fonte: "Relatório Infraestrutura"
-    },
-    {
-      id: 3,
-      codigo: "cat 0.1.03",
-      descricao: "Infraestrutura predial (espaços, sistemas)",
-      fonte: "CEE"
-    },
-    {
-      id: 4,
-      codigo: "cat 0.1.04",
-      descricao: "Infraestrutura laboratorial e ambientes de ensino",
-      fonte: ""
-    },
-  ]);
+  const [situacoes, setSituacoes] = useState<SituacaoProblema[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingAdd, setLoadingAdd] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const [novaSituacao, setNovaSituacao] = useState<SituacaoProblema>({ 
-    id: 0, 
-    codigo: "", 
+  const [novaSituacao, setNovaSituacao] = useState<{ 
+    pga_id: number;
+    descricao: string;
+    fonte: string;
+  }>({ 
+    pga_id: 1, // Valor padrão
     descricao: "",
     fonte: ""
   });
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleAddSituacao = () => {
-    if (!novaSituacao.codigo || !novaSituacao.descricao) {
-      alert("Preencha o código e a descrição da situação problema");
+  // Carrega dados iniciais
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const situacoesData = await situacoesService.getAll();
+      setSituacoes(situacoesData);
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+      setError('Erro ao carregar dados. Verifique se o backend está rodando.');
+      
+      // Fallback para dados mock em caso de erro
+      setSituacoes([
+        {
+          situacao_id: 1,
+          pga_id: 1,
+          descricao: "Metodologia de ensino, desempenho de alunos, evasão",
+          fonte: "CPA"
+        },
+        {
+          situacao_id: 2,
+          pga_id: 1,
+          descricao: "Manutenção e conservação predial",
+          fonte: "Relatório Infraestrutura"
+        },
+        {
+          situacao_id: 3,
+          pga_id: 1,
+          descricao: "Infraestrutura predial (espaços, sistemas)",
+          fonte: "CEE"
+        },
+        {
+          situacao_id: 4,
+          pga_id: 1,
+          descricao: "Infraestrutura laboratorial e ambientes de ensino",
+          fonte: ""
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddSituacao = async () => {
+    if (!novaSituacao.descricao) {
+      alert("Preencha a descrição da situação problema");
       return;
     }
 
-    if (situacoes.some(s => s.codigo === novaSituacao.codigo)) {
-      alert(`Já existe uma situação problema com o código ${novaSituacao.codigo}`);
-      return;
+    try {
+      setLoadingAdd(true);
+      
+      const novaSituacaoCreated = await situacoesService.create({
+        pga_id: novaSituacao.pga_id,
+        descricao: novaSituacao.descricao,
+        fonte: novaSituacao.fonte
+      });
+      
+      setSituacoes([...situacoes, novaSituacaoCreated]);
+      setNovaSituacao({ pga_id: 1, descricao: "", fonte: "" });
+      
+      toast({
+        variant: "success",
+        title: "Sucesso!",
+        description: "Situação problema adicionada com sucesso.",
+      });
+      
+    } catch (err) {
+      console.error('Erro ao adicionar situação:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao adicionar situação",
+        description: "Ocorreu um erro ao adicionar a situação problema. Tente novamente.",
+      });
+    } finally {
+      setLoadingAdd(false);
     }
-
-    const id = situacoes.length > 0 ? Math.max(...situacoes.map(s => s.id)) + 1 : 1;
-    setSituacoes([...situacoes, { ...novaSituacao, id }]);
-    setNovaSituacao({ id: 0, codigo: "", descricao: "", fonte: "" });
   };
 
-  const handleRemoveSituacao = (id: number) => {
-    setSituacoes(situacoes.filter(s => s.id !== id));
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [situacaoToDelete, setSituacaoToDelete] = useState<SituacaoProblema | null>(null);
+  const [loadingRemove, setLoadingRemove] = useState(false);
+
+  const handleRemoveSituacao = async (id: number) => {
+    const situacao = situacoes.find(s => s.situacao_id === id);
+    setSituacaoToDelete(situacao || null);
+    setShowDeleteModal(true);
   };
-  
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setSituacaoToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!situacaoToDelete) return;
+    
+    try {
+      setLoadingRemove(true);
+      
+      await situacoesService.delete(situacaoToDelete.situacao_id);
+      setSituacoes(situacoes.filter(s => s.situacao_id !== situacaoToDelete.situacao_id));
+      
+      toast({
+        variant: "success",
+        title: "Situação removida",
+        description: `"${situacaoToDelete.descricao}" foi removida com sucesso`,
+      });
+      
+      handleCloseDeleteModal();
+    } catch (err) {
+      console.error('Erro ao remover situação:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao remover",
+        description: "Não foi possível remover a situação. Tente novamente.",
+      });
+    } finally {
+      setLoadingRemove(false);
+    }
+  };
+
   const filteredSituacoes = situacoes.filter(situacao => 
-    situacao.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     situacao.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    situacao.fonte.toLowerCase().includes(searchTerm.toLowerCase())
+    situacao.fonte?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin text-[#ae0f0a]" />
+          <span className="text-lg text-gray-600">Carregando situações problema...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header com indicador de erro */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -88,8 +186,14 @@ export const SituacoesConfig = () => {
             Gerenciar Situações Problema
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Configure as situações problema identificadas que podem ser associadas aos projetos
+            Configure as situações problema que originam os projetos do PGA
           </p>
+          {error && (
+            <div className="flex items-center mt-2 text-amber-600">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-500">{filteredSituacoes.length} registros</span>
@@ -105,15 +209,16 @@ export const SituacoesConfig = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label htmlFor="codigo" className="block text-sm font-medium text-gray-700 mb-1">
-              Código
+            <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
+              Descrição da Situação
             </label>
             <Input
-              id="codigo"
-              placeholder="Ex: cat 0.1.05"
-              value={novaSituacao.codigo}
-              onChange={e => setNovaSituacao({ ...novaSituacao, codigo: e.target.value })}
+              id="descricao"
+              placeholder="Ex: Metodologia de ensino, desempenho de alunos, evasão"
+              value={novaSituacao.descricao}
+              onChange={e => setNovaSituacao({ ...novaSituacao, descricao: e.target.value })}
               className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
             />
           </div>
           
@@ -127,30 +232,28 @@ export const SituacoesConfig = () => {
               value={novaSituacao.fonte}
               onChange={e => setNovaSituacao({ ...novaSituacao, fonte: e.target.value })}
               className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
             />
           </div>
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
-            Descrição da Situação Problema
-          </label>
-          <textarea
-            id="descricao"
-            placeholder="Descreva a situação problema..."
-            value={novaSituacao.descricao}
-            onChange={e => setNovaSituacao({ ...novaSituacao, descricao: e.target.value })}
-            className="w-full resize-y bg-white border-gray-300"
-            rows={2}
-          />
         </div>
         
         <div className="flex justify-end">
           <Button 
             onClick={handleAddSituacao} 
             className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center"
+            disabled={loadingAdd}
           >
-            <Plus className="h-4 w-4 mr-1" /> Adicionar Situação
+            {loadingAdd ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                Adicionando...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar Situação
+              </>
+            )}
           </Button>
         </div>
       </Card>
@@ -176,40 +279,38 @@ export const SituacoesConfig = () => {
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow>
-                  <TableHead className="w-28">Código</TableHead>
                   <TableHead>Descrição</TableHead>
-                  <TableHead>Fonte</TableHead>
+                  <TableHead className="w-40">Fonte</TableHead>
                   <TableHead className="w-24 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSituacoes
-                  .sort((a, b) => a.codigo.localeCompare(b.codigo))
-                  .map(situacao => (
-                    <TableRow key={situacao.id} className="hover:bg-gray-50">
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono bg-gray-100 border-gray-300 text-gray-800 font-semibold">
-                          {situacao.codigo}
+                {filteredSituacoes.map(situacao => (
+                  <TableRow key={situacao.situacao_id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium text-gray-700">
+                      {situacao.descricao}
+                    </TableCell>
+                    <TableCell>
+                      {situacao.fonte ? (
+                        <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700">
+                          {situacao.fonte}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium text-gray-700">
-                        {situacao.descricao}
-                      </TableCell>
-                      <TableCell>
-                        {situacao.fonte || "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleRemoveSituacao(situacao.id)}
-                          className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
-                        >
-                          Remover
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      ) : (
+                        <span className="text-gray-400 text-sm">Não informado</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleRemoveSituacao(situacao.situacao_id)}
+                        className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
+                      >
+                        Remover
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           ) : (
@@ -224,6 +325,73 @@ export const SituacoesConfig = () => {
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        title="Confirmar Remoção"
+        className="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="bg-red-100 rounded-full p-3">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Esta ação não pode ser desfeita. A situação problema será removida permanentemente do sistema.
+            </p>
+          </div>
+          
+          {situacaoToDelete && (
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <div>
+                  <p className="font-medium text-gray-900">{situacaoToDelete.descricao}</p>
+                  <p className="text-sm text-gray-500">Situação Problema {situacaoToDelete.fonte && `• ${situacaoToDelete.fonte}`}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-900">
+              Tem certeza que deseja remover esta situação problema?
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={handleCloseDeleteModal}
+              disabled={loadingRemove}
+              className="min-w-[100px]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={loadingRemove}
+              className="bg-[#ae0f0a] hover:bg-[#910c08] min-w-[100px]"
+            >
+              {loadingRemove ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removendo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
