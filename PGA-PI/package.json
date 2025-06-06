@@ -9,7 +9,7 @@
     "build": "vite build",
     "deploy": "gh-pages -d dist",
     "predeploy": "npm run build",
-    "docker:build": "docker build -t pga-frontend .",
+    "docker:build": "docker build --build-arg VITE_API_URL=${VITE_API_URL:-http://localhost:3000} -t pga-frontend .",
     "docker:run": "docker run -d -p 80:80 --name pga-frontend-container pga-frontend",
     "docker:stop": "docker stop pga-frontend-container",
     "docker:remove": "docker rm pga-frontend-container",
@@ -18,7 +18,8 @@
     "docker:compose:up": "docker-compose up -d",
     "docker:compose:down": "docker-compose down",
     "docker:compose:build": "docker-compose build",
-    "docker:compose:logs": "docker-compose logs -f"
+    "docker:compose:logs": "docker-compose logs -f",
+    "docker:build:dev": "VITE_API_URL=http://localhost:3000 npm run docker:build"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.5",

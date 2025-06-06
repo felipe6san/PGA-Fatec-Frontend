@@ -1,19 +1,26 @@
 # Build stage
 FROM node:18-alpine AS builder
 
+# Set environment variables for build
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package*.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (including dev dependencies for build)
+RUN npm ci --silent
 
 # Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build
+
+# Remove dev dependencies and clean cache
+RUN npm prune --production && npm cache clean --force
 
 # Production stage
 FROM nginx:alpine AS production

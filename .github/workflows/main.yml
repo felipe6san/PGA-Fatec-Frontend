@@ -49,7 +49,7 @@ jobs:
       working-directory: ./PGA-PI
 
     - name: Build Docker image
-      run: docker build -t pga-frontend:${{ github.sha }} .
+      run: docker build --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} -t pga-frontend:${{ github.sha }} .
       working-directory: ./PGA-PI
 
     - name: Test Docker image
