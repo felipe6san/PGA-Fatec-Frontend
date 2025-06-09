@@ -18,10 +18,9 @@
 
 <p align="center">
     <a href="#sobre">Sobre</a>  |  
-    <a href="#mer">MER</a>  |  
+    <a href="#mer">MER & Requisitos</a>  |  
     <a href="#prototipos">Protótipos & Documentação</a>  |  
     <a href="#tecnologias">Tecnologias</a>  |  
-    <a href="#script">Script</a>  |  
     <a href="#equipe">Equipe</a>
 </p>
 
@@ -36,11 +35,33 @@
 
 <span id="mer">
   
-## :bookmark_tabs: MER
-  O Modelo Entidade-Relacionamento foi desenvolvido para representar de forma estruturada os dados envolvidos no planejamento e na gestão anual das Fatecs.
-  
-![MER](https://i.imgur.com/aW09a8m.png)
+## :bookmark_tabs: MER e Requisitos
 
+<details>
+   <summary>Clique aqui para visualizar o MER</summary>
+    <br>
+    <div align="center">
+    <img src="https://i.imgur.com/aW09a8m.png" alt="MER">
+    </div>
+</details>
+
+### :dart: Requisitos Funcionais
+| Número | Nome | Descrição |
+|:--:|:----------:|:----------------:|
+| 01 | Cadastro de Ações/Projetos |  Registro detalhado de cada ação/projeto, incluindo descrição, prazo e responsável.  |
+| 02 | Classificação de Prioridades |  Definir e categorizar as ações/projetos conforme os graus de prioridade institucionais.  |
+| 03 | Monitoramento de Progresso |  Exibir o status de execução de cada etapa dos projetos.  |
+| 04 | Geração de Arquivos |  Gerar arquivos consolidados ao finalizar o projeto.  |
+| 05 | Controle de Usuários e Permissões |  Controle de Usuários e Permissões | Gerenciar perfis de acesso e permissões para diferentes níveis de usuários.  |
+| 06 | Registro de Custos |  Cadastrar e acompanhar os custos associados a cada ação/projeto.  |
+
+### :dart: Requisitos Não Funcionais
+| Número | Nome |
+|:--:|:----------:|
+| 01 | 3Conformidade Institucional. |
+| 02 | Acessibilidade. |
+| 03 | Interface de fácil usabilidade. |
+| 04 | Responsividade multiplataforma. |
 
 → [Voltar ao topo](#topo)
 
@@ -49,13 +70,11 @@
 ## 💻 Protótipos e Documentação
   No planejamento do projeto, foram criados wireframes e mockups para a idealização do layout da interface. Após a validação pelo cliente, esses elementos foram implementados em um protótipo, permitindo a interação do usuário com a interface.
   
-  Além disso, outras documentações, como fluxos de dados, modelagem do banco de dados e arquitetura do sistema, foram organizadas e compiladas em um [PDF]().
+  Além disso, outras documentações, como fluxos de dados, modelagem do banco de dados e arquitetura do sistema, foram organizadas e compiladas em um [Documento](https://docs.google.com/document/d/1jA_Q3uX5fbNhBs4_swb11LFk14hEF6qx/edit).
 
 ## Protótipo de Alta Fidelidade
 
 ![Protótipo alta fidelidade](https://i.imgur.com/vqTm6Yx.png)
-
-![Protótipo alta fidelidade](https://i.imgur.com/N3pyQsX.png)
 
 #### O Protótipo foi construido usando o [Figma](https://www.figma.com/design/fGjaMNQejB1JcliVylMCJf/PGA?node-id=7-5&t=uPFd3fqHqdSqladm-0)
 
@@ -70,15 +89,6 @@
 |![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)|![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)|
 |![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)|![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)|
 |![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)|![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)|
-
-→ [Voltar ao topo](#topo)
-
-<span id="script">
-
-
-## :dart: Script
-
-
 
 → [Voltar ao topo](#topo)
 
