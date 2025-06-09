@@ -21,11 +21,11 @@ export const SituacoesConfig = () => {
   const [error, setError] = useState<string | null>(null);
   
   const [novaSituacao, setNovaSituacao] = useState<{ 
-    pga_id: number;
+    codigo_categoria: string;
     descricao: string;
     fonte: string;
   }>({ 
-    pga_id: 1, // Valor padrão
+    codigo_categoria: "",
     descricao: "",
     fonte: ""
   });
@@ -37,52 +37,72 @@ export const SituacoesConfig = () => {
     loadInitialData();
   }, []);
 
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const situacoesData = await situacoesService.getAll();
-      setSituacoes(situacoesData);
-    } catch (err) {
-      console.error('Erro ao carregar dados:', err);
-      setError('Erro ao carregar dados. Verifique se o backend está rodando.');
-      
-      // Fallback para dados mock em caso de erro
-      setSituacoes([
-        {
-          situacao_id: 1,
-          pga_id: 1,
-          descricao: "Metodologia de ensino, desempenho de alunos, evasão",
-          fonte: "CPA"
-        },
-        {
-          situacao_id: 2,
-          pga_id: 1,
-          descricao: "Manutenção e conservação predial",
-          fonte: "Relatório Infraestrutura"
-        },
-        {
-          situacao_id: 3,
-          pga_id: 1,
-          descricao: "Infraestrutura predial (espaços, sistemas)",
-          fonte: "CEE"
-        },
-        {
-          situacao_id: 4,
-          pga_id: 1,
-          descricao: "Infraestrutura laboratorial e ambientes de ensino",
-          fonte: ""
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  // Função para gerar próximo código automaticamente
+  const gerarProximoCodigo = () => {
+    if (situacoes.length === 0) return "0.1.01";
+    
+    // Pegar todos os códigos que começam com "0.1."
+    const codigosExistentes = situacoes
+      .filter(s => s.codigo_categoria.startsWith("0.1."))
+      .map(s => {
+        const partes = s.codigo_categoria.split(".");
+        return parseInt(partes[2]) || 0;
+      })
+      .sort((a, b) => b - a);
+    
+    const proximoNumero = (codigosExistentes[0] || 0) + 1;
+    return `0.1.${proximoNumero.toString().padStart(2, '0')}`;
   };
 
+  // Atualizar validações
   const handleAddSituacao = async () => {
-    if (!novaSituacao.descricao) {
-      alert("Preencha a descrição da situação problema");
+    // Validações
+    if (!novaSituacao.codigo_categoria.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Campo obrigatório",
+        description: "Preencha o código da categoria",
+      });
+      return;
+    }
+
+    if (!novaSituacao.descricao.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Campo obrigatório",
+        description: "Preencha a descrição da situação problema",
+      });
+      return;
+    }
+
+    // Validar formato do código
+    const codigoRegex = /^\d+\.\d+\.\d+$/;
+    if (!codigoRegex.test(novaSituacao.codigo_categoria)) {
+      toast({
+        variant: "destructive",
+        title: "Formato inválido",
+        description: "O código deve seguir o formato: 0.1.01",
+      });
+      return;
+    }
+
+    // Verificar duplicata de código
+    if (situacoes.some(s => s.codigo_categoria === novaSituacao.codigo_categoria)) {
+      toast({
+        variant: "destructive",
+        title: "Código já existe",
+        description: "Já existe uma situação problema com este código",
+      });
+      return;
+    }
+
+    // Verificar duplicata de descrição
+    if (situacoes.some(s => s.descricao.toLowerCase() === novaSituacao.descricao.toLowerCase())) {
+      toast({
+        variant: "destructive",
+        title: "Situação já existe",
+        description: "Já existe uma situação problema com esta descrição",
+      });
       return;
     }
 
@@ -90,13 +110,13 @@ export const SituacoesConfig = () => {
       setLoadingAdd(true);
       
       const novaSituacaoCreated = await situacoesService.create({
-        pga_id: novaSituacao.pga_id,
-        descricao: novaSituacao.descricao,
-        fonte: novaSituacao.fonte
+        codigo_categoria: novaSituacao.codigo_categoria.trim(),
+        descricao: novaSituacao.descricao.trim(),
+        fonte: novaSituacao.fonte.trim() || undefined
       });
       
       setSituacoes([...situacoes, novaSituacaoCreated]);
-      setNovaSituacao({ pga_id: 1, descricao: "", fonte: "" });
+      setNovaSituacao({ codigo_categoria: "", descricao: "", fonte: "" });
       
       toast({
         variant: "success",
@@ -159,10 +179,84 @@ export const SituacoesConfig = () => {
     }
   };
 
-  const filteredSituacoes = situacoes.filter(situacao => 
-    situacao.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    situacao.fonte?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Atualizar dados mock
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const situacoesData = await situacoesService.getAll();
+      setSituacoes(situacoesData);
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+      setError('Erro ao carregar dados. Verifique se o backend está rodando.');
+      
+      // CORRIGIDO: Fallback para dados mock com todas as propriedades obrigatórias
+      const mockSituacoes: SituacaoProblema[] = [
+        {
+          situacao_id: 1,
+          codigo_categoria: "0.1.01",
+          descricao: "Metodologia de ensino, desempenho de alunos, evasão",
+          fonte: "CPA",
+          ordem: 1,
+          ativo: true,
+          criado_em: new Date().toISOString(),
+          criado_por: null,
+          atualizado_em: new Date().toISOString(),
+          atualizado_por: null,
+        },
+        {
+          situacao_id: 2,
+          codigo_categoria: "0.1.02",
+          descricao: "Manutenção e conservação predial",
+          fonte: "Relatório Infraestrutura",
+          ordem: 2,
+          ativo: true,
+          criado_em: new Date().toISOString(),
+          criado_por: null,
+          atualizado_em: new Date().toISOString(),
+          atualizado_por: null,
+        },
+        {
+          situacao_id: 3,
+          codigo_categoria: "0.1.03",
+          descricao: "Infraestrutura predial (espaços, sistemas)",
+          fonte: "CEE",
+          ordem: 3,
+          ativo: true,
+          criado_em: new Date().toISOString(),
+          criado_por: null,
+          atualizado_em: new Date().toISOString(),
+          atualizado_por: null,
+        },
+        {
+          situacao_id: 4,
+          codigo_categoria: "0.1.04",
+          descricao: "Infraestrutura laboratorial e ambientes de ensino",
+          fonte: null,
+          ordem: 4,
+          ativo: true,
+          criado_em: new Date().toISOString(),
+          criado_por: null,
+          atualizado_em: new Date().toISOString(),
+          atualizado_por: null,
+        },
+      ];
+      
+      setSituacoes(mockSituacoes);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Atualizar filtros
+  const filteredSituacoes = situacoes
+    .filter(situacao => 
+      situacao.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      situacao.fonte?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      situacao.codigo_categoria.includes(searchTerm)
+    )
+    .sort((a, b) => a.codigo_categoria.localeCompare(b.codigo_categoria));
 
   // Loading state
   if (loading) {
@@ -178,7 +272,7 @@ export const SituacoesConfig = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header com indicador de erro */}
+      {/* Header simplificado - SEM controles de ano */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -186,7 +280,7 @@ export const SituacoesConfig = () => {
             Gerenciar Situações Problema
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Configure as situações problema que originam os projetos do PGA
+            Configure as situações problema identificadas no PGA.
           </p>
           {error && (
             <div className="flex items-center mt-2 text-amber-600">
@@ -207,14 +301,40 @@ export const SituacoesConfig = () => {
           Adicionar Nova Situação Problema
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label htmlFor="codigo" className="block text-sm font-medium text-gray-700 mb-1">
+              Código da Categoria
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="codigo"
+                placeholder="Ex: 0.1.05"
+                value={novaSituacao.codigo_categoria}
+                onChange={e => setNovaSituacao({ ...novaSituacao, codigo_categoria: e.target.value })}
+                className="flex-1 bg-white border-gray-300"
+                disabled={loadingAdd}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setNovaSituacao({ ...novaSituacao, codigo_categoria: gerarProximoCodigo() })}
+                className="whitespace-nowrap"
+                disabled={loadingAdd}
+              >
+                Auto
+              </Button>
+            </div>
+          </div>
+          
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
               Descrição da Situação
             </label>
             <Input
               id="descricao"
-              placeholder="Ex: Metodologia de ensino, desempenho de alunos, evasão"
+              placeholder="Ex: Metodologia de ensino, desempenho..."
               value={novaSituacao.descricao}
               onChange={e => setNovaSituacao({ ...novaSituacao, descricao: e.target.value })}
               className="w-full bg-white border-gray-300"
@@ -258,7 +378,7 @@ export const SituacoesConfig = () => {
         </div>
       </Card>
       
-      {/* Lista de Situações */}
+      {/* Tabela */}
       <div>
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-md font-medium text-gray-700">Situações Problema Cadastradas</h3>
@@ -279,6 +399,7 @@ export const SituacoesConfig = () => {
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow>
+                  <TableHead className="w-32">Código</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead className="w-40">Fonte</TableHead>
                   <TableHead className="w-24 text-right">Ações</TableHead>
@@ -287,6 +408,9 @@ export const SituacoesConfig = () => {
               <TableBody>
                 {filteredSituacoes.map(situacao => (
                   <TableRow key={situacao.situacao_id} className="hover:bg-gray-50">
+                    <TableCell className="font-mono text-sm text-gray-600">
+                      {situacao.codigo_categoria}
+                    </TableCell>
                     <TableCell className="font-medium text-gray-700">
                       {situacao.descricao}
                     </TableCell>
@@ -326,6 +450,7 @@ export const SituacoesConfig = () => {
         </div>
       </div>
 
+      {/* Modal de confirmação */}
       <Modal
         isOpen={showDeleteModal}
         onClose={handleCloseDeleteModal}

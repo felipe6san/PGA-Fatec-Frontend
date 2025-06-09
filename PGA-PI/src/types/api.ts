@@ -94,9 +94,15 @@ export interface EntregavelLinkSei {
 
 export interface SituacaoProblema {
   situacao_id: number;
-  pga_id: number;
+  codigo_categoria: string;
   descricao: string;
-  fonte?: string;
+  fonte?: string | null;
+  ordem?: number | null;
+  ativo: boolean;
+  criado_em: string;
+  criado_por?: number | null;
+  atualizado_em: string;
+  atualizado_por?: number | null;
 }
 
 export interface TipoVinculoHAE {
@@ -165,4 +171,4 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
-} 
+}

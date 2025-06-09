@@ -1,23 +1,28 @@
 import api from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/config';
 import { SituacaoProblema } from '@/types/api';
 
-export interface CreateSituacaoDto {
-  pga_id: number;
+export interface CreateSituacaoProblemaRequest {
+  codigo_categoria: string;
   descricao: string;
   fonte?: string;
+  ordem?: number;
 }
 
-export interface UpdateSituacaoDto {
-  pga_id?: number;
+export interface UpdateSituacaoProblemaRequest {
+  codigo_categoria?: string;
   descricao?: string;
   fonte?: string;
+  ordem?: number;
+  ativo?: boolean;
 }
 
 class SituacoesService {
+  // CORRIGIDO: endpoint correto
+  private readonly endpoint = '/problem-situation';
+
   async getAll(): Promise<SituacaoProblema[]> {
     try {
-      const response = await api.get<SituacaoProblema[]>(`${API_ENDPOINTS.SITUATIONS}`);
+      const response = await api.get<SituacaoProblema[]>(this.endpoint);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar situações problema:', error);
@@ -27,7 +32,7 @@ class SituacoesService {
 
   async getById(id: number): Promise<SituacaoProblema> {
     try {
-      const response = await api.get<SituacaoProblema>(`${API_ENDPOINTS.SITUATIONS}/${id}`);
+      const response = await api.get<SituacaoProblema>(`${this.endpoint}/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar situação problema:', error);
@@ -35,9 +40,9 @@ class SituacoesService {
     }
   }
 
-  async create(data: CreateSituacaoDto): Promise<SituacaoProblema> {
+  async create(data: CreateSituacaoProblemaRequest): Promise<SituacaoProblema> {
     try {
-      const response = await api.post<SituacaoProblema>(`${API_ENDPOINTS.SITUATIONS}`, data);
+      const response = await api.post<SituacaoProblema>(this.endpoint, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar situação problema:', error);
@@ -45,9 +50,9 @@ class SituacoesService {
     }
   }
 
-  async update(id: number, data: UpdateSituacaoDto): Promise<SituacaoProblema> {
+  async update(id: number, data: UpdateSituacaoProblemaRequest): Promise<SituacaoProblema> {
     try {
-      const response = await api.put<SituacaoProblema>(`${API_ENDPOINTS.SITUATIONS}/${id}`, data);
+      const response = await api.put<SituacaoProblema>(`${this.endpoint}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar situação problema:', error);
@@ -57,7 +62,7 @@ class SituacoesService {
 
   async delete(id: number): Promise<void> {
     try {
-      await api.delete(`${API_ENDPOINTS.SITUATIONS}/${id}`);
+      await api.delete(`${this.endpoint}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar situação problema:', error);
       throw new Error('Falha ao deletar situação problema');
