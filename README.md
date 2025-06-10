@@ -29,7 +29,7 @@
 ## :page_facing_up: Sobre o Projeto
   Projeto de plataforma digital que centraliza e facilita o Planejamento de Gestão Anual (PGA) das Faculdades de Tecnologia (Fatecs), promovendo uma gestão mais eficiente, organizada e colaborativa. A plataforma permite que as equipes gestoras registrem, monitorem e avaliem ações e projetos estratégicos, alinhando-os às prioridades institucionais do Centro Paula Souza e às demandas locais da unidade. A inclusão de diferentes atores, como coordenadores, docentes e parceiros, amplia o alcance do projeto, transformando-o em um hub abrangente para a integração de esforços em prol da excelência acadêmica, inovação e responsabilidade social. O PGA Digital não apenas simplifica processos, mas aspira a ser um catalisador para transformações positivas no ecossistema educacional, unindo diversos agentes para enfrentar os desafios contemporâneos de maneira colaborativa e inovadora.
 
-### :link: Projeto disponível para visualização em [Plano de Gestão Anual Fatec]()
+### :link: Projeto disponível para visualização em [Plano de Gestão Anual Fatec](https://vfavretto.github.io/PGA-Fatec-Frontend/).
 
 → [Voltar ao topo](#topo)
 
@@ -45,23 +45,178 @@
     </div>
 </details>
 
-### :dart: Requisitos Funcionais
-| Número | Nome | Descrição |
-|:--:|:----------:|:----------------:|
-| 01 | Cadastro de Ações/Projetos |  Registro detalhado de cada ação/projeto, incluindo descrição, prazo e responsável.  |
-| 02 | Classificação de Prioridades |  Definir e categorizar as ações/projetos conforme os graus de prioridade institucionais.  |
-| 03 | Monitoramento de Progresso |  Exibir o status de execução de cada etapa dos projetos.  |
-| 04 | Geração de Arquivos |  Gerar arquivos consolidados ao finalizar o projeto.  |
-| 05 | Controle de Usuários e Permissões |  Controle de Usuários e Permissões | Gerenciar perfis de acesso e permissões para diferentes níveis de usuários.  |
-| 06 | Registro de Custos |  Cadastrar e acompanhar os custos associados a cada ação/projeto.  |
+## 🎯 Requisitos Funcionais
+ 
+### RF001 - Gerenciamento de Usuários
+- **Descrição**: O sistema deve permitir o cadastro, atualização e gerenciamento de usuários
+- **Funcionalidades**:
+  - Cadastro de usuários com nome, email, nome de usuário
+  - Autenticação segura com JWT
+  - Diferentes níveis de acesso baseados no tipo de usuário
+ 
+### RF002 - Gerenciamento de Unidades
+- **Descrição**: O sistema deve gerenciar unidades educacionais (FATEC)
+- **Funcionalidades**:
+  - Cadastro de unidades com código FNNN único
+  - Registro do nome completo da unidade
+  - Registro do diretor responsável
+  - Vinculação de cursos à unidade
+ 
+### RF003 - Gerenciamento de PGA (Plano de Gestão Anual)
+- **Descrição**: Controle completo do ciclo de vida dos planos de gestão
+- **Funcionalidades**:
+  - Criação de PGA por unidade e ano
+  - Controle de versões do plano
+  - Análise de cenário contextual
+  - Datas de elaboração e parecer GPR
+  - Status de acompanhamento
+ 
+### RF004 - Gerenciamento de Situações Problema
+- **Descrição**: Identificação e registro de problemas institucionais
+- **Funcionalidades**:
+  - Registro de situações-problema identificadas
+  - Descrição detalhada das situações
+  - Identificação das fontes dos problemas
+  - Vinculação ao PGA correspondente
+ 
+### RF005 - Gerenciamento de Eixos Temáticos e Temas
+- **Descrição**: Organização temática das ações e projetos
+- **Funcionalidades**:
+  - Cadastro de eixos temáticos numerados
+  - Definição de temas dentro de cada eixo
+  - Descrições detalhadas dos eixos e temas
+  - Estrutura hierárquica eixo-tema
+ 
+### RF006 - Gerenciamento de Prioridades de Ação
+- **Descrição**: Classificação de prioridades para ações e projetos
+- **Funcionalidades**:
+  - Definição de graus de prioridade
+  - Classificação por tipo de gestão
+  - Descrições e detalhes das prioridades
+  - Vinculação às ações/projetos
+ 
+### RF007 - Gerenciamento de Ações e Projetos
+- **Descrição**: Planejamento e acompanhamento de ações/projetos
+- **Funcionalidades**:
+  - Definição do que será feito e por que será feito
+  - Datas de início e fim planejadas
+  - Referência a objetivos institucionais
+  - Marcação de obrigatoriedades (inclusão, sustentabilidade)
+  - Vinculação a eixos temáticos, temas e prioridades
+  - Sistema de anexos para documentação
+ 
+### RF008 - Gerenciamento de Equipes de Projeto
+- **Descrição**: Gestão de pessoas envolvidas nos projetos
+- **Funcionalidades**:
+  - Vinculação de pessoas aos projetos
+  - Definição de papéis (coordenador, participante, etc.)
+  - Registro de carga horária semanal
+  - Controle de tipos de vínculo HAE (Hora-Atividade Específica)
+ 
+### RF009 - Gerenciamento de Etapas e Entregas
+- **Descrição**: Controle de etapas e entregáveis dos projetos
+- **Funcionalidades**:
+  - Definição de etapas dos processos
+  - Vinculação a entregáveis específicos
+  - Links para documentos no SEI
+  - Datas de verificação previstas e realizadas
+  - Status de verificação (Pendente, Em Andamento, Concluído)
+ 
+### RF010 - Gerenciamento de Aquisições
+- **Descrição**: Controle de aquisições necessárias para projetos
+- **Funcionalidades**:
+  - Registro de itens a serem adquiridos
+  - Especificação de unidades de medida e quantidades
+  - Justificativas para aquisições
+  - Estimativas de valores unitários e totais
+  - Classificação por tipo de anexo (Projeto, Material Permanente, Material de Consumo)
+ 
+### RF011 - Gerenciamento de Ações CPA
+- **Descrição**: Registro de ações específicas da CPA (Comissão Própria de Avaliação)
+- **Funcionalidades**:
+  - Descrição das ações CPA
+  - Justificativas para as ações
+  - Vinculação ao PGA correspondente
+ 
+### RF012 - Gerenciamento de Rotinas Institucionais
+- **Descrição**: Controle de atividades rotineiras da instituição
+- **Funcionalidades**:
+  - Cadastro de rotinas por tipo
+  - Atribuição de responsáveis e participantes
+  - Registro de entregáveis esperados
+  - Controle de status
+ 
+### RF013 - Gerenciamento de Ocorrências de Rotinas
+- **Descrição**: Registro de realizações das rotinas institucionais
+- **Funcionalidades**:
+  - Registro de datas de realização
+  - Controle de horários
+  - Definição de locais
+  - Registro de pautas e resultados
+  - Links para atas das reuniões
+  - Status das ocorrências
+ 
+### RF014 - Gerenciamento de Cursos
+- **Descrição**: Controle dos cursos oferecidos pela unidade
+- **Funcionalidades**:
+  - Cadastro de cursos por unidade
+  - Status dos cursos
+  - Atribuição de coordenadores
+ 
+### RF015 - Sistema de Autenticação e Autorização
+- **Descrição**: Controle de acesso ao sistema
+- **Funcionalidades**:
+  - Login com usuário e senha
+  - Autenticação JWT
+  - Controle de sessões
+  - Proteção de rotas baseada em roles
 
-### :dart: Requisitos Não Funcionais
-| Número | Nome |
-|:--:|:----------:|
-| 01 | 3Conformidade Institucional. |
-| 02 | Acessibilidade. |
-| 03 | Interface de fácil usabilidade. |
-| 04 | Responsividade multiplataforma. |
+ 
+## 🔧 Requisitos Não Funcionais
+ 
+### RNF001 - Segurança
+- **Autenticação**: Uso de JWT (JSON Web Tokens) para autenticação
+- **Criptografia**: Senhas armazenadas com hash bcrypt
+- **Autorização**: Sistema baseado em roles e guards
+- **Helmet**: Configuração de headers de segurança HTTP
+- **Validação**: Validação rigorosa de entrada de dados
+ 
+### RNF002 - Confiabilidade
+- **Disponibilidade**: Sistema deve estar disponível 99.5% do tempo
+- **Backup**: Backup automático do banco de dados
+- **Recuperação**: Plano de recuperação de desastres
+- **Monitoramento**: Logs detalhados para auditoria
+ 
+### RNF003 - Usabilidade
+- **Interface**: API RESTful bem documentada
+- **Padronização**: Seguir padrões REST para endpoints
+- **Documentação**: Documentação completa da API
+- **Versionamento**: Controle de versão da API
+ 
+### RNF004 - Portabilidade
+- **Containerização**: Aplicação containerizada com Docker
+- **Docker Compose**: Orquestração de serviços
+- **Banco de Dados**: PostgreSQL containerizado
+- **Ambientes**: Configuração para desenvolvimento, teste e produção
+ 
+### RNF005 - Manutenibilidade
+- **Arquitetura**: Arquitetura modular baseada em NestJS
+- **Padrões**: Uso de design patterns (Repository, Service, DTO)
+- **Testes**: Cobertura de testes unitários e e2e
+- **Linting**: ESLint e Prettier para qualidade do código
+- **TypeScript**: Tipagem estática para maior segurança
+ 
+### RNF006 - Desenvolvimento
+- **Framework**: NestJS com TypeScript
+- **ORM**: Prisma ORM para abstração do banco
+- **Validação**: Class-validator para validação de DTOs
+- **Documentação**: Swagger/OpenAPI para documentação
+- **Migrations**: Sistema de migrations do Prisma
+ 
+### RNF007 - Qualidade
+- **Padrões de Código**: ESLint configurado
+- **Formatação**: Prettier para formatação consistente
+- **CI/CD**: Pipeline de integração contínua
 
 → [Voltar ao topo](#topo)
 
