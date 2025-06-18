@@ -191,7 +191,7 @@ export const SituacoesConfig = () => {
       console.error('Erro ao carregar dados:', err);
       setError('Erro ao carregar dados. Verifique se o backend está rodando.');
       
-      // CORRIGIDO: Fallback para dados mock com todas as propriedades obrigatórias
+      // Fallback para dados mock com todas as propriedades obrigatórias
       const mockSituacoes: SituacaoProblema[] = [
         {
           situacao_id: 1,

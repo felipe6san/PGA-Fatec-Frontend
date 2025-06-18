@@ -1,22 +1,25 @@
 // Enums do backend
 export enum TipoUsuario {
-  ADMINISTRADOR = 'ADMINISTRADOR',
-  GESTOR = 'GESTOR',
-  DOCENTE = 'DOCENTE',
-  FUNCIONARIO = 'FUNCIONARIO'
+  ADMINISTRADOR = "Administrador",
+  CPS = "CPS",
+  REGIONAL = "Regional",
+  DIRETOR = "Diretor",
+  COORDENADOR = "Coordenador",
+  ADMINISTRATIVO = "Administrativo",
+  DOCENTE = "Docente",
 }
 
 export enum AnexoProjetoUm {
-  ANEXO1 = '1',
-  ANEXO2 = '2', 
-  ANEXO3 = '3',
-  ANEXO4 = '4'
+  ANEXO1 = "1",
+  ANEXO2 = "2",
+  ANEXO3 = "3",
+  ANEXO4 = "4",
 }
 
 export enum StatusVerificacao {
-  PENDENTE = 'Pendente',
-  OK = 'OK',
-  REQUER_ACAO = 'RequerAcao'
+  PENDENTE = "Pendente",
+  OK = "OK",
+  REQUER_ACAO = "RequerAcao",
 }
 
 export interface User {
@@ -25,7 +28,28 @@ export interface User {
   email?: string;
   nome_usuario?: string;
   tipo_usuario: TipoUsuario;
+  ativo?: boolean;
+  unidade_id?: number;
   createdAt?: Date;
+  unidades?: Array<{
+    unidade_id: number;
+    nome_completo: string;
+    ativo: boolean;
+  }>;
+}
+
+export interface Pessoa {
+  pessoa_id: number;
+  nome: string;
+  email: string;
+  tipo_usuario: TipoUsuario;
+  ativo: boolean;
+  criado_em?: string;
+  unidades?: Array<{
+    unidade_id: number;
+    nome_completo: string;
+    ativo: boolean;
+  }>;
 }
 
 export interface EixoTematico {
@@ -63,7 +87,7 @@ export interface AcaoProjeto {
   objetivos_institucionais_referenciados?: string;
   obrigatorio_inclusao: boolean;
   obrigatorio_sustentabilidade: boolean;
-  
+
   // Relacionamentos
   eixo?: EixoTematico;
   prioridade?: PrioridadeAcao;
@@ -171,4 +195,28 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+// Adicione esta interface se ainda não existir
+
+export interface SolicitacaoAcesso {
+  solicitacao_id: number;
+  nome: string;
+  email: string;
+  unidade_id: number;
+  status: 'Pendente' | 'Aprovada' | 'Rejeitada';
+  data_solicitacao: string;
+  data_processamento?: string | null;
+  processado_por?: number | null;
+  tipo_usuario_concedido?: string | null;
+  unidade?: {
+    unidade_id: number;
+    nome_completo: string;
+    codigo_fnnn: string;
+  };
+  processador?: {
+    pessoa_id: number;
+    nome: string;
+    email: string;
+  };
 }

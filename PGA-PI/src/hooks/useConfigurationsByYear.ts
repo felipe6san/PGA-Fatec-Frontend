@@ -209,9 +209,9 @@ const BASE_DATA = {
     },
     {
       id: 2,
-      nome: 'Maria Santos',
-      email: 'maria.santos@fatec.sp.gov.br',
-      tipo_usuario: 'Gestor',
+      nome: 'Murilo Santos',
+      email: 'murilo.santos@fatec.sp.gov.br',
+      tipo_usuario: 'Administrador',
       ano_criacao: 2020
     },
     {
@@ -225,28 +225,28 @@ const BASE_DATA = {
       id: 4,
       nome: 'Ana Costa',
       email: 'ana.costa@fatec.sp.gov.br',
-      tipo_usuario: 'Técnico',
+      tipo_usuario: 'Diretor',
       ano_criacao: 2022
     },
     {
       id: 5,
       nome: 'Carlos Ferreira',
       email: 'carlos.ferreira@fatec.sp.gov.br',
-      tipo_usuario: 'Analista',
+      tipo_usuario: 'CPS',
       ano_criacao: 2023
     },
     {
       id: 6,
       nome: 'Lucia Rodrigues',
       email: 'lucia.rodrigues@fatec.sp.gov.br',
-      tipo_usuario: 'Especialista',
+      tipo_usuario: 'Regional',
       ano_criacao: 2024
     },
     {
       id: 7,
       nome: 'Roberto Oliveira',
       email: 'roberto.oliveira@fatec.sp.gov.br',
-      tipo_usuario: 'Consultor',
+      tipo_usuario: 'Administrativo',
       ano_criacao: 2025
     }
   ]

@@ -17,7 +17,6 @@ export interface UpdateSituacaoProblemaRequest {
 }
 
 class SituacoesService {
-  // CORRIGIDO: endpoint correto
   private readonly endpoint = '/problem-situation';
 
   async getAll(): Promise<SituacaoProblema[]> {

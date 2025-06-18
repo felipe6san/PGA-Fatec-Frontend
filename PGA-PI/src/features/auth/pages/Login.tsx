@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@components/ui/button";
-import { Card, CardContent } from "@components/ui/card";
-import { Input } from "@components/ui/input";
-import { useAuth } from "@context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 import { logoImage, bgImage } from "@/assets";
-import { AlertCircle, Info, XCircle } from "lucide-react";
-import { Modal } from "@components/ui/modal";
-import api from "@lib/api";
+import { AlertCircle, Info, XCircle, CheckCircle } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import api from "@/lib/api";
 import { BASE_ROUTE } from "@/lib";
+import { Select, SelectContent, SelectItem, SelectGroup, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ErrorType = "credentials" | "server" | "connection" | "validation" | null;
 
@@ -41,7 +42,6 @@ export const Login = (): JSX.Element => {
     if (!credentials.email) {
       setErrorType("validation");
       setErrorMessage("Por favor, informe seu email.");
-      console.log(bgImage, logoImage);
       return false;
     }
 
@@ -72,10 +72,14 @@ export const Login = (): JSX.Element => {
     setIsLoading(true);
 
     try {
+      console.log('Tentando fazer login...'); // Debug
       const success = await login(credentials.email, credentials.senha);
+      console.log('Login success:', success); // Debug
 
       if (success) {
-        navigate(`${BASE_ROUTE}dashboard`);
+        console.log('Redirecionando para dashboard...'); // Debug
+        // Usar window.location para garantir o redirecionamento
+        window.location.href = `${BASE_ROUTE}dashboard`;
       } else {
         setErrorType("credentials");
         setErrorMessage(
@@ -83,6 +87,7 @@ export const Login = (): JSX.Element => {
         );
       }
     } catch (err: any) {
+      console.error('Erro no login:', err); // Debug
       if (err.response) {
         if (err.response.status === 401 || err.response.status === 403) {
           setErrorType("credentials");
@@ -159,11 +164,63 @@ export const Login = (): JSX.Element => {
     setIsModalOpen(true);
   };
 
-  const [isRequestAccessModalOpen, setIsRequestAccessModalOpen] =
-    useState(false);
+  // Estados para o modal de solicitação de acesso
+  const [isRequestAccessModalOpen, setIsRequestAccessModalOpen] = useState(false);
+  const [accessRequestData, setAccessRequestData] = useState({
+    nome: '',
+    email: '',
+    codigo_unidade: '', // Mudou de unidade_id para codigo_unidade
+  });
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false);
+  const [requestStatus, setRequestStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
+
+  const handleAccessRequestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAccessRequestData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitAccessRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!accessRequestData.nome || !accessRequestData.email || !accessRequestData.codigo_unidade) {
+      setRequestStatus({
+        type: 'error',
+        message: 'Por favor, preencha todos os campos.'
+      });
+      return;
+    }
+    
+    setIsLoadingRequest(true);
+    try {
+      // Enviar solicitação para o backend
+      await api.post('/users/request-access', accessRequestData);
+      
+      setRequestStatus({
+        type: 'success',
+        message: 'Solicitação enviada com sucesso! Você receberá um email quando sua solicitação for analisada.'
+      });
+    } catch (error) {
+      setRequestStatus({
+        type: 'error',
+        message: 'Erro ao enviar solicitação. Por favor, tente novamente.'
+      });
+      console.error('Erro ao solicitar acesso:', error);
+    } finally {
+      setIsLoadingRequest(false);
+    }
+  };
 
   const handleRequestAccess = () => {
     setIsRequestAccessModalOpen(true);
+    // Resetar estados
+    setAccessRequestData({ nome: '', email: '', codigo_unidade: '' });
+    setRequestStatus({ type: null, message: '' });
   };
 
   const renderErrorMessage = () => {
@@ -390,24 +447,95 @@ export const Login = (): JSX.Element => {
       <Modal
         isOpen={isRequestAccessModalOpen}
         onClose={() => setIsRequestAccessModalOpen(false)}
-        title="Solicitar Acesso"
+        title="Solicitar Acesso ao Sistema PGA"
         className="max-w-[90%] md:max-w-md mx-auto"
       >
         <div className="space-y-4">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <Info className="w-16 h-16 text-[#ae0f0a]" />
-            <p className="text-lg font-['Source_Sans_3',Helvetica] text-gray-700">
-              Funcionalidade de solicitação de registro será implementada em uma
-              versão futura!
-            </p>
-            <Button
-              type="button"
-              onClick={() => setIsRequestAccessModalOpen(false)}
-              className="h-[57px] px-6 bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-bold text-white text-lg transition-colors duration-200"
-            >
-              Entendi
-            </Button>
-          </div>
+          {requestStatus.type ? (
+            // Feedback de sucesso ou erro
+            <div className={`flex flex-col items-center text-center space-y-4 py-4 ${
+              requestStatus.type === "success" ? "text-green-600" : "text-red-600"
+            }`}>
+              {requestStatus.type === "success" ? (
+                <CheckCircle className="w-16 h-16" />
+              ) : (
+                <AlertCircle className="w-16 h-16" />
+              )}
+              <p className="text-lg font-['Source_Sans_3',Helvetica]">
+                {requestStatus.message}
+              </p>
+              <Button
+                type="button"
+                onClick={() => {
+                  setIsRequestAccessModalOpen(false);
+                  setRequestStatus({ type: null, message: "" });
+                }}
+                className="mt-4"
+              >
+                Fechar
+              </Button>
+            </div>
+          ) : (
+            // Formulário de solicitação
+            <form onSubmit={handleSubmitAccessRequest} className="space-y-4">
+              <div>
+                <div className="text-sm font-medium pb-1.5">Nome Completo</div>
+                <Input
+                  id="nome"
+                  name="nome"
+                  value={accessRequestData.nome}
+                  onChange={handleAccessRequestChange}
+                  className="mt-1"
+                  placeholder="Digite seu nome completo"
+                  required
+                />
+              </div>
+              
+              <div>
+                <div className="text-sm font-medium pb-1.5">Email Institucional</div>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={accessRequestData.email}
+                  onChange={handleAccessRequestChange}
+                  className="mt-1"
+                  placeholder="Digite seu email institucional"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Preferencialmente utilize seu email institucional (@fatec.sp.gov.br)
+                </p>
+              </div>
+              
+              <div>
+                <div className="text-sm font-medium pb-1.5">Código da Unidade Fatec</div>
+                <Input
+                  id="codigo_unidade"
+                  name="codigo_unidade"
+                  type="text"
+                  value={accessRequestData.codigo_unidade}
+                  onChange={handleAccessRequestChange}
+                  className="mt-1"
+                  placeholder="Ex: F003 (código FNNN da sua unidade)"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Digite o código FNNN da sua unidade Fatec (ex: F003 para Fatec São Paulo)
+                </p>
+              </div>
+              
+              <div className="pt-4">
+                <Button 
+                  type="submit"
+                  className="w-full bg-[#ae0f0a] hover:bg-[#8e0c08]"
+                  disabled={isLoadingRequest}
+                >
+                  {isLoadingRequest ? "Enviando..." : "Solicitar Acesso"}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </Modal>
     </div>

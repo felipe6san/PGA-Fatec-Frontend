@@ -1,25 +1,20 @@
-import { useEffect, useState, useRef, TouchEvent } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useAccessibility } from "@/hooks/useAccessibility";
 import { Menu, ChevronLeft, ChevronRight, Settings, User, LogOut, Info, Plus, Minus, Contrast, Moon, Sun, Zap, ZapOff, Volume2, VolumeX, HelpCircle, Monitor } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/utils/constants";
-import { Modal } from "@components/ui/modal";
-import { Button } from "@components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
 import { KeyboardShortcuts, AccessibilityHelp } from "@/components/accessibility/KeyboardShortcuts";
 import { type Theme } from "@/utils/theme";
 
 interface HeaderProps {
   toggleSidebar: () => void;
-  isMobile?: boolean;
+  isMobile: boolean;
   isExpanded: boolean;
 }
 
-export const Header = ({
-  toggleSidebar,
-  isMobile = false,
-  isExpanded,
-}: HeaderProps): JSX.Element => {
+export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpanded }) => {
   const { user, logout } = useAuth();
   const {
     settings: accessibilitySettings,
@@ -108,7 +103,7 @@ export const Header = ({
         break;
       case "logout":
         logout();
-        navigate(ROUTES.LOGIN);
+        navigate("/login");
         announceToScreenReader("Logout realizado com sucesso");
         break;
       default:
@@ -117,12 +112,12 @@ export const Header = ({
   };
 
   // Handlers para gesto de swipe
-  const handleTouchStart = (e: TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
