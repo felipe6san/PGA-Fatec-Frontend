@@ -32,9 +32,16 @@ export interface User {
   unidade_id?: number;
   createdAt?: Date;
   unidades?: Array<{
+    pessoa_id: number;
     unidade_id: number;
-    nome_completo: string;
+    data_vinculo: string;
     ativo: boolean;
+    unidade: {
+      unidade_id: number;
+      codigo_fnnn: string;
+      nome_completo: string;
+      diretor_nome?: string;
+    }
   }>;
 }
 

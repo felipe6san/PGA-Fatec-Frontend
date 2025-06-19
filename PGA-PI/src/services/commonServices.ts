@@ -68,15 +68,15 @@ class UserService {
     }
   }
 
-  async getByUnidade(unidadeId: number): Promise<User[]> {
-    try {
-      const response = await api.get<User[]>(`${API_ENDPOINTS.USERS}/unidade/${unidadeId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar usuários da unidade:', error);
-      throw error;
-    }
+async getByUnidade(unidadeId: number): Promise<User[]> {
+  try {
+    const response = await api.get<User[]>(`/users/by-unidade/${unidadeId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar usuários por unidade:', error);
+    return [];
   }
+}
 
   async create(data: CreateUserData): Promise<User> {
     try {

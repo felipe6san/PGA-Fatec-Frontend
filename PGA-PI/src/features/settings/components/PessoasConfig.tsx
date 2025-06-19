@@ -33,6 +33,9 @@ export const PessoasConfig: React.FC = () => {
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
+  // O ID mockado (1) está bom para testes, mantenha essa abordagem
+  const unidadeId = 1; // ID mockado para testes - futuramente virá da URL
+
   // Carregar pessoas do banco
   const loadPessoas = useCallback(async () => {
     if (!user) return;
@@ -42,20 +45,17 @@ export const PessoasConfig: React.FC = () => {
     try {
       let pessoasData: User[] = [];
       
-      // Verificar se o usuário tem as propriedades necessárias
+      // Verificar se o usuário é admin/CPS
       const userTipo = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
-      const userUnidadeId = (user as any)?.unidade_id || (user as any)?.unidadeId;
-      
-      console.log("Tipo de usuário:", userTipo); // Debug
-      console.log("Unidade ID:", userUnidadeId); // Debug
       
       // Se for administrador, pode ver todas as pessoas
       if (userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) {
         console.log("Carregando todas as pessoas (admin/cps)"); // Debug
         pessoasData = await userService.getAll();
-      } else if (userUnidadeId) {
-        console.log("Carregando pessoas da unidade:", userUnidadeId); // Debug
-        pessoasData = await userService.getByUnidade(userUnidadeId);
+      } else {
+        // Usar o ID da unidade mockado em vez de tentar pegar do usuário
+        console.log("Carregando pessoas da unidade:", unidadeId); // Debug
+        pessoasData = await userService.getByUnidade(unidadeId);
       }
       
       console.log("Pessoas carregadas:", pessoasData); // Debug
@@ -124,11 +124,9 @@ export const PessoasConfig: React.FC = () => {
 
     setLoading(true);
     try {
-      const userUnidadeId = (user as any)?.unidade_id || (user as any)?.unidadeId;
-      
       const dadosPessoa = {
         ...novaPessoa,
-        unidade_id: novaPessoa.unidade_id || userUnidadeId
+        unidade_id: novaPessoa.unidade_id || unidadeId // Usar o ID mockado
       };
 
       const novaPessoaCriada = await userService.create(dadosPessoa);
@@ -187,10 +185,16 @@ export const PessoasConfig: React.FC = () => {
 
   // Função para obter nome da unidade
   const getUnidadeNome = (pessoa: User) => {
-    if (pessoa.unidades && pessoa.unidades.length > 0) {
-      return pessoa.unidades[0].nome_completo;
+    if (!pessoa.unidades || pessoa.unidades.length === 0) {
+      return 'Unidade não definida';
     }
-    return 'Unidade não definida';
+    
+    // A estrutura correta tem unidade aninhado como vimos no backend
+    if (pessoa.unidades[0].unidade && pessoa.unidades[0].unidade.nome_completo) {
+      return pessoa.unidades[0].unidade.nome_completo;
+    }
+    
+    return 'Nome não disponível';
   };
 
   // Lista de tipos de usuário conforme a hierarquia atual do sistema
@@ -258,10 +262,11 @@ export const PessoasConfig: React.FC = () => {
   console.log("canManagePessoas:", canManagePessoas); // Debug
   console.log("userTipo:", userTipo); // Debug
 
-  // Verificar se pode ver solicitações de acesso (apenas admin e CPS)
+  // Verificar se pode ver solicitações de acesso (incluindo diretores)
   const canViewAccessRequests = userTipo && [
     TipoUsuario.ADMINISTRADOR, 
-    TipoUsuario.CPS
+    TipoUsuario.CPS,
+    TipoUsuario.DIRETOR  // Adicionando diretor à lista
   ].includes(userTipo);
 
   console.log("canViewAccessRequests:", canViewAccessRequests); // Debug
@@ -405,7 +410,9 @@ export const PessoasConfig: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-md font-medium text-gray-700 flex items-center">
                 <Users className="h-5 w-5 mr-2 text-[#ae0f0a]" />
-                Solicitações de Acesso Pendentes
+                {userTipo === TipoUsuario.DIRETOR 
+                  ? "Solicitações de Acesso da sua Unidade" 
+                  : "Solicitações de Acesso Pendentes"}
               </h3>
               <Button 
                 variant="outline" 
@@ -478,7 +485,27 @@ export const PessoasConfig: React.FC = () => {
                         <TableCell>{pessoa.email || '-'}</TableCell>
                         {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) && (
                           <TableCell className="text-sm text-gray-600">
-                            {getUnidadeNome(pessoa)}
+                            <div className="group relative">
+                              {getUnidadeNome(pessoa)}
+                              
+                              {pessoa.unidades && pessoa.unidades.length > 1 && (
+                                <div className="absolute hidden group-hover:block z-10 bg-white border shadow-md rounded p-2 w-60">
+                                  <p className="font-medium mb-1 text-xs text-gray-500">
+                                    Todas as unidades:
+                                  </p>
+                                  <ul className="text-xs">
+                                    {pessoa.unidades.map((u) => (
+                                      <li
+                                        key={u.unidade_id}
+                                        className="py-1 border-b last:border-0"
+                                      >
+                                        {u.unidade && u.unidade.nome_completo ? u.unidade.nome_completo : "Nome não disponível"}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                         )}
                         <TableCell>
