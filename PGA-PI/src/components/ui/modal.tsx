@@ -22,15 +22,16 @@ export const Modal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50"
         onClick={onClose}
       />
 
-      {/* Modal Content */}
+      {/* Modal Content - com arredondamento completo */}
       <div
-        className={`relative z-50 w-full bg-white rounded-[21px] shadow-lg ${
+        className={`relative z-50 w-full rounded-[21px] shadow-lg overflow-hidden ${
           className || ""
         }`}
+        style={{ backgroundColor: "white" }}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="font-['Source_Sans_3',Helvetica] text-2xl font-bold text-[#2D3748]">
@@ -44,7 +45,13 @@ export const Modal = ({
           </button>
         </div>
 
-        <div className="p-6">{children}</div>
+        {/* Container do conteúdo arredondado na parte inferior */}
+        <div
+          className="p-6 rounded-b-[21px]"
+          style={{ backgroundColor: "white" }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
