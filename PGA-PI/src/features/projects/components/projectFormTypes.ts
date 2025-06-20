@@ -35,13 +35,13 @@ export enum StatusVerificacao {
 }
 
 export interface EtapaProcesso {
-  id: number; // Frontend local ID
+  id: number;
   descricao: string;
   entregavelLinkSei?: string;
   numeroRef?: string;
   dataVerificacaoPrevista?: string;
   dataVerificacaoRealizada?: string;
-  statusVerificacao: StatusVerificacao | string;
+  statusVerificacao?: StatusVerificacao | string;
 }
 
 export enum TipoAnexo {

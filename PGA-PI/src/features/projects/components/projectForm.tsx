@@ -355,13 +355,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     setEtapasProcesso([
       ...etapasProcesso,
       {
-        id: etapasProcesso.length,
+        id: Date.now(),
         descricao: "",
-        statusVerificacao: StatusVerificacao.Pendente,
-        entregavelLinkSei: "",
-        numeroRef: "",
-        dataVerificacaoPrevista: "",
-        dataVerificacaoRealizada: "",
+        // Todos os campos opcionais não precisam ser inicializados
+        // statusVerificacao não é mais obrigatório, então não precisa inicializar
       },
     ]);
   };
@@ -508,9 +505,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         tipoVinculoHAE: p.tipoVinculoHAE,
       })),
       etapas: etapasProcesso.map((e) => ({
-        ...e,
-        dataVerificacaoPrevista: e.dataVerificacaoPrevista || null,
-        dataVerificacaoRealizada: e.dataVerificacaoRealizada || null,
+        descricao: e.descricao,
+        // Apenas incluir os campos opcionais se estiverem presentes
+        ...(e.entregavelLinkSei ? { entregavel_id: parseInt(e.entregavelLinkSei) } : {}),
+        ...(e.numeroRef ? { numero_ref: e.numeroRef } : {}),
+        ...(e.statusVerificacao ? { status_verificacao: e.statusVerificacao } : {}),
+        ...(e.dataVerificacaoPrevista ? { data_verificacao_prevista: e.dataVerificacaoPrevista } : {}),
+        ...(e.dataVerificacaoRealizada ? { data_verificacao_realizada: e.dataVerificacaoRealizada } : {}),
       })),
       aquisicoes: aquisicoes.map((a) => ({
         ...a,
@@ -1019,11 +1020,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
                   onChange={(e) => handleEtapaProcessoChange(index, e)}
                   className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                   disabled={loadingEntregaveis}
+                  // Remover o required
                 >
                   <option value="">
                     {loadingEntregaveis 
                       ? "Carregando entregáveis..." 
-                      : "Selecione um entregável"}
+                      : "Selecione um entregável (opcional)"}
                   </option>
                   {entregaveis.map((entregavel) => (
                     <option
