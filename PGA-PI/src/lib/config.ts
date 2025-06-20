@@ -5,4 +5,12 @@ console.log('Base route:', BASE_ROUTE);
 export const API_ENDPOINTS = {
   LOGIN: `${API_URL}/auth/login`,
   USERS: `${API_URL}/users`,
+  THEMES: `${API_URL}/themes`,
+  THEMATIC_AXIS: `${API_URL}/thematic-axis`,
+  PROJECTS: `${API_URL}/project1`,
+  ATTACHMENTS: `${API_URL}/attachment1`,
+  PRIORITY_ACTIONS: `${API_URL}/priority-action`,
+  DELIVERABLES: `${API_URL}/deliverable`,
+  SITUATIONS: `${API_URL}/problem-situation`,
+  WORKLOAD_HAE: `${API_URL}/workload-hae`,
 };

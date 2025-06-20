@@ -1,57 +1,87 @@
-import { ReactNode, createContext, useContext, useState, useEffect } from "react";
-import { authService, UserData } from "@features/auth/services/authService";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService, type UserData } from '@/features/auth/services/authService';
 
-type AuthContextType = {
-  isAuthenticated: boolean;
+interface AuthContextType {
   user: UserData | null;
-  login: (email: string, senha: string) => Promise<boolean>;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-};
+}
 
-export const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  user: null,
-  login: async () => false,
-  logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-type AuthProviderProps = {
+interface AuthProviderProps {
   children: ReactNode;
-};
+}
 
-export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
-  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
-  const [user, setUser] = useState<UserData | null>(authService.getCurrentUser());
-  
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    // Verificar autenticação durante inicialização
-    setIsAuthenticated(authService.isAuthenticated());
-    setUser(authService.getCurrentUser());
+    // Verificar se há dados de usuário salvos
+    const checkStoredAuth = () => {
+      try {
+        if (authService.isAuthenticated()) {
+          const userData = authService.getCurrentUser();
+          console.log('Usuário carregado do localStorage:', userData);
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+        // Limpar dados corrompidos
+        authService.logout();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkStoredAuth();
   }, []);
 
-  const login = async (email: string, senha: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const userData = await authService.login({ email, senha });
-      setIsAuthenticated(true);
+      // O authService.login retorna UserData diretamente
+      const userData = await authService.login({ email, senha: password });
+      console.log('Login realizado com:', userData);
+      
+      // O authService já salva no localStorage, então só precisamos atualizar o state
       setUser(userData);
       return true;
     } catch (error) {
-      console.error("Erro no login:", error);
-      return false;
+      console.error('Erro no login:', error);
+      throw error;
     }
   };
 
   const logout = () => {
     authService.logout();
-    setIsAuthenticated(false);
     setUser(null);
   };
 
+  const value: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    logout,
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext); 
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+// Re-exportar o tipo UserData do authService
+export type { UserData } from '@/features/auth/services/authService';

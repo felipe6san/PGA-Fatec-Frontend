@@ -1,111 +1,204 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
 import { 
   Table, TableBody, TableCell, TableHead, 
   TableHeader, TableRow 
 } from "../../../components/ui/table";
 import { Input } from "../../../components/ui/input";
-import { Card } from "../../../components/ui/card";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Plus, Search, AlertCircle, BarChart3, Flag } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
-
-interface Prioridade {
-  id: number;
-  grau: number;
-  descricao: string;
-  tipo_gestao: string;
-  detalhes?: string;
-}
+import { Card } from "../../../components/ui/card";
+import { Modal } from "../../../components/ui/modal";
+import { Plus, Search, AlertCircle, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { useToast } from "../../../components/ui/use-toast";
+import { prioridadesService } from "../services/prioridadesService";
+import { PrioridadeAcao } from "@/types/api";
 
 export const PrioridadesConfig = () => {
-  const [prioridades, setPrioridades] = useState<Prioridade[]>([
-    { id: 1, grau: 1, descricao: "URGÊNCIA DE REGULAÇÃO", tipo_gestao: "Regulação", detalhes: "Prioridade máxima (advinda de MEC, CEE, MP, Vigilância Sanitária ou notificação de qualquer órgão regulador/fiscalizador)" },
-    { id: 2, grau: 2, descricao: "URGÊNCIA ESTRATÉGICA", tipo_gestao: "Estratégico", detalhes: "Gestão Estratégica do CPS (AMS, novos cursos e unidades, programas de governo)" },
-    { id: 3, grau: 3, descricao: "PRIORIDADE ALTA", tipo_gestao: "Tático", detalhes: "Gestão Tática (ações correlatas à Avaliação Institucional - ENADE, WebSAI, CPA, Observatório Escolar)" },
-    { id: 4, grau: 4, descricao: "PRIORIDADE MÉDIA", tipo_gestao: "Operacional", detalhes: "Gestão Operacional para aumento da capacidade instalada" },
-    { id: 5, grau: 5, descricao: "PRIORIDADE REGULAR", tipo_gestao: "Operacional", detalhes: "Gestão Operacional para preservação da capacidade instalada" },
-    { id: 6, grau: 6, descricao: "Outro", tipo_gestao: "Outro", detalhes: "" },
-  ]);
+  const [prioridades, setPrioridades] = useState<PrioridadeAcao[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingAdd, setLoadingAdd] = useState(false);
+  const [loadingRemove, setLoadingRemove] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
-  const [novaPrioridade, setNovaPrioridade] = useState<Prioridade>({ 
-    id: 0, 
+  // Estados do modal de confirmação
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [prioridadeToDelete, setPrioridadeToDelete] = useState<PrioridadeAcao | null>(null);
+  
+  const [novaPrioridade, setNovaPrioridade] = useState<{ 
+    grau: number; 
+    tipo_gestao: string; 
+    descricao: string; 
+    detalhes: string; 
+  }>({ 
     grau: 0, 
+    tipo_gestao: "", 
     descricao: "", 
-    tipo_gestao: "",
-    detalhes: ""
+    detalhes: "" 
   });
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  const tiposGestao = ["Regulação", "Estratégico", "Tático", "Operacional", "Outro"];
+  // Carrega dados iniciais
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
-  const handleAddPrioridade = () => {
-    if (!novaPrioridade.grau || !novaPrioridade.descricao || !novaPrioridade.tipo_gestao) {
-      alert("Preencha o grau, a descrição e o tipo de gestão da prioridade");
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const prioridadesData = await prioridadesService.getAll();
+      setPrioridades(prioridadesData);
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+      setError('Erro ao carregar dados. Verifique se o backend está rodando.');
+      
+      toast({
+        variant: "destructive",
+        title: "Conectando com dados de exemplo",
+        description: "Não foi possível conectar ao servidor. Usando dados locais.",
+      });
+      
+      // Fallback para dados mock em caso de erro
+      setPrioridades([
+        { prioridade_id: 1, grau: 1, tipo_gestao: "Estratégico", descricao: "Muito Alta", detalhes: "Prioridade máxima para ações estratégicas" },
+        { prioridade_id: 2, grau: 2, tipo_gestao: "Tático", descricao: "Alta", detalhes: "Prioridade alta para ações táticas" },
+        { prioridade_id: 3, grau: 3, tipo_gestao: "Operacional", descricao: "Média", detalhes: "Prioridade média para ações operacionais" },
+        { prioridade_id: 4, grau: 4, tipo_gestao: "Rotina", descricao: "Baixa", detalhes: "Prioridade baixa para ações de rotina" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddPrioridade = async () => {
+    if (!novaPrioridade.grau || !novaPrioridade.tipo_gestao || !novaPrioridade.descricao || !novaPrioridade.detalhes) {
+      toast({
+        variant: "destructive",
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos: grau, tipo de gestão, descrição e detalhes",
+      });
       return;
     }
 
     if (prioridades.some(p => p.grau === novaPrioridade.grau)) {
-      alert(`Já existe uma prioridade com o grau ${novaPrioridade.grau}`);
+      toast({
+        variant: "destructive",
+        title: "Grau já existe",
+        description: `Já existe uma prioridade com o grau ${novaPrioridade.grau}`,
+      });
       return;
     }
 
-    const id = prioridades.length > 0 ? Math.max(...prioridades.map(p => p.id)) + 1 : 1;
+    try {
+      setLoadingAdd(true);
+      
+      const novaPrioridadeCreated = await prioridadesService.create({
+        grau: novaPrioridade.grau,
+        tipo_gestao: novaPrioridade.tipo_gestao,
+        descricao: novaPrioridade.descricao,
+        detalhes: novaPrioridade.detalhes
+      });
+      
+      setPrioridades([...prioridades, novaPrioridadeCreated]);
+      setNovaPrioridade({ grau: 0, tipo_gestao: "", descricao: "", detalhes: "" });
+      
+      toast({
+        variant: "success",
+        title: "Prioridade adicionada!",
+        description: `"${novaPrioridade.descricao}" foi adicionada com sucesso`,
+      });
+      
+    } catch (err) {
+      console.error('Erro ao adicionar prioridade:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao adicionar",
+        description: "Não foi possível adicionar a prioridade. Tente novamente.",
+      });
+    } finally {
+      setLoadingAdd(false);
+    }
+  };
+
+  // Função para abrir o modal de confirmação
+  const handleShowDeleteModal = (prioridade: PrioridadeAcao) => {
+    setPrioridadeToDelete(prioridade);
+    setShowDeleteModal(true);
+  };
+
+  // Função para fechar o modal
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setPrioridadeToDelete(null);
+  };
+
+  // Função para confirmar a remoção
+  const handleConfirmDelete = async () => {
+    if (!prioridadeToDelete) return;
     
-    setPrioridades([...prioridades, { ...novaPrioridade, id }]);
-    setNovaPrioridade({ id: 0, grau: 0, descricao: "", tipo_gestao: "", detalhes: "" });
+    try {
+      setLoadingRemove(true);
+      
+      await prioridadesService.delete(prioridadeToDelete.prioridade_id);
+      setPrioridades(prioridades.filter(p => p.prioridade_id !== prioridadeToDelete.prioridade_id));
+      
+      toast({
+        variant: "success",
+        title: "Prioridade removida",
+        description: `"${prioridadeToDelete.descricao}" foi removida com sucesso`,
+      });
+      
+      handleCloseDeleteModal();
+    } catch (err) {
+      console.error('Erro ao remover prioridade:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao remover",
+        description: "Não foi possível remover a prioridade. Tente novamente.",
+      });
+    } finally {
+      setLoadingRemove(false);
+    }
   };
 
-  const handleRemovePrioridade = (id: number) => {
-    setPrioridades(prioridades.filter(p => p.id !== id));
-  };
-  
-  const handleUpdateDetalhes = (id: number, detalhes: string) => {
-    setPrioridades(prioridades.map(prioridade => 
-      prioridade.id === id ? { ...prioridade, detalhes } : prioridade
-    ));
-  };
-
+  // Filtragem de prioridades com base no termo de busca
   const filteredPrioridades = prioridades.filter(prioridade => 
     prioridade.grau.toString().includes(searchTerm) ||
+    prioridade.tipo_gestao.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prioridade.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (prioridade.tipo_gestao && prioridade.tipo_gestao.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (prioridade.detalhes && prioridade.detalhes.toLowerCase().includes(searchTerm.toLowerCase()))
+    prioridade.detalhes!.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPriorityBadgeColor = (grau: number) => {
-    switch(grau) {
-      case 1: return "bg-red-100 text-red-800 border-red-300";
-      case 2: return "bg-orange-100 text-orange-800 border-orange-300";
-      case 3: return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case 4: return "bg-blue-100 text-blue-800 border-blue-300";
-      case 5: return "bg-green-100 text-green-800 border-green-300";
-      default: return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
-  const getTipoGestaoBadgeColor = (tipo: string) => {
-    switch(tipo) {
-      case "Regulação": return "bg-red-100 text-red-800 border-red-300";
-      case "Estratégico": return "bg-orange-100 text-orange-800 border-orange-300";
-      case "Tático": return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "Operacional": return "bg-blue-100 text-blue-800 border-blue-300";
-      default: return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin text-[#ae0f0a]" />
+          <span className="text-lg text-gray-600">Carregando prioridades...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header com indicador de erro */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-            <BarChart3 className="h-6 w-6 mr-2 text-[#ae0f0a]" />
-            Gerenciar Prioridades e Origens
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-800">Gerenciar Prioridades de Ação</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Configure as prioridades e origens utilizadas na classificação de projetos e ações
+            As prioridades definem a importância das ações no sistema.
           </p>
+          {error && (
+            <div className="flex items-center mt-2 text-amber-600">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-500">{filteredPrioridades.length} registros</span>
@@ -115,23 +208,23 @@ export const PrioridadesConfig = () => {
       {/* Formulário de cadastro */}
       <Card className="p-5 border border-gray-200 shadow-sm">
         <h3 className="text-md font-medium mb-4 text-gray-700 flex items-center">
-          <Flag className="h-5 w-5 mr-2 text-[#ae0f0a]" />
-          Adicionar Nova Prioridade/Origem
+          <Plus className="h-5 w-5 mr-2 text-[#ae0f0a]" />
+          Adicionar Nova Prioridade
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label htmlFor="grau" className="block text-sm font-medium text-gray-700 mb-1">
-              Grau de Prioridade
+              Grau da Prioridade
             </label>
             <Input
               id="grau"
               type="number"
-              min="1"
-              placeholder="Ex: 1 (mais alta) a 6 (mais baixa)"
+              placeholder="Ex: 5"
               value={novaPrioridade.grau || ""}
               onChange={e => setNovaPrioridade({ ...novaPrioridade, grau: parseInt(e.target.value) || 0 })}
               className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
             />
           </div>
           
@@ -139,59 +232,64 @@ export const PrioridadesConfig = () => {
             <label htmlFor="tipo_gestao" className="block text-sm font-medium text-gray-700 mb-1">
               Tipo de Gestão
             </label>
-            <Select
+            <Input
+              id="tipo_gestao"
+              placeholder="Ex: Estratégico"
               value={novaPrioridade.tipo_gestao}
-              onValueChange={(value) => setNovaPrioridade({ ...novaPrioridade, tipo_gestao: value })}
-            >
-              <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800">
-                <SelectValue placeholder="Selecione um tipo de gestão" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tiposGestao.map(tipo => (
-                    <SelectItem key={tipo} value={tipo}>
-                      {tipo}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+              onChange={e => setNovaPrioridade({ ...novaPrioridade, tipo_gestao: e.target.value })}
+              className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
+            />
           </div>
         </div>
 
-        <div className="mb-4">
-          <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
-            Descrição
-          </label>
-          <Input
-            id="descricao"
-            placeholder="Ex: URGÊNCIA DE REGULAÇÃO"
-            value={novaPrioridade.descricao}
-            onChange={e => setNovaPrioridade({ ...novaPrioridade, descricao: e.target.value })}
-            className="w-full bg-white border-gray-300"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="detalhes" className="block text-sm font-medium text-gray-700 mb-1">
-            Detalhamento/Fundamentação (opcional)
-          </label>
-          <textarea
-            id="detalhes"
-            placeholder="Ex: Prioridade máxima (advinda de MEC, CEE, MP, Vigilância Sanitária...)"
-            value={novaPrioridade.detalhes || ""}
-            onChange={e => setNovaPrioridade({ ...novaPrioridade, detalhes: e.target.value })}
-            className="w-full resize-y bg-white border-gray-300"
-            rows={2}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
+              Descrição
+            </label>
+            <Input
+              id="descricao"
+              placeholder="Ex: Muito Baixa"
+              value={novaPrioridade.descricao}
+              onChange={e => setNovaPrioridade({ ...novaPrioridade, descricao: e.target.value })}
+              className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="detalhes" className="block text-sm font-medium text-gray-700 mb-1">
+              Detalhes
+            </label>
+            <Input
+              id="detalhes"
+              placeholder="Ex: Para ações de baixíssima prioridade"
+              value={novaPrioridade.detalhes}
+              onChange={e => setNovaPrioridade({ ...novaPrioridade, detalhes: e.target.value })}
+              className="w-full bg-white border-gray-300"
+              disabled={loadingAdd}
+            />
+          </div>
         </div>
         
         <div className="flex justify-end">
           <Button 
             onClick={handleAddPrioridade} 
             className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center"
+            disabled={loadingAdd}
           >
-            <Plus className="h-4 w-4 mr-1" /> Adicionar
+            {loadingAdd ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                Adicionando...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar Prioridade
+              </>
+            )}
           </Button>
         </div>
       </Card>
@@ -199,7 +297,7 @@ export const PrioridadesConfig = () => {
       {/* Lista de Prioridades */}
       <div>
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-md font-medium text-gray-700">Prioridades e Origens Cadastradas</h3>
+          <h3 className="text-md font-medium text-gray-700">Prioridades Cadastradas</h3>
           
           <div className="relative w-64">
             <Input
@@ -217,10 +315,10 @@ export const PrioridadesConfig = () => {
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow>
-                  <TableHead className="w-16">Grau</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Tipo de Gestão</TableHead>
-                  <TableHead>Detalhes/Fundamentação</TableHead>
+                  <TableHead className="w-20">Grau</TableHead>
+                  <TableHead className="w-32">Tipo de Gestão</TableHead>
+                  <TableHead className="w-32">Descrição</TableHead>
+                  <TableHead>Detalhes</TableHead>
                   <TableHead className="w-24 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -228,36 +326,29 @@ export const PrioridadesConfig = () => {
                 {filteredPrioridades
                   .sort((a, b) => a.grau - b.grau)
                   .map(prioridade => (
-                    <TableRow key={prioridade.id} className="hover:bg-gray-50">
+                    <TableRow key={prioridade.prioridade_id} className="hover:bg-gray-50">
                       <TableCell>
-                        <Badge variant="outline" className={`${getPriorityBadgeColor(prioridade.grau)} font-semibold`}>
+                        <Badge variant="outline" className="font-mono bg-purple-50 border-purple-200 text-purple-800 font-semibold">
                           {prioridade.grau}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium text-gray-700">
+                        {prioridade.tipo_gestao}
+                      </TableCell>
+                      <TableCell className="font-medium text-gray-700">
                         {prioridade.descricao}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`${getTipoGestaoBadgeColor(prioridade.tipo_gestao)} font-semibold`}>
-                          {prioridade.tipo_gestao}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <textarea
-                          value={prioridade.detalhes || ""}
-                          onChange={(e) => handleUpdateDetalhes(prioridade.id, e.target.value)}
-                          placeholder="Adicione detalhes sobre esta prioridade..."
-                          className="w-full resize-none min-h-[50px] text-sm bg-white border-gray-200"
-                          rows={2}
-                        />
+                      <TableCell className="text-gray-600">
+                        {prioridade.detalhes}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={() => handleRemovePrioridade(prioridade.id)}
+                          onClick={() => handleShowDeleteModal(prioridade)}
                           className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
                         >
+                          <Trash2 className="h-3 w-3 mr-1" />
                           Remover
                         </Button>
                       </TableCell>
@@ -277,6 +368,81 @@ export const PrioridadesConfig = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de Confirmação de Remoção */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        title="Confirmar Remoção"
+        className="max-w-md"
+      >
+        <div className="space-y-4">
+          {/* Ícone de alerta */}
+          <div className="flex items-center justify-center">
+            <div className="bg-red-100 rounded-full p-3">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+            </div>
+          </div>
+
+          {/* Descrição */}
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Esta ação não pode ser desfeita. A prioridade será removida permanentemente do sistema.
+            </p>
+          </div>
+          
+          {/* Preview do item a ser removido */}
+          {prioridadeToDelete && (
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <Badge variant="outline" className="font-mono bg-purple-50 border-purple-200 text-purple-800 font-semibold">
+                  {prioridadeToDelete.grau}
+                </Badge>
+                <div>
+                  <p className="font-medium text-gray-900">{prioridadeToDelete.descricao}</p>
+                  <p className="text-sm text-gray-500">{prioridadeToDelete.tipo_gestao} • {prioridadeToDelete.detalhes}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-900">
+              Tem certeza que deseja remover esta prioridade?
+            </p>
+          </div>
+
+          {/* Botões de ação */}
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={handleCloseDeleteModal}
+              disabled={loadingRemove}
+              className="min-w-[100px]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={loadingRemove}
+              className="bg-[#ae0f0a] hover:bg-[#910c08] min-w-[100px]"
+            >
+              {loadingRemove ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removendo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

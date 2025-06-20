@@ -3,20 +3,29 @@ export enum PapelProjeto {
   Colaborador = "Colaborador",
 }
 
-export enum TipoVinculoHAE {
-  HAE15 = "15",
-  HAE25 = "25",
-  HAE40 = "40",
-  NaoSeAplica = "NaoSeAplica",
+export interface TipoVinculoHAE {
+  id: number;
+  sigla: string;
+  descricao: string;
+  detalhes?: string;
+  ativo: boolean;
+}
+
+// Interface para pessoa vinda da API - Movida para o arquivo de tipos
+export interface PessoaAPI {
+  pessoa_id: number;
+  nome: string;
+  email?: string;
+  tipo_usuario?: string;
 }
 
 export interface ProjetoPessoa {
-  id: number; // Frontend local ID
-  pessoaId: string; // Corresponds to pessoa_id in DB, fetched from mock/API
+  id: number;
+  pessoaId: string;
   nome: string;
   papel: PapelProjeto;
-  cargaHorariaSemanal?: string; // number in schema, keep string for input
-  tipoVinculoHAE?: TipoVinculoHAE | string;
+  cargaHorariaSemanal?: string;
+  tipoVinculoHAE?: string;
 }
 
 export enum StatusVerificacao {
@@ -26,13 +35,13 @@ export enum StatusVerificacao {
 }
 
 export interface EtapaProcesso {
-  id: number; // Frontend local ID
+  id: number;
   descricao: string;
   entregavelLinkSei?: string;
   numeroRef?: string;
   dataVerificacaoPrevista?: string;
   dataVerificacaoRealizada?: string;
-  statusVerificacao: StatusVerificacao | string;
+  statusVerificacao?: StatusVerificacao | string;
 }
 
 export enum TipoAnexo {
@@ -61,8 +70,8 @@ export interface EixoTematico {
 }
 
 export interface PrioridadeAcao {
-  id: number; // Corresponds to prioridade_id
+  prioridade_id: number;
   grau: number;
   descricao: string;
   tipo_gestao: string;
-} 
+}
