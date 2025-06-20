@@ -1,15 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PapelProjeto,
   TipoVinculoHAE,
   ProjetoPessoa,
   StatusVerificacao,
   EtapaProcesso,
-  TipoAnexo,
   AquisicaoItem,
-  EixoTematico,
   PrioridadeAcao,
+  PessoaAPI,
 } from "./projectFormTypes";
+import {
+  eixoTematicoService,
+  prioridadeAcaoService,
+  temaService,
+  userService,
+  workloadHaeService,
+  entregaveisService,
+} from "@/services/commonServices";
+import { useAuth } from "@/context/AuthContext";
+import { situacoesService } from "@/features/settings/services/situacoesService";
+import { TipoUsuario, EntregavelLinkSei, SituacaoProblema } from "@/types/api"; // Importar tipo do entregável
 
 // --- Utility Functions ---
 const formatCurrency = (value: string): string => {
@@ -24,88 +34,58 @@ const parseCurrencyInput = (value: string): string => {
   return value.replace(/\D/g, "");
 };
 
-const mockPessoas = [
-  { pessoaId: "1", nome: "João Silva (Docente)" },
-  { pessoaId: "2", nome: "Maria Santos (Administrativo)" },
-  { pessoaId: "3", nome: "Pedro Oliveira (Docente)" },
-  { pessoaId: "4", nome: "Ana Costa (Gestor)" },
-  { pessoaId: "5", nome: "Lucas Ferreira (Docente)" },
-  { pessoaId: "6", nome: "Mariana Lima (Administrativo)" },
-];
+// Modificar a interface de props para receber o eixoTematico selecionado
+interface ProjectFormProps {
+  eixoSelecionado?: {
+    eixo_id: number;
+    numero: number;
+    nome: string;
+  };
+}
 
-const mockEixosTematicos: EixoTematico[] = [
-  { id: 1, numero: 1, nome: "Eixo 1: Ensino de Qualidade" },
-  { id: 2, numero: 2, nome: "Eixo 2: Pesquisa e Inovação" },
-  { id: 3, numero: 3, nome: "Eixo 3: Extensão e Comunidade" },
-  { id: 4, numero: 4, nome: "Eixo 4: Gestão e Infraestrutura" },
-];
+const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
+  // Obter usuário autenticado
+  const { user } = useAuth();
 
-const mockPrioridadesAcao: PrioridadeAcao[] = [
-  { id: 1, grau: 1, descricao: "Prioridade Alta", tipo_gestao: "Regulação" },
-  { id: 2, grau: 2, descricao: "Prioridade Média", tipo_gestao: "Estratégico" },
-  { id: 3, grau: 3, descricao: "Prioridade Baixa", tipo_gestao: "Operacional" },
-];
+  // Estado para armazenar os eixos temáticos do backend
+  const [eixosTematicos, setEixosTematicos] = useState<any[]>([]);
+  const [loadingEixos, setLoadingEixos] = useState(false);
+  const [errorEixos, setErrorEixos] = useState<string | null>(null);
 
-const mockEntregavel = [
-  { id: 1, descricao: "Solicitacao de Material Consumo" },
-  { id: 2, descricao: "Solicitacao de Material Permanente" },
-  { id: 3, descricao: "Solicitacao de Reagentes Quimicos" },
-  { id: 4, descricao: "Solicitacao de Livros" },
-  { id: 5, descricao: "Solicitacao de Softwares" },
-  { id: 6, descricao: "Relatorio" },
-];
+  // NOVO: Estados para prioridades
+  const [prioridades, setPrioridades] = useState<PrioridadeAcao[]>([]);
+  const [loadingPrioridades, setLoadingPrioridades] = useState(false);
+  const [errorPrioridades, setErrorPrioridades] = useState<string | null>(null);
 
-const mockSituacoesProblema = [
-  {
-    id: 1,
-    codigo: "cat 0.1.01",
-    descricao: "Metodologia de ensino, desempenho de alunos, evasão",
-  },
-  {
-    id: 2,
-    codigo: "cat 0.1.02",
-    descricao: "Manutenção e conservação predial",
-  },
-  {
-    id: 3,
-    codigo: "cat 0.1.03",
-    descricao: "Infraestrutura predial (espaços, sistemas)",
-  },
-  {
-    id: 4,
-    codigo: "cat 0.1.04",
-    descricao: "Infraestrutura laboratorial e ambientes de ensino",
-  },
-  {
-    id: 5,
-    codigo: "cat 0.1.05",
-    descricao: "Materiais, equipamentos e mobiliários",
-  },
-  {
-    id: 6,
-    codigo: "cat 0.1.06",
-    descricao: "Quantidade de professores/funcionários",
-  },
-  {
-    id: 7,
-    codigo: "cat 0.1.07",
-    descricao: "Comunicação com a comunidade acadêmica",
-  },
-  {
-    id: 8,
-    codigo: "cat 0.1.08",
-    descricao: "Participação da comunidade e sociedade",
-  },
-  {
-    id: 9,
-    codigo: "cat 0.1.09",
-    descricao: "Acesso/Inclusão ao Ensino Superior (social, PCD)",
-  },
-  { id: 10, codigo: "cat 0.1.99", descricao: "Outra" },
-];
+  // NOVO: Estados para temas
+  const [temas, setTemas] = useState<any[]>([]);
+  const [filteredTemas, setFilteredTemas] = useState<any[]>([]);
+  const [loadingTemas, setLoadingTemas] = useState(false);
+  const [errorTemas, setErrorTemas] = useState<string | null>(null);
 
-const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
-  const [tema, setTema] = useState<string>("");
+  // NOVO: Estados para tipos de vínculo HAE
+  const [tiposVinculoHAE, setTiposVinculoHAE] = useState<TipoVinculoHAE[]>([]);
+  const [loadingVinculos, setLoadingVinculos] = useState(false);
+  const [errorVinculos, setErrorVinculos] = useState<string | null>(null);
+
+  // Estado para entregáveis
+  const [entregaveis, setEntregaveis] = useState<EntregavelLinkSei[]>([]);
+  const [loadingEntregaveis, setLoadingEntregaveis] = useState(false);
+  const [errorEntregaveis, setErrorEntregaveis] = useState<string | null>(null);
+
+  // Estado para situações problema
+  const [situacoesProblemaAPI, setSituacoesProblemaAPI] = useState<SituacaoProblema[]>([]);
+  const [loadingSituacoes, setLoadingSituacoes] = useState(false);
+  const [errorSituacoes, setErrorSituacoes] = useState<string | null>(null);
+
+  // Inicializar o eixoId com o valor do eixo selecionado
+  const [eixoId, setEixoId] = useState<string>(
+    eixoSelecionado ? eixoSelecionado.eixo_id.toString() : ""
+  );
+
+  // Estado para tema selecionado
+  const [temaId, setTemaId] = useState<string>("");
+
   const [nomeProjeto, setNomeProjeto] = useState<string>("");
   const [ano, setAno] = useState<number>(new Date().getFullYear());
   const [origem, setOrigem] = useState<string>("");
@@ -115,7 +95,6 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
   const [dataFinal, setDataFinal] = useState<string>("");
   const [custoEstimado, setCustoEstimado] = useState<string>("");
   const [fonteRecursos, setFonteRecursos] = useState<string>("");
-  const [eixoId, setEixoId] = useState<string>("");
   const [prioridadeId, setPrioridadeId] = useState<string>("");
   const [
     objetivosInstitucionaisReferenciados,
@@ -125,6 +104,8 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
     useState<boolean>(false);
   const [obrigatorioSustentabilidade, setObrigatorioSustentabilidade] =
     useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+
   const [pessoasProjeto, setPessoasProjeto] = useState<ProjetoPessoa[]>([
     { id: 0, pessoaId: "", nome: "", papel: PapelProjeto.Responsavel },
   ]);
@@ -138,7 +119,192 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
     }>
   >([{ id: "", descricao: "" }]);
   const [aquisicoes, setAquisicoes] = useState<AquisicaoItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  // Carregar dados iniciais ao montar o componente
+  useEffect(() => {
+    carregarEixosTematicos();
+    carregarPrioridades();
+    carregarTemas();
+    carregarPessoas();
+    carregarTiposVinculoHAE();
+    carregarEntregaveis();
+    carregarSituacoesProblema(); // Adicionar esta chamada
+  }, []);
+
+  // Filtrar temas baseados no eixo selecionado
+  useEffect(() => {
+    if (eixoId && temas.length > 0) {
+      const temasDoEixo = temas.filter(
+        (tema) => tema.eixo_id === parseInt(eixoId)
+      );
+      setFilteredTemas(temasDoEixo);
+      // Limpar seleção de tema se mudar de eixo
+      setTemaId("");
+    } else {
+      setFilteredTemas([]);
+    }
+  }, [eixoId, temas]);
+
+  // Função para carregar eixos temáticos
+  const carregarEixosTematicos = async () => {
+    try {
+      setLoadingEixos(true);
+      setErrorEixos(null);
+
+      const data = await eixoTematicoService.getAll();
+      console.log("Eixos temáticos carregados:", data);
+      setEixosTematicos(data);
+    } catch (error) {
+      console.error("Erro ao carregar eixos temáticos:", error);
+      setErrorEixos("Não foi possível carregar os eixos temáticos.");
+    } finally {
+      setLoadingEixos(false);
+    }
+  };
+
+  // NOVO: Função para carregar prioridades
+  const carregarPrioridades = async () => {
+    try {
+      setLoadingPrioridades(true);
+      setErrorPrioridades(null);
+
+      const data = await prioridadeAcaoService.getAll();
+      console.log("Prioridades carregadas:", data);
+      setPrioridades(data);
+    } catch (error) {
+      console.error("Erro ao carregar prioridades:", error);
+      setErrorPrioridades("Não foi possível carregar as prioridades de ação.");
+    } finally {
+      setLoadingPrioridades(false);
+    }
+  };
+
+  // NOVO: Função para carregar temas
+  const carregarTemas = async () => {
+    try {
+      setLoadingTemas(true);
+      setErrorTemas(null);
+
+      const data = await temaService.getAll();
+      console.log("Temas carregados:", data);
+      setTemas(data);
+    } catch (error) {
+      console.error("Erro ao carregar temas:", error);
+      setErrorTemas("Não foi possível carregar os temas.");
+    } finally {
+      setLoadingTemas(false);
+    }
+  };
+
+  // Estado para pessoas
+  const [pessoas, setPessoas] = useState<PessoaAPI[]>([]);
+  const [loadingPessoas, setLoadingPessoas] = useState(false);
+  const [errorPessoas, setErrorPessoas] = useState<string | null>(null);
+
+  // Função para carregar pessoas
+  const carregarPessoas = async () => {
+    try {
+      setLoadingPessoas(true);
+      setErrorPessoas(null);
+
+      // Se não tivermos usuário logado, não fazer nada
+      if (!user) return;
+
+      let pessoasData: PessoaAPI[] = [];
+
+      const userTipo =
+        (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
+      const unidadeId = (user as any)?.unidades?.[0]?.unidade_id || 1;
+
+      console.log("Tipo de usuário:", userTipo);
+
+      // Se for administrador ou CPS, pode ver todas as pessoas
+      if (
+        userTipo === TipoUsuario.ADMINISTRADOR ||
+        userTipo === TipoUsuario.CPS
+      ) {
+        console.log("Carregando todas as pessoas (admin/CPS)");
+        pessoasData = await userService.getAll();
+      } else {
+        // Caso contrário, carregar pessoas da unidade do usuário
+        console.log(`Carregando pessoas da unidade: ${unidadeId}`);
+        pessoasData = await userService.getByUnidade(unidadeId);
+      }
+
+      console.log("Pessoas carregadas:", pessoasData);
+      setPessoas(pessoasData);
+    } catch (error) {
+      console.error("Erro ao carregar pessoas:", error);
+      setErrorPessoas("Não foi possível carregar a lista de pessoas.");
+    } finally {
+      setLoadingPessoas(false);
+    }
+  };
+
+  // Função para carregar tipos de vínculo HAE
+  const carregarTiposVinculoHAE = async () => {
+    try {
+      setLoadingVinculos(true);
+      setErrorVinculos(null);
+      
+      const data = await workloadHaeService.getAll();
+      console.log('Tipos de vínculo HAE carregados:', data);
+      setTiposVinculoHAE(data);
+    } catch (error) {
+      console.error('Erro ao carregar tipos de vínculo HAE:', error);
+      setErrorVinculos('Não foi possível carregar os tipos de vínculo HAE.');
+    } finally {
+      setLoadingVinculos(false);
+    }
+  };
+
+  // NOVO: Função para carregar entregáveis
+  const carregarEntregaveis = async () => {
+    try {
+      setLoadingEntregaveis(true);
+      setErrorEntregaveis(null);
+      
+      const data = await entregaveisService.getAll();
+      console.log('Entregáveis carregados:', data);
+      setEntregaveis(data);
+    } catch (error) {
+      console.error('Erro ao carregar entregáveis:', error);
+      setErrorEntregaveis('Não foi possível carregar a lista de entregáveis.');
+    } finally {
+      setLoadingEntregaveis(false);
+    }
+  };
+
+  // Função para carregar situações problema
+  const carregarSituacoesProblema = async () => {
+    try {
+      setLoadingSituacoes(true);
+      setErrorSituacoes(null);
+      
+      const data = await situacoesService.getAll();
+      console.log('Situações problema carregadas:', data);
+      setSituacoesProblemaAPI(data);
+    } catch (error) {
+      console.error('Erro ao carregar situações problema:', error);
+      setErrorSituacoes('Não foi possível carregar a lista de situações problema.');
+    } finally {
+      setLoadingSituacoes(false);
+    }
+  };
+
+  // Formatação de código para temas
+  const formatarCodigoTema = (
+    eixoNumero: number,
+    temaNumero: number
+  ): string => {
+    return `cat ${eixoNumero}.${temaNumero.toString().padStart(2, "0")}`;
+  };
+
+  // Função para obter o número do eixo
+  const getEixoNumero = (eixoId: number): number => {
+    const eixo = eixosTematicos.find((e) => e.eixo_id === eixoId);
+    return eixo ? eixo.numero : 0;
+  };
 
   const handleAddPessoaProjeto = (papel: PapelProjeto) => {
     setPessoasProjeto([
@@ -165,11 +331,14 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
     const currentPessoa = newPessoasProjeto[index];
 
     if (name === "pessoaId") {
-      const selectedPessoa = mockPessoas.find((p) => p.pessoaId === value);
+      const selectedPessoa = pessoas.find(
+        (p) => p.pessoa_id.toString() === value
+      );
+
       newPessoasProjeto[index] = {
         ...currentPessoa,
         pessoaId: value,
-        nome: selectedPessoa?.nome || "",
+        nome: selectedPessoa ? selectedPessoa.nome : "",
       };
     } else {
       newPessoasProjeto[index] = { ...currentPessoa, [name]: value };
@@ -243,14 +412,16 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const { value } = event.target;
-    const situacao = mockSituacoesProblema.find(
-      (s) => s.id.toString() === value
+    const situacao = situacoesProblemaAPI.find(
+      (s) => s.situacao_id.toString() === value
     );
 
     const newSituacoesProblema = [...situacoesProblema];
     newSituacoesProblema[index] = {
       id: value,
-      descricao: situacao ? `${situacao.codigo} - ${situacao.descricao}` : "",
+      descricao: situacao 
+        ? `${situacao.codigo_categoria} - ${situacao.descricao}` 
+        : "",
     };
 
     setSituacoesProblema(newSituacoesProblema);
@@ -318,7 +489,7 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const formData = {
-      tema,
+      temaId: parseInt(temaId) || null,
       eixoId: parseInt(eixoId) || null,
       prioridadeId: parseInt(prioridadeId) || null,
       oQueSeraFeito,
@@ -371,31 +542,90 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
       onSubmit={handleSubmit}
       className="space-y-6 p-4 bg-white shadow-md rounded-lg"
     >
-      {/* Layout em duas colunas para Tema e Nome do Projeto */}
+      {/* Layout em duas colunas para Eixo Temático e Tema do Projeto */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* PRIMEIRO CAMPO: Eixo Temático */}
         <div>
           <label
-            htmlFor="projectTheme"
+            htmlFor="eixoId"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Eixo Temático:
+          </label>
+          <select
+            id="eixoId"
+            value={eixoId}
+            onChange={(e) => setEixoId(e.target.value)}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            disabled={loadingEixos || !!eixoSelecionado}
+          >
+            <option value="">
+              {loadingEixos
+                ? "Carregando eixos temáticos..."
+                : "Selecione um Eixo Temático"}
+            </option>
+            {eixosTematicos.map((eixo) => (
+              <option key={eixo.eixo_id} value={eixo.eixo_id}>
+                {eixo.numero.toString().padStart(2, "0")} - {eixo.nome}
+              </option>
+            ))}
+          </select>
+          {errorEixos && (
+            <p className="text-red-500 text-sm mt-1">{errorEixos}</p>
+          )}
+
+          {/* Se tivermos um eixo selecionado, mostramos de forma mais clara */}
+          {eixoSelecionado && (
+            <p className="text-sm text-gray-600 mt-1">
+              Eixo pré-selecionado da etapa anterior.
+            </p>
+          )}
+        </div>
+
+        {/* SEGUNDO CAMPO: ID/Tema do Projeto */}
+        <div>
+          <label
+            htmlFor="temaId"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             ID/Tema do Projeto (Conforme PGA):
           </label>
           <select
-            id="projectTheme"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            id="temaId"
+            value={temaId}
+            onChange={(e) => setTemaId(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
             required
+            disabled={!eixoId || loadingTemas}
           >
-            <option value="">Selecione um tema...</option>
-            {temasProjeto.map((tema) => (
-              <option key={tema.id} value={tema.id}>
-                {tema.code} - {tema.description}
+            <option value="">
+              {loadingTemas
+                ? "Carregando temas..."
+                : !eixoId
+                ? "Selecione primeiro um eixo temático"
+                : "Selecione um tema..."}
+            </option>
+            {filteredTemas.map((tema) => (
+              <option key={tema.tema_id} value={tema.tema_id.toString()}>
+                {formatarCodigoTema(getEixoNumero(tema.eixo_id), tema.tema_num)}{" "}
+                - {tema.descricao}
               </option>
             ))}
           </select>
+          {errorTemas && (
+            <p className="text-red-500 text-sm mt-1">{errorTemas}</p>
+          )}
+          {!loadingTemas && eixoId && filteredTemas.length === 0 && (
+            <p className="text-amber-500 text-sm mt-1">
+              Não há temas cadastrados para este eixo.
+            </p>
+          )}
         </div>
+      </div>
 
+      {/* Nome do Projeto e Ano */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label
             htmlFor="nomeProjeto"
@@ -411,9 +641,7 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label
             htmlFor="ano"
@@ -430,76 +658,46 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-
-        <div>
-          <label
-            htmlFor="prioridadeId"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Prioridade/Origem da Ação:
-          </label>
-          <select
-            id="prioridadeId"
-            value={prioridadeId}
-            onChange={(e) => setPrioridadeId(e.target.value)}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-          >
-            <option value="">Selecione a Prioridade/Origem</option>
-            {mockPrioridadesAcao.map((prio) => (
-              <option key={prio.id} value={prio.id}>
-                {prio.grau} - {prio.descricao} ({prio.tipo_gestao})
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label
-            htmlFor="eixoId"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Eixo Temático:
-          </label>
-          <select
-            id="eixoId"
-            value={eixoId}
-            onChange={(e) => setEixoId(e.target.value)}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-          >
-            <option value="">Selecione um Eixo Temático</option>
-            {mockEixosTematicos.map((eixo) => (
-              <option key={eixo.id} value={eixo.id}>
-                {eixo.numero} - {eixo.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label
-            htmlFor="prioridadeId"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Prioridade/Origem da Ação:
-          </label>
-          <select
-            id="prioridadeId"
-            value={prioridadeId}
-            onChange={(e) => setPrioridadeId(e.target.value)}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-          >
-            <option value="">Selecione a Prioridade/Origem</option>
-            {mockPrioridadesAcao.map((prio) => (
-              <option key={prio.id} value={prio.id}>
-                {prio.grau} - {prio.descricao} ({prio.tipo_gestao})
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* ATUALIZADO: Prioridade/Origem da Ação - Agora usando dados dinâmicos */}
+      <div>
+        <label
+          htmlFor="prioridadeId"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Prioridade/Origem da Ação:
+        </label>
+        <select
+          id="prioridadeId"
+          value={prioridadeId}
+          onChange={(e) => setPrioridadeId(e.target.value)}
+          required
+          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          disabled={loadingPrioridades}
+        >
+          <option value="">
+            {loadingPrioridades
+              ? "Carregando prioridades..."
+              : "Selecione a Prioridade/Origem"}
+          </option>
+          {prioridades.map((prio) => (
+            <option
+              key={prio.prioridade_id}
+              value={prio.prioridade_id.toString()}
+            >
+              {prio.grau} - {prio.descricao} ({prio.tipo_gestao})
+            </option>
+          ))}
+        </select>
+        {errorPrioridades && (
+          <p className="text-red-500 text-sm mt-1">{errorPrioridades}</p>
+        )}
+        {!loadingPrioridades && prioridades.length === 0 && (
+          <p className="text-amber-500 text-sm mt-1">
+            Não há prioridades/origens cadastradas no sistema.
+          </p>
+        )}
       </div>
 
       <div>
@@ -678,14 +876,27 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
                   onChange={(e) => handlePessoaProjetoChange(index, e)}
                   required
                   className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  disabled={loadingPessoas}
                 >
-                  <option value="">Selecione uma pessoa</option>
-                  {mockPessoas.map((p) => (
-                    <option key={p.pessoaId} value={p.pessoaId}>
-                      {p.nome}
+                  <option value="">
+                    {loadingPessoas
+                      ? "Carregando pessoas..."
+                      : "Selecione uma pessoa"}
+                  </option>
+                  {pessoas.map((p) => (
+                    <option key={p.pessoa_id} value={p.pessoa_id.toString()}>
+                      {p.nome} {p.tipo_usuario ? `(${p.tipo_usuario})` : ""}
                     </option>
                   ))}
                 </select>
+                {errorPessoas && (
+                  <p className="text-red-500 text-sm mt-1">{errorPessoas}</p>
+                )}
+                {!loadingPessoas && pessoas.length === 0 && (
+                  <p className="text-amber-500 text-sm mt-1">
+                    Não há pessoas cadastradas.
+                  </p>
+                )}
               </div>
               {pessoa.papel === PapelProjeto.Colaborador && (
                 <>
@@ -718,16 +929,21 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
                       value={pessoa.tipoVinculoHAE || ""}
                       onChange={(e) => handlePessoaProjetoChange(index, e)}
                       className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                      disabled={loadingVinculos}
                     >
-                      <option value="">Selecione o tipo</option>
-                      {Object.values(TipoVinculoHAE).map((vinculo) => (
-                        <option key={vinculo} value={vinculo}>
-                          {vinculo === TipoVinculoHAE.NaoSeAplica
-                            ? "Não se Aplica"
-                            : `HAE ${vinculo}`}
+                      <option value="">
+                        {loadingVinculos ? "Carregando tipos de vínculo..." : "Selecione o tipo"}
+                      </option>
+                      {tiposVinculoHAE.map((vinculo) => (
+                        <option key={vinculo.id} value={vinculo.id.toString()}>
+                          {vinculo.sigla} - {vinculo.descricao}
                         </option>
                       ))}
+                      <option value="NaoSeAplica">Não se Aplica</option>
                     </select>
+                    {errorVinculos && (
+                      <p className="text-red-500 text-sm mt-1">{errorVinculos}</p>
+                    )}
                   </div>
                 </>
               )}
@@ -802,14 +1018,25 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
                   value={etapa.entregavelLinkSei || ""}
                   onChange={(e) => handleEtapaProcessoChange(index, e)}
                   className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  disabled={loadingEntregaveis}
                 >
-                  <option value="">Selecione um entregável</option>
-                  {mockEntregavel.map((entregavel) => (
-                    <option key={entregavel.id} value={entregavel.descricao}>
-                      {entregavel.descricao}
+                  <option value="">
+                    {loadingEntregaveis 
+                      ? "Carregando entregáveis..." 
+                      : "Selecione um entregável"}
+                  </option>
+                  {entregaveis.map((entregavel) => (
+                    <option
+                      key={entregavel.entregavel_id}
+                      value={entregavel.entregavel_id.toString()}
+                    >
+                      {entregavel.entregavel_numero} - {entregavel.descricao}
                     </option>
                   ))}
                 </select>
+                {errorEntregaveis && (
+                  <p className="text-red-500 text-sm mt-1">{errorEntregaveis}</p>
+                )}
               </div>
               <div>
                 <label
@@ -975,11 +1202,14 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
               value={situacao.id}
               onChange={(e) => handleSituacaoProblemaChange(index, e)}
               className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mr-2 bg-white"
+              disabled={loadingSituacoes}
             >
-              <option value="">Selecionar situação problema...</option>
-              {mockSituacoesProblema.map((opcao) => (
-                <option key={opcao.id} value={opcao.id.toString()}>
-                  {opcao.codigo} - {opcao.descricao}
+              <option value="">
+                {loadingSituacoes ? "Carregando situações..." : "Selecionar situação problema..."}
+              </option>
+              {situacoesProblemaAPI.map((situacao) => (
+                <option key={situacao.situacao_id} value={situacao.situacao_id.toString()}>
+                  {situacao.codigo_categoria} - {situacao.descricao}
                 </option>
               ))}
             </select>
@@ -992,15 +1222,20 @@ const ProjectForm: React.FC<{ temasProjeto: any[] }> = ({ temasProjeto }) => {
             </button>
           </div>
         ))}
+        
+        {errorSituacoes && (
+          <p className="text-red-500 text-sm mt-1 mb-2">{errorSituacoes}</p>
+        )}
+        
         <button
           type="button"
           onClick={handleAddSituacaoProblema}
-          className="self-end mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="mt-2 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 self-start"
         >
-          Adicionar Situação/Oportunidade
+          Adicionar Situação
         </button>
       </div>
-
+      
       <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
         <button
           type="submit"

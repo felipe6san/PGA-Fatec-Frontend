@@ -8,6 +8,7 @@ import {
   SolicitacaoAcesso,
   TipoUsuario
 } from '@/types/api';
+import { TipoVinculoHAE } from "@/features/projects/components/projectFormTypes";
 
 // Tipo para criação de usuário
 interface CreateUserData {
@@ -18,17 +19,19 @@ interface CreateUserData {
 }
 
 // EixoTematico Service
-class EixoTematicoService {
+export const eixoTematicoService = {
   async getAll(): Promise<EixoTematico[]> {
     try {
-      const response = await api.get<EixoTematico[]>(API_ENDPOINTS.THEMATIC_AXIS);
+      const response = await api.get(API_ENDPOINTS.THEMATIC_AXIS);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar eixos temáticos:', error);
       throw error;
     }
-  }
-}
+  },
+  
+  // Outros métodos como getById, create, update, delete...
+};
 
 // PrioridadeAcao Service
 class PrioridadeAcaoService {
@@ -137,23 +140,61 @@ class AccessRequestService {
   async processRequest(
     requestId: number,
     status: 'Aprovada' | 'Rejeitada',
-    tipo_usuario?: string
+    tipo_usuario?: string,
+    unidade_id?: number
   ): Promise<SolicitacaoAcesso> {
     const response = await api.post(`${API_ENDPOINTS.USERS}/process-access-request/${requestId}`, {
       status,
-      tipo_usuario
+      tipo_usuario,
+      unidade_id
     });
     
     return response.data;
   }
 }
 
+// WorkloadHae Service
+class WorkloadHaeService {
+  async getAll(): Promise<TipoVinculoHAE[]> {
+    try {
+      const response = await api.get<TipoVinculoHAE[]>(API_ENDPOINTS.WORKLOAD_HAE);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar tipos de vínculo HAE:', error);
+      throw error;
+    }
+  }
+
+  async getById(id: number): Promise<TipoVinculoHAE> {
+    try {
+      const response = await api.get<TipoVinculoHAE>(`${API_ENDPOINTS.WORKLOAD_HAE}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar tipo de vínculo HAE ID ${id}:`, error);
+      throw error;
+    }
+  }
+}
+
 // Exportar instâncias dos serviços
-export const eixoTematicoService = new EixoTematicoService();
 export const prioridadeAcaoService = new PrioridadeAcaoService();
 export const temaService = new TemaService();
 export const userService = new UserService();
 export const accessRequestService = new AccessRequestService();
+export const workloadHaeService = new WorkloadHaeService();
 
 // Exportar tipos para uso em outros arquivos
 export type { CreateUserData };
+
+// Serviço para entregáveis (linkSei)
+export const entregaveisService = {
+  async getAll() {
+    const response = await api.get(API_ENDPOINTS.DELIVERABLES);
+    return response.data;
+  },
+  
+  async getById(id: number) {
+    const response = await api.get(`${API_ENDPOINTS.DELIVERABLES}/${id}`);
+    return response.data;
+  }
+};

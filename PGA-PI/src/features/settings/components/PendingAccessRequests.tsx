@@ -133,17 +133,20 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
 
     setIsProcessing(true);
     try {
-      // Vamos adicionar um log para debug
+      // Adicionar log para debug
       console.log('🚀 Enviando aprovação:', {
         id: selectedRequest.solicitacao_id,
         status: 'Aprovada',
-        tipoUsuario: selectedTipoUsuario
+        tipoUsuario: selectedTipoUsuario,
+        unidadeId: selectedRequest.unidade_id // Incluir o ID da unidade da solicitação
       });
       
+      // Passar a unidade_id da solicitação quando o tipo for Diretor
       await accessRequestService.processRequest(
         selectedRequest.solicitacao_id,
         'Aprovada',
-        selectedTipoUsuario
+        selectedTipoUsuario,
+        selectedTipoUsuario === 'Diretor' ? selectedRequest.unidade_id : undefined
       );
       
       toast({
@@ -152,7 +155,6 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
       });
       
       await loadRequests();
-      
       if (onRequestProcessed) {
         await onRequestProcessed();
       }
