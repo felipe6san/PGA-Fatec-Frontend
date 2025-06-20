@@ -83,37 +83,43 @@ export interface Tema {
 
 export interface AcaoProjeto {
   acao_projeto_id: number;
+  codigo_projeto?: string;
+  nome_projeto?: string;
   pga_id: number;
   eixo_id: number;
   prioridade_id: number;
-  tema: string;
+  tema_id: number;
   o_que_sera_feito: string;
   por_que_sera_feito: string;
-  data_inicio?: Date;
-  data_final?: Date;
-  objetivos_institucionais_referenciados?: string;
+  data_inicio?: Date | null;
+  data_final?: Date | null;
+  objetivos_institucionais_referenciados?: string | null;
   obrigatorio_inclusao: boolean;
   obrigatorio_sustentabilidade: boolean;
+  ativo: boolean;
+  custo_total_estimado?: number | null;
+  fonte_recursos?: string | null;
 
-  // Relacionamentos
   eixo?: EixoTematico;
+  tema?: Tema;
+  pga?: any;
   prioridade?: PrioridadeAcao;
-  aquisicoes?: Attachment1[];
+  situacoesProblemas?: SituacaoProblema[];
   etapas?: any[];
   pessoas?: any[];
 }
 
-export interface Attachment1 {
-  id: string;
+export interface Attachment {
+  anexo_id: number;
+  etapa_processo_id: number;
+  entregavel_id?: number;
   item: string;
-  projeto?: AcaoProjeto;
-  projetoId?: string;
-  denominacaoOuEspecificacao: string;
+  descricao: string;
   quantidade: number;
-  precoTotalEstimado: number;
-  flag: AnexoProjetoUm;
-  createdAt?: Date;
-  updatedAt?: Date;
+  preco_unitario_estimado: number;
+  preco_total_estimado: number;
+  criado_em?: string;
+  atualizado_em?: string;
 }
 
 export interface EntregavelLinkSei {
@@ -143,37 +149,42 @@ export interface TipoVinculoHAE {
   detalhes?: string;
 }
 
-// DTOs para criação/atualização
-export interface CreateAttachment1Dto {
+export interface CreateAttachmentDto {
+  etapa_processo_id: number;
+  entregavel_id?: number;
   item: string;
-  projetoId: string;
-  denominacaoOuEspecificacao: string;
+  descricao: string;
   quantidade: number;
-  precoTotalEstimado: number;
-  flag: AnexoProjetoUm;
+  preco_unitario_estimado: number;
+  preco_total_estimado: number;
 }
 
-export interface UpdateAttachment1Dto {
+export interface UpdateAttachmentDto {
+  etapa_processo_id?: number;
+  entregavel_id?: number;
   item?: string;
-  projetoId?: string;
-  denominacaoOuEspecificacao?: string;
+  descricao?: string;
   quantidade?: number;
-  precoTotalEstimado?: number;
-  flag?: AnexoProjetoUm;
+  preco_unitario_estimado?: number;
+  preco_total_estimado?: number;
 }
 
 export interface CreateProject1Dto {
   pga_id: number;
   eixo_id: number;
   prioridade_id: number;
-  tema: string;
+  tema_id: number;
   o_que_sera_feito: string;
   por_que_sera_feito: string;
-  data_inicio?: string;
-  data_final?: string;
-  objetivos_institucionais_referenciados?: string;
-  obrigatorio_inclusao: boolean;
-  obrigatorio_sustentabilidade: boolean;
+  data_inicio?: string | Date | null;
+  data_final?: string | Date | null;
+  objetivos_institucionais_referenciados?: string | null;
+  obrigatorio_inclusao?: boolean;
+  obrigatorio_sustentabilidade?: boolean;
+  nome_projeto?: string;
+  codigo_projeto?: string;
+  custo_total_estimado?: number;
+  fonte_recursos?: string;
 }
 
 export interface UpdateProject1Dto {
@@ -188,6 +199,24 @@ export interface UpdateProject1Dto {
   objetivos_institucionais_referenciados?: string;
   obrigatorio_inclusao?: boolean;
   obrigatorio_sustentabilidade?: boolean;
+}
+
+export interface CreateProcessStepDto {
+  acao_projeto_id: number;
+  descricao: string;
+  entregavel_id?: number;
+  numero_ref?: string;
+  data_verificacao_prevista?: string;
+  data_verificacao_realizada?: string;
+  status_verificacao?: string;
+}
+
+export interface CreateProjetoPessoaDto {
+  acao_projeto_id: number;
+  pessoa_id: number;
+  papel: string;
+  carga_horaria_semanal?: number;
+  tipo_vinculo_hae_id?: number;
 }
 
 // Tipos de resposta da API
@@ -227,3 +256,5 @@ export interface SolicitacaoAcesso {
     email: string;
   };
 }
+
+

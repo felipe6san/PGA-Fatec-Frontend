@@ -8,9 +8,12 @@ export const API_ENDPOINTS = {
   THEMES: `${API_URL}/themes`,
   THEMATIC_AXIS: `${API_URL}/thematic-axis`,
   PROJECTS: `${API_URL}/project1`,
-  ATTACHMENTS: `${API_URL}/attachment1`,
+  ATTACHMENTS: `${API_URL}/attachments`,
   PRIORITY_ACTIONS: `${API_URL}/priority-action`,
   DELIVERABLES: `${API_URL}/deliverable`,
   SITUATIONS: `${API_URL}/problem-situation`,
   WORKLOAD_HAE: `${API_URL}/workload-hae`,
+  PROCESS_STEPS: `${API_URL}/process-step`,
+  PROJECT_PERSON: `${API_URL}/project-person`,
+  PGA: `${API_URL}/pga`,
 };
