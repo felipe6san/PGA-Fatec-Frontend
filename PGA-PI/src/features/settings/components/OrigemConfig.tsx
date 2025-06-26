@@ -69,7 +69,7 @@ export const OrigemConfig = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center pt-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
             <GitBranch className="h-6 w-6 mr-2 text-[#ae0f0a]" />

@@ -172,10 +172,10 @@ export const EixosConfig = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-48 sm:h-64">
         <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-[#ae0f0a]" />
-          <span className="text-lg text-gray-600">Carregando eixos temáticos...</span>
+          <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-[#ae0f0a]" />
+          <span className="text-base sm:text-lg text-gray-600">Carregando eixos temáticos...</span>
         </div>
       </div>
     );
@@ -183,144 +183,154 @@ export const EixosConfig = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header com indicador de erro */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Gerenciar Eixos Temáticos</h2>
-          <p className="text-sm text-gray-500 mt-1">
+      {/* Header responsivo com indicador de erro */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 pt-6">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 leading-tight">
+            Gerenciar Eixos Temáticos
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
             Os eixos temáticos são as grandes áreas de atuação do PGA.
           </p>
           {error && (
             <div className="flex items-center mt-2 text-amber-600">
-              <AlertCircle className="h-4 w-4 mr-1" />
-              <span className="text-sm">{error}</span>
+              <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+              <span className="text-xs sm:text-sm">{error}</span>
             </div>
           )}
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">{filteredEixos.length} registros</span>
+        <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
+          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
+            {filteredEixos.length} registros
+          </span>
         </div>
       </div>
 
-      {/* Formulário de cadastro */}
-      <Card className="p-5 border border-gray-200 shadow-sm">
-        <h3 className="text-md font-medium mb-4 text-gray-700 flex items-center">
-          <Plus className="h-5 w-5 mr-2 text-[#ae0f0a]" />
-          Adicionar Novo Eixo Temático
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label htmlFor="numero" className="block text-sm font-medium text-gray-700 mb-1">
-              Número do Eixo
-            </label>
-            <Input
-              id="numero"
-              type="number"
-              placeholder="Ex: 10"
-              value={novoEixo.numero || ""}
-              onChange={e => setNovoEixo({ ...novoEixo, numero: parseInt(e.target.value) || 0 })}
-              className="w-full bg-white border-gray-300"
-              disabled={loadingAdd}
-            />
+      {/* Formulário de cadastro responsivo */}
+      <Card className="border border-gray-200 shadow-sm">
+        <div className="p-4 sm:p-5">
+          <h3 className="text-sm sm:text-md font-medium mb-4 text-gray-700 flex items-center">
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#ae0f0a] flex-shrink-0" />
+            Adicionar Novo Eixo Temático
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label htmlFor="numero" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Número do Eixo
+              </label>
+              <Input
+                id="numero"
+                type="number"
+                placeholder="Ex: 10"
+                value={novoEixo.numero || ""}
+                onChange={e => setNovoEixo({ ...novoEixo, numero: parseInt(e.target.value) || 0 })}
+                className="w-full bg-white border-gray-300 text-sm"
+                disabled={loadingAdd}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="nome" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                Nome do Eixo Temático
+              </label>
+              <Input
+                id="nome"
+                placeholder="Ex: Sustentabilidade e Meio Ambiente"
+                value={novoEixo.nome}
+                onChange={e => setNovoEixo({ ...novoEixo, nome: e.target.value })}
+                className="w-full bg-white border-gray-300 text-sm"
+                disabled={loadingAdd}
+              />
+            </div>
           </div>
           
-          <div>
-            <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
-              Nome do Eixo Temático
-            </label>
-            <Input
-              id="nome"
-              placeholder="Ex: Sustentabilidade e Meio Ambiente"
-              value={novoEixo.nome}
-              onChange={e => setNovoEixo({ ...novoEixo, nome: e.target.value })}
-              className="w-full bg-white border-gray-300"
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleAddEixo} 
+              className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center text-sm px-4 py-2"
               disabled={loadingAdd}
-            />
+            >
+              {loadingAdd ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adicionando...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Eixo
+                </>
+              )}
+            </Button>
           </div>
-        </div>
-        
-        <div className="flex justify-end">
-          <Button 
-            onClick={handleAddEixo} 
-            className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center"
-            disabled={loadingAdd}
-          >
-            {loadingAdd ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                Adicionando...
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-1" />
-                Adicionar Eixo
-              </>
-            )}
-          </Button>
         </div>
       </Card>
       
-      {/* Lista de Eixos */}
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-md font-medium text-gray-700">Eixos Temáticos Cadastrados</h3>
+      {/* Lista de Eixos responsiva */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <h3 className="text-sm sm:text-md font-medium text-gray-700">
+            Eixos Temáticos Cadastrados
+          </h3>
           
-          <div className="relative w-64">
+          <div className="relative w-full sm:w-64">
             <Input
               placeholder="Pesquisar eixos..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="pl-9 bg-white"
+              className="pl-8 sm:pl-9 bg-white text-sm"
             />
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-2 sm:left-3 top-2.5 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
           </div>
         </div>
         
         <div className="border rounded-md shadow-sm bg-white overflow-hidden">
           {filteredEixos.length > 0 ? (
-            <Table>
-              <TableHeader className="bg-gray-50">
-                <TableRow>
-                  <TableHead className="w-24">Número</TableHead>
-                  <TableHead>Nome do Eixo Temático</TableHead>
-                  <TableHead className="w-24 text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEixos
-                  .sort((a, b) => a.numero - b.numero)
-                  .map(eixo => (
-                    <TableRow key={eixo.eixo_id} className="hover:bg-gray-50">
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono bg-gray-100 border-gray-300 text-gray-800 font-semibold">
-                          {eixo.numero.toString().padStart(2, '0')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium text-gray-700">
-                        {eixo.nome}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleShowDeleteModal(eixo)}
-                          className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Remover
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead className="w-16 sm:w-24 text-xs sm:text-sm px-3 py-3">Número</TableHead>
+                    <TableHead className="text-xs sm:text-sm px-3 py-3">Nome do Eixo Temático</TableHead>
+                    <TableHead className="w-20 sm:w-24 text-right text-xs sm:text-sm px-3 py-3">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEixos
+                    .sort((a, b) => a.numero - b.numero)
+                    .map(eixo => (
+                      <TableRow key={eixo.eixo_id} className="hover:bg-gray-50">
+                        <TableCell className="px-3 py-3">
+                          <Badge variant="outline" className="font-mono bg-gray-100 border-gray-300 text-gray-800 font-semibold text-xs">
+                            {eixo.numero.toString().padStart(2, '0')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium text-gray-700 px-3 py-3 text-xs sm:text-sm">
+                          {eixo.nome}
+                        </TableCell>
+                        <TableCell className="text-right px-3 py-3">
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleShowDeleteModal(eixo)}
+                            className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20 text-xs px-3 py-1"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            <span className="hidden sm:inline">Remover</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <div className="py-8 text-center">
+            <div className="py-8 text-center px-4">
               <div className="flex justify-center mb-3">
-                <AlertCircle className="h-8 w-8 text-gray-400" />
+                <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
               </div>
-              <p className="text-gray-500">
+              <p className="text-gray-500 text-sm sm:text-base">
                 {searchTerm ? "Nenhum eixo temático encontrado com estes critérios." : "Não há eixos temáticos cadastrados ainda."}
               </p>
             </div>
@@ -333,19 +343,19 @@ export const EixosConfig = () => {
         isOpen={showDeleteModal}
         onClose={handleCloseDeleteModal}
         title="Confirmar Remoção"
-        className="max-w-md"
+        className="max-w-sm sm:max-w-md mx-4 sm:mx-auto"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 p-4 sm:p-6">
           {/* Ícone de alerta */}
           <div className="flex items-center justify-center">
             <div className="bg-red-100 rounded-full p-3">
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
             </div>
           </div>
 
           {/* Descrição */}
           <div className="text-center">
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-4 text-sm sm:text-base leading-relaxed">
               Esta ação não pode ser desfeita. O eixo temático será removido permanentemente do sistema.
             </p>
           </div>
@@ -354,19 +364,19 @@ export const EixosConfig = () => {
           {eixoToDelete && (
             <div className="bg-gray-50 p-4 rounded-lg border">
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className="font-mono bg-gray-100 border-gray-300 text-gray-800 font-semibold">
+                <Badge variant="outline" className="font-mono bg-gray-100 border-gray-300 text-gray-800 font-semibold text-xs">
                   {eixoToDelete.numero.toString().padStart(2, '0')}
                 </Badge>
-                <div>
-                  <p className="font-medium text-gray-900">{eixoToDelete.nome}</p>
-                  <p className="text-sm text-gray-500">Eixo Temático</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{eixoToDelete.nome}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Eixo Temático</p>
                 </div>
               </div>
             </div>
           )}
 
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-xs sm:text-sm font-medium text-gray-900">
               Tem certeza que deseja remover este eixo temático?
             </p>
           </div>
@@ -377,7 +387,7 @@ export const EixosConfig = () => {
               variant="outline"
               onClick={handleCloseDeleteModal}
               disabled={loadingRemove}
-              className="min-w-[100px]"
+              className="min-w-[100px] text-sm"
             >
               Cancelar
             </Button>
@@ -385,7 +395,7 @@ export const EixosConfig = () => {
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={loadingRemove}
-              className="bg-[#ae0f0a] hover:bg-[#910c08] min-w-[100px]"
+              className="bg-[#ae0f0a] hover:bg-[#910c08] min-w-[100px] text-sm"
             >
               {loadingRemove ? (
                 <>

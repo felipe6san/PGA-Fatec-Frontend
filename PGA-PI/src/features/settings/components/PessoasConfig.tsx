@@ -282,35 +282,43 @@ export const PessoasConfig: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-            <UserRound className="h-6 w-6 mr-2 text-[#ae0f0a]" />
-            Gerenciar Pessoas
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS
-              ? "Cadastre pessoas para atribuição em projetos e ações (todas as unidades)"
-              : "Cadastre pessoas para atribuição em projetos e ações (sua unidade)"
-            }
-          </p>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header responsivo */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0 lg:space-x-4 pt-6">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start space-x-3">
+            <UserRound className="h-5 w-5 sm:h-6 sm:w-6 mt-1 text-[#ae0f0a] flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 leading-tight">
+                Gerenciar Pessoas
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 leading-relaxed">
+                {userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS
+                  ? "Cadastre pessoas para atribuição em projetos e ações (todas as unidades)"
+                  : "Cadastre pessoas para atribuição em projetos e ações (sua unidade)"
+                }
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">{filteredPessoas.length} registros</span>
+        
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
+          <span className="text-xs sm:text-sm text-gray-500 text-center sm:text-left whitespace-nowrap">
+            {filteredPessoas.length} registros
+          </span>
           
           {/* Botão de solicitações de acesso - apenas para admin e CPS */}
           {canViewAccessRequests && (
             <Button 
               variant="outline" 
               onClick={toggleAccessRequests}
-              className="flex items-center text-[#ae0f0a] border-[#ae0f0a]/20 hover:bg-[#ae0f0a]/10 relative"
+              className="flex items-center justify-center text-[#ae0f0a] border-[#ae0f0a]/20 hover:bg-[#ae0f0a]/10 relative text-xs sm:text-sm px-3 py-2"
               disabled={loadingRequests}
             >
-              <InboxIcon className="h-4 w-4 mr-2" />
-              Solicitações de Acesso
+              <InboxIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Solicitações de Acesso</span>
               {pendingRequestsCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium min-w-[20px]">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center font-medium min-w-[16px] sm:min-w-[20px]">
                   {pendingRequestsCount > 99 ? '99+' : pendingRequestsCount}
                 </span>
               )}
@@ -320,111 +328,116 @@ export const PessoasConfig: React.FC = () => {
       </div>
 
       {/* Card que alterna entre Adicionar Pessoas e Solicitações de Acesso */}
-      <Card className="p-5 border border-gray-200 shadow-sm">
-        {!showAccessRequests ? (
-          <>
-            <h3 className="text-md font-medium mb-4 text-gray-700 flex items-center">
-              <UserPlus className="h-5 w-5 mr-2 text-[#ae0f0a]" />
-              Adicionar Nova Pessoa
-            </h3>
-            
-            {canManagePessoas ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nome Completo
-                    </label>
-                    <Input
-                      id="nome"
-                      placeholder="Ex: João Silva"
-                      value={novaPessoa.nome}
-                      onChange={e => setNovaPessoa({ ...novaPessoa, nome: e.target.value })}
-                      className="w-full bg-white border-gray-300"
-                      disabled={loading}
-                    />
+      <Card className="border border-gray-200 shadow-sm">
+        <div className="p-4 sm:p-5">
+          {!showAccessRequests ? (
+            <>
+              <h3 className="text-sm sm:text-md font-medium mb-3 sm:mb-4 text-gray-700 flex items-center">
+                <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#ae0f0a] flex-shrink-0" />
+                Adicionar Nova Pessoa
+              </h3>
+              
+              {canManagePessoas ? (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                    <div>
+                      <label htmlFor="nome" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Nome Completo
+                      </label>
+                      <Input
+                        id="nome"
+                        placeholder="Ex: João Silva"
+                        value={novaPessoa.nome}
+                        onChange={e => setNovaPessoa({ ...novaPessoa, nome: e.target.value })}
+                        className="w-full bg-white border-gray-300 text-sm"
+                        disabled={loading}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        E-mail
+                      </label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Ex: joao@fatec.sp.gov.br"
+                        value={novaPessoa.email}
+                        onChange={e => setNovaPessoa({ ...novaPessoa, email: e.target.value })}
+                        className="w-full bg-white border-gray-300 text-sm"
+                        disabled={loading}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="tipo" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Tipo
+                      </label>
+                      <Select
+                        value={novaPessoa.tipo_usuario}
+                        onValueChange={(value) => setNovaPessoa({ ...novaPessoa, tipo_usuario: value as TipoUsuario })}
+                        disabled={loading}
+                      >
+                        <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
+                          <SelectValue placeholder="Selecione um tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {getTiposUsuarioPermitidos().map(tipo => (
+                              <SelectItem key={tipo.value} value={tipo.value}>
+                                {tipo.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      E-mail
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Ex: joao@fatec.sp.gov.br"
-                      value={novaPessoa.email}
-                      onChange={e => setNovaPessoa({ ...novaPessoa, email: e.target.value })}
-                      className="w-full bg-white border-gray-300"
-                      disabled={loading}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo
-                    </label>
-                    <Select
-                      value={novaPessoa.tipo_usuario}
-                      onValueChange={(value) => setNovaPessoa({ ...novaPessoa, tipo_usuario: value as TipoUsuario })}
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleAddPessoa} 
+                      className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center text-sm px-3 sm:px-4 py-2"
                       disabled={loading}
                     >
-                      <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800">
-                        <SelectValue placeholder="Selecione um tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {getTiposUsuarioPermitidos().map(tipo => (
-                            <SelectItem key={tipo.value} value={tipo.value}>
-                              {tipo.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> 
+                      {loading ? 'Adicionando...' : 'Adicionar Pessoa'}
+                    </Button>
                   </div>
+                </>
+              ) : (
+                <div className="text-center py-6 sm:py-8 text-gray-500 px-4">
+                  <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 sm:mb-3 text-gray-400" />
+                  <p className="text-sm sm:text-base">Você não tem permissão para cadastrar pessoas.</p>
+                  <p className="text-xs sm:text-sm mt-1">Entre em contato com o administrador do sistema.</p>
+                  <p className="text-xs mt-2 text-gray-400">Tipo de usuário atual: {userTipo}</p>
                 </div>
-                
-                <div className="flex justify-end">
-                  <Button 
-                    onClick={handleAddPessoa} 
-                    className="bg-[#ae0f0a] hover:bg-[#910c08] text-white flex items-center"
-                    disabled={loading}
-                  >
-                    <Plus className="h-4 w-4 mr-1" /> 
-                    {loading ? 'Adicionando...' : 'Adicionar Pessoa'}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <AlertCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p>Você não tem permissão para cadastrar pessoas.</p>
-                <p className="text-sm mt-1">Entre em contato com o administrador do sistema.</p>
-                <p className="text-xs mt-2 text-gray-400">Tipo de usuário atual: {userTipo}</p>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 mb-4">
+                <h3 className="text-sm sm:text-md font-medium text-gray-700 flex items-center">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-[#ae0f0a] flex-shrink-0" />
+                  <span className="truncate">
+                    {userTipo === TipoUsuario.DIRETOR 
+                      ? "Solicitações de Acesso da sua Unidade" 
+                      : "Solicitações de Acesso Pendentes"}
+                  </span>
+                </h3>
+                <Button 
+                  variant="outline" 
+                  onClick={toggleAccessRequests}
+                  size="sm"
+                  className="text-xs sm:text-sm px-3 py-2 w-full sm:w-auto"
+                >
+                  Voltar para Pessoas
+                </Button>
               </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-md font-medium text-gray-700 flex items-center">
-                <Users className="h-5 w-5 mr-2 text-[#ae0f0a]" />
-                {userTipo === TipoUsuario.DIRETOR 
-                  ? "Solicitações de Acesso da sua Unidade" 
-                  : "Solicitações de Acesso Pendentes"}
-              </h3>
-              <Button 
-                variant="outline" 
-                onClick={toggleAccessRequests}
-                size="sm"
-              >
-                Voltar para Pessoas
-              </Button>
-            </div>
-            <PendingAccessRequestsTab onRequestProcessed={loadAccessRequests} />
-          </>
-        )}
+              <PendingAccessRequestsTab onRequestProcessed={loadAccessRequests} />
+            </>
+          )}
+        </div>
       </Card>
       
       {/* Lista de Pessoas - só mostra quando não estiver na aba de solicitações */}
