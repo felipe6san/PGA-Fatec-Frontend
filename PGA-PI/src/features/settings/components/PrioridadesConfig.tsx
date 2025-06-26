@@ -187,7 +187,7 @@ export const PrioridadesConfig = () => {
   return (
     <div className="space-y-6">
       {/* Header com indicador de erro */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center pt-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Gerenciar Prioridades de Ação</h2>
           <p className="text-sm text-gray-500 mt-1">
