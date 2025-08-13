@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "../../dashboard/components/cardDa
 import { useEffect, useState } from "react";
 import { projectService } from '../services/projectService';
 import { anexoService } from '../../anexos/services/anexoService';
-import { AcaoProjeto, Attachment1 } from '@/types/api';
+import { AcaoProjeto, Attachment } from '@/types/api';
 
 const formatCurrencyForDisplay = (value?: number): string => {
   if (value === undefined || value === null) return "R$ 0,00";
@@ -15,7 +15,7 @@ const formatCurrencyForDisplay = (value?: number): string => {
 export const Projects = (): JSX.Element => {
   const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null);
   const [projetos, setProjetos] = useState<AcaoProjeto[]>([]);
-  const [anexos, setAnexos] = useState<Attachment1[]>([]);
+  const [anexos, setAnexos] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -118,7 +118,7 @@ export const Projects = (): JSX.Element => {
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-grow">
-                          <h3 className="text-xl font-semibold text-gray-800">{project.tema}</h3>
+                          <h3 className="text-xl font-semibold text-gray-800">{project.tema?.descricao || 'Sem tema'}</h3>
                           <p className="text-gray-600 mt-1 text-sm">
                             Prazo Final: {project.data_final ? new Date(project.data_final).toLocaleDateString() : 'Não definido'}
                           </p>
@@ -203,17 +203,25 @@ export const Projects = (): JSX.Element => {
                           {project.obrigatorio_sustentabilidade && <span className="text-sm font-medium text-teal-700 bg-teal-100 px-2 py-1 rounded">Promove Sustentabilidade</span>}
                         </div>
 
-                        {project.aquisicoes && project.aquisicoes.length > 0 && (
+                        {project.etapas && anexos
+                          .filter(anexo =>
+                            project.etapas?.some(etapa => etapa.etapa_id === anexo.etapa_processo_id)
+                          )
+                          .length > 0 && (
                           <div>
                             <h4 className="font-semibold text-md mb-2">Anexos/Aquisições:</h4>
                             <div className="space-y-2">
-                              {project.aquisicoes.map((anexo) => (
-                                <div key={anexo.id} className="p-3 bg-white rounded-md shadow-sm border text-sm">
-                                  <p className="font-medium">{anexo.item}</p>
-                                  <p className="text-gray-600">{anexo.denominacaoOuEspecificacao}</p>
-                                  <p>Qtd: {anexo.quantidade} - Preço Total: {formatCurrencyForDisplay(anexo.precoTotalEstimado)}</p>
-                                </div>
-                              ))}
+                              {anexos
+                                .filter(anexo =>
+                                  project.etapas?.some(etapa => etapa.etapa_id === anexo.etapa_processo_id)
+                                )
+                                .map(anexo => (
+                                  <div key={anexo.anexo_id} className="p-3 bg-white rounded-md shadow-sm border text-sm">
+                                    <p className="font-medium">{anexo.item}</p>
+                                    <p className="text-gray-600">{anexo.descricao}</p>
+                                    <p>Qtd: {anexo.quantidade} - Preço Total: {formatCurrencyForDisplay(anexo.preco_total_estimado)}</p>
+                                  </div>
+                                ))}
                             </div>
                           </div>
                         )}
