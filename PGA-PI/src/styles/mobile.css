@@ -1,0 +1,244 @@
+/* Estilos específicos para dispositivos móveis */
+
+/* Breakpoints responsivos */
+@media (max-width: 640px) {
+  /* Ajustes para telas muito pequenas */
+  .mobile-container {
+    padding: 0.5rem;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-text-xs {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Ajustes para tablets e celulares */
+  .mobile-full-width {
+    width: 100%;
+  }
+  
+  .mobile-stack {
+    flex-direction: column;
+  }
+  
+  .mobile-center {
+    text-align: center;
+    justify-content: center;
+  }
+  
+  /* Melhorar espaçamento em mobile */
+  .mobile-p-4 {
+    padding: 1rem;
+  }
+  
+  .mobile-p-3 {
+    padding: 0.75rem;
+  }
+  
+  /* Ajustar tamanhos de fonte */
+  .mobile-text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .mobile-text-base {
+    font-size: 1rem;
+  }
+  
+  /* Melhorar botões para touch */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Ajustar cards para mobile */
+  .mobile-card {
+    margin: 0.5rem 0;
+    border-radius: 0.75rem;
+  }
+  
+  /* Melhorar navegação por tabs */
+  .mobile-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .mobile-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Ajustes para tablets */
+  .tablet-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .tablet-stack-sm {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* Melhorias específicas para touch */
+@media (hover: none) and (pointer: coarse) {
+  /* Aumentar área de toque */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Melhorar feedback visual */
+  .touch-feedback:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Ajustar scroll para touch */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Melhorias para orientação landscape em mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-landscape {
+    padding: 0.5rem;
+  }
+  
+  .mobile-landscape-header {
+    height: 3rem;
+  }
+  
+  .mobile-landscape-content {
+    padding-top: 3rem;
+  }
+}
+
+/* Melhorias para telas de alta densidade */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .retina-border {
+    border-width: 0.5px;
+  }
+}
+
+/* Melhorias para acessibilidade em mobile */
+@media (max-width: 768px) {
+  .mobile-focus-visible {
+    outline: 2px solid #ae0f0a;
+    outline-offset: 2px;
+  }
+  
+  .mobile-skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #ae0f0a;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+  }
+  
+  .mobile-skip-link:focus {
+    top: 6px;
+  }
+}
+
+/* Animações otimizadas para mobile */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-fade-in {
+    animation: mobileFadeIn 0.3s ease-in-out;
+  }
+  
+  .mobile-slide-up {
+    animation: mobileSlideUp 0.3s ease-out;
+  }
+}
+
+@keyframes mobileFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mobileSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Utilitários para mobile */
+.mobile-hidden {
+  display: none;
+}
+
+.mobile-block {
+  display: block;
+}
+
+.mobile-flex {
+  display: flex;
+}
+
+.mobile-grid {
+  display: grid;
+}
+
+/* Ajustes para formulários mobile */
+@media (max-width: 768px) {
+  .mobile-form-input {
+    font-size: 16px; /* Evita zoom em iOS */
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .mobile-form-button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+  
+  .mobile-form-group {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Melhorias para modais em mobile */
+@media (max-width: 768px) {
+  .mobile-modal {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+  
+  .mobile-modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .mobile-modal-content {
+    padding: 1rem;
+  }
+  
+  .mobile-modal-footer {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+  }
+}

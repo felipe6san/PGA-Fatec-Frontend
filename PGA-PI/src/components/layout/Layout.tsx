@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+import { MobileNavigation, MobileFloatingButton } from "./MobileNavigation";
 
 export const Layout = (): JSX.Element => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -81,6 +83,15 @@ export const Layout = (): JSX.Element => {
           </div>
         </main>
       </div>
+
+      {/* Navegação Mobile */}
+      <MobileNavigation 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
+      
+      {/* Botão flutuante para mobile */}
+      <MobileFloatingButton onClick={() => setIsMobileMenuOpen(true)} />
     </div>
   );
 };

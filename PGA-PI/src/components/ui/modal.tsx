@@ -28,12 +28,12 @@ export const Modal = ({
 
       {/* Modal Content - com arredondamento completo */}
       <div
-        className={`relative z-50 w-full rounded-[21px] shadow-lg overflow-hidden ${
+        className={`relative z-50 w-full rounded-[21px] shadow-lg overflow-hidden mobile-modal ${
           className || ""
         }`}
         style={{ backgroundColor: "white" }}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 mobile-modal-header">
           <h2 className="font-['Source_Sans_3',Helvetica] text-2xl font-bold text-[#2D3748]">
             {title}
           </h2>
@@ -47,7 +47,7 @@ export const Modal = ({
 
         {/* Container do conteúdo arredondado na parte inferior */}
         <div
-          className="p-6 rounded-b-[21px]"
+          className="p-6 rounded-b-[21px] mobile-modal-content"
           style={{ backgroundColor: "white" }}
         >
           {children}

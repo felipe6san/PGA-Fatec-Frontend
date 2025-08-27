@@ -1,5 +1,6 @@
 @import "../tailwind.css";
 @import "./styles/accessibility.css";
+@import "./styles/mobile.css";
 
 @layer base {
   body {

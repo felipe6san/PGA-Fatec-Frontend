@@ -46,14 +46,14 @@ export const ProjectProgressCard = ({ project }: ProjectProgressCardProps) => {
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-semibold text-gray-900">{project.name}</h3>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 mobile-stack">
               <div className="flex items-center gap-1">
                 <User className="w-4 h-4" />
-                <span>{project.responsible}</span>
+                <span className="mobile-text-sm">{project.responsible}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <span>{project.deadline}</span>
+                <span className="mobile-text-sm">{project.deadline}</span>
               </div>
             </div>
           </div>
