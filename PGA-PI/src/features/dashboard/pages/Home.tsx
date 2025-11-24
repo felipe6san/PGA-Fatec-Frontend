@@ -152,7 +152,7 @@ export const Home = (): JSX.Element => {
 
       {/* Sistema de Abas */}
       <Tabs className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 mb-6 mobile-tabs">
           <TabsTrigger
             value="overview"
             isActive={activeTab === "overview"}
@@ -195,7 +195,7 @@ export const Home = (): JSX.Element => {
         <TabsContent value="overview" isActive={activeTab === "overview"}>
           <div className="space-y-6">
             {/* Cards de Estatísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mobile-container">
               <StatsCard
                 title="Total de Projetos"
                 value={mockProjects.length}
@@ -227,7 +227,7 @@ export const Home = (): JSX.Element => {
             </div>
 
             {/* Resumo dos Projetos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mobile-stack">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Target className="w-5 h-5" />
@@ -256,7 +256,7 @@ export const Home = (): JSX.Element => {
               <Target className="w-5 h-5" />
               Andamento dos Projetos
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mobile-stack">
               {mockProjects.map((project) => (
                 <ProjectProgressCard key={project.id} project={project} />
               ))}

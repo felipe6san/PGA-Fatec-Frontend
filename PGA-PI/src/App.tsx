@@ -1,3 +1,4 @@
+import React from "react";
 import { Router } from "@routes/index";
 import { AuthProvider } from "@context/AuthContext";
 import { Toaster } from "./components/ui/toaster";

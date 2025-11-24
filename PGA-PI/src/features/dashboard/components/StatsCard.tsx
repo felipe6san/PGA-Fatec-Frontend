@@ -24,13 +24,13 @@ export const StatsCard = ({
   return (
     <Card className={`shadow-[0px_0px_25px_#00000026] rounded-xl ${className}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+        <h3 className="text-sm font-medium text-gray-600 mobile-text-sm">{title}</h3>
         {icon && <div className="text-gray-400">{icon}</div>}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
+        <div className="text-2xl font-bold text-gray-900 mobile-text-lg">{value}</div>
         {description && (
-          <p className="text-xs text-gray-500 mt-1">{description}</p>
+          <p className="text-xs text-gray-500 mt-1 mobile-text-xs">{description}</p>
         )}
         {trend && (
           <div className="flex items-center mt-2">
