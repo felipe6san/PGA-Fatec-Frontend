@@ -19,14 +19,13 @@ import {
 } from "@/services/commonServices";
 import { useAuth } from "@/context/AuthContext";
 import { situacoesService } from "@/features/settings/services/situacoesService";
-import { TipoUsuario, EntregavelLinkSei, SituacaoProblema } from "@/types/api"; // Importar tipo do entregável
+import { TipoUsuario, EntregavelLinkSei, SituacaoProblema } from "@/types/api";
 import { projectService } from "@/features/projects/services/projectService";
 import { processStepService } from "@/services/processStepService";
 import { anexoService } from "@/features/anexos/services/anexoService";
 import { projetoPessoaService } from "@/services/projectPersonService";
 import { pgaService } from "@/services/pgaService";
 
-// --- Utility Functions ---
 const formatCurrency = (value: string): string => {
   const number = parseFloat(value.replace(/[^\d]/g, "")) / 100;
   return new Intl.NumberFormat("pt-BR", {
@@ -289,7 +288,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // Formatação de código para temas
   const formatarCodigoTema = (
     eixoNumero: number,
     temaNumero: number
@@ -297,7 +295,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     return `cat ${eixoNumero}.${temaNumero.toString().padStart(2, "0")}`;
   };
 
-  // Função para obter o número do eixo
   const getEixoNumero = (eixoId: number): number => {
     const eixo = eixosTematicos.find((e) => e.eixo_id === eixoId);
     return eixo ? eixo.numero : 0;
@@ -354,8 +351,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
       {
         id: Date.now(),
         descricao: "",
-        // Todos os campos opcionais não precisam ser inicializados
-        // statusVerificacao não é mais obrigatório, então não precisa inicializar
       },
     ]);
   };
@@ -375,14 +370,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
   const handleStatusChange = (index: number, status: StatusVerificacao) => {
     const newEtapasProcesso = [...etapasProcesso];
 
-    // Se já estava no mesmo status, volte para Pendente
     if (newEtapasProcesso[index].statusVerificacao === status) {
       newEtapasProcesso[index] = {
         ...newEtapasProcesso[index],
         statusVerificacao: StatusVerificacao.Pendente,
       };
     } else {
-      // Caso contrário, defina para o novo status
       newEtapasProcesso[index] = {
         ...newEtapasProcesso[index],
         statusVerificacao: status,
@@ -454,7 +447,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
 
       const acaoProjetoId = projetoCriado.acao_projeto_id;
 
-      // 2. Criar pessoas vinculadas ao projeto
       for (const pessoa of pessoasProjeto) {
         await projetoPessoaService.create({
           acao_projeto_id: acaoProjetoId,
@@ -470,7 +462,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         });
       }
 
-      // 3. Criar etapas do processo e anexos vinculados
       for (const etapa of etapasProcesso) {
         const etapaCriada = await processStepService.create({
           acao_projeto_id: acaoProjetoId,
@@ -509,10 +500,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         }
       }
 
-      // 4. (Opcional) Situações problema, se houver endpoint específico
 
       alert("Projeto registrado com sucesso!");
-      // Redirecionar ou resetar formulário conforme necessário
 
     } catch (error) {
       console.error("Erro ao registrar projeto:", error);
@@ -550,7 +539,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
             </option>
             {eixosTematicos.map((eixo) => (
               <option key={eixo.eixo_id} value={eixo.eixo_id}>
-                {eixo.numero.toString().padStart(2, "0")} - {eixo.nome}
+                {eixo.numero.toString().padStart(2, "0")} - {eixo.nome_eixo}
               </option>
             ))}
           </select>
@@ -1014,7 +1003,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
                   onChange={(e) => handleEtapaProcessoChange(index, e)}
                   className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                   disabled={loadingEntregaveis}
-                  // Remover o required
                 >
                   <option value="">
                     {loadingEntregaveis 

@@ -51,12 +51,10 @@ export const Projects = (): JSX.Element => {
   };
 
   const getStatusColor = () => {
-    // Por enquanto todos os projetos são "Em Andamento"
     return "bg-blue-100 text-blue-800";
   };
 
   const calculateProgress = (project: AcaoProjeto): number => {
-    // Cálculo simples baseado nas datas
     if (!project.data_inicio || !project.data_final) return 0;
     
     const now = new Date();
@@ -119,11 +117,11 @@ export const Projects = (): JSX.Element => {
                       <div className="flex justify-between items-start">
                         <div className="flex-grow">
                           <h3 className="text-xl font-semibold text-gray-800">{project.tema?.descricao || 'Sem tema'}</h3>
-                          <p className="text-gray-600 mt-1 text-sm">
+                            <p className="text-gray-600 mt-1 text-sm">
                             Prazo Final: {project.data_final ? new Date(project.data_final).toLocaleDateString() : 'Não definido'}
                           </p>
                           <div className="mt-2 text-sm">
-                            <p><span className="font-semibold">Eixo Temático:</span> {project.eixo?.nome || 'N/A'}</p>
+                            <p><span className="font-semibold">Eixo Temático:</span> {project.eixo?.nome_eixo || 'N/A'}</p>
                             <p><span className="font-semibold">Prioridade:</span> {project.prioridade?.descricao || 'N/A'}</p>
                           </div>
                         </div>

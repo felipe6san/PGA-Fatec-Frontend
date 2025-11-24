@@ -84,7 +84,9 @@ async getByUnidade(unidadeId: number): Promise<User[]> {
   async create(data: CreateUserData): Promise<User> {
     try {
       const response = await api.post<User>(`${API_ENDPOINTS.USERS}`, data);
-      return response.data;
+      // backend may return { user, email_sent } or directly the created user
+      if (response.data && (response.data as any).user) return (response.data as any).user;
+      return response.data as any;
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
       throw error;

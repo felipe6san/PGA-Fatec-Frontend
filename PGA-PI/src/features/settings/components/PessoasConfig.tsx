@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -12,12 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { PendingAccessRequestsTab } from "./PendingAccessRequests";
 import { TipoUsuario, User } from "@/types/api";
 import { accessRequestService, userService, type CreateUserData } from "@/services/commonServices";
+import api from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/config';
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
 export const PessoasConfig: React.FC = () => {
   const { user } = useAuth();
-  console.log("Usuario logado:", user); // Debug
   
   const [pessoas, setPessoas] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,38 +28,55 @@ export const PessoasConfig: React.FC = () => {
     tipo_usuario: TipoUsuario.DOCENTE,
     unidade_id: undefined
   });
+
+  const [regionais, setRegionais] = useState<any[]>([]);
+  const [unidades, setUnidades] = useState<any[]>([]);
+  const [fetchedUserDetails, setFetchedUserDetails] = useState<any>(null);
+  const [selectedRegionalId, setSelectedRegionalId] = useState<number | undefined>(undefined);
+  const [selectedUnidadeId, setSelectedUnidadeId] = useState<number | undefined>(undefined);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showAccessRequests, setShowAccessRequests] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  // O ID mockado (1) está bom para testes, mantenha essa abordagem
-  const unidadeId = 1; // ID mockado para testes - futuramente virá da URL
+  const unidadeId = (user as any)?.unidades?.[0]?.unidade_id;
 
-  // Carregar pessoas do banco
+  useEffect(() => {
+    if (!user) return;
+    const first = (user as any)?.unidades?.[0];
+    if (!first) return;
+
+    const resolvedUnidadeId = first.unidade_id ?? first.unidade?.unidade_id ?? first.unidade?.id ?? first.unidade?.id_unidade;
+    const resolvedRegionalId = first.unidade?.regional_id ?? first.regional_id ?? first.unidade?.regional?.regional_id ?? first.regional?.id;
+
+    if (resolvedUnidadeId) setSelectedUnidadeId(resolvedUnidadeId as number);
+    if (resolvedRegionalId) setSelectedRegionalId(resolvedRegionalId as number);
+  }, [user]);
   const loadPessoas = useCallback(async () => {
     if (!user) return;
-    
-    console.log("Carregando pessoas..."); // Debug
+
     setLoading(true);
     try {
       let pessoasData: User[] = [];
-      
-      // Verificar se o usuário é admin/CPS
+
       const userTipo = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
-      
-      // Se for administrador, pode ver todas as pessoas
+
       if (userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) {
-        console.log("Carregando todas as pessoas (admin/cps)"); // Debug
         pessoasData = await userService.getAll();
       } else {
-        // Usar o ID da unidade mockado em vez de tentar pegar do usuário
-        console.log("Carregando pessoas da unidade:", unidadeId); // Debug
-        pessoasData = await userService.getByUnidade(unidadeId);
+        const unidadeFromAuth = (user as any)?.unidades?.[0]?.unidade_id ?? (user as any)?.unidades?.[0]?.unidade?.unidade_id;
+        const unidadeFromFetched = fetchedUserDetails?.unidades?.[0]?.unidade_id ?? fetchedUserDetails?.unidades?.[0]?.unidade?.unidade_id;
+        const unidadeFromContexts = unidades?.[0]?.unidade_id ?? unidades?.[0]?.id ?? unidades?.[0]?.unidade?.unidade_id;
+        const unidadeToUse = selectedUnidadeId || unidadeFromFetched || unidadeFromContexts || unidadeFromAuth;
+
+        if (!unidadeToUse) {
+          pessoasData = [];
+        } else {
+          pessoasData = await userService.getByUnidade(unidadeToUse);
+        }
       }
-      
-      console.log("Pessoas carregadas:", pessoasData); // Debug
+
       setPessoas(pessoasData);
     } catch (error) {
       console.error('Erro ao carregar pessoas:', error);
@@ -72,36 +90,158 @@ export const PessoasConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, selectedUnidadeId, fetchedUserDetails]);
 
-  // Função para carregar solicitações de acesso
+  useEffect(() => {
+    if (!selectedUnidadeId) return;
+    const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
+    if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS) return;
+    fetchPessoasForUnit(selectedUnidadeId);
+  }, [selectedUnidadeId]);
+
+  const fetchPessoasForUnit = async (unidadeNum?: number) => {
+    setLoading(true);
+    try {
+      if (!unidadeNum) {
+        console.warn('fetchPessoasForUnit chamado sem unidadeId');
+        setPessoas([]);
+        return;
+      }
+
+      const resp = await userService.getByUnidade(unidadeNum);
+      setPessoas(resp || []);
+    } catch (err) {
+      console.error('Erro ao buscar pessoas por unidade (direct):', err);
+      setPessoas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadAccessRequests = useCallback(async () => {
     setLoadingRequests(true);
     try {
       const data = await accessRequestService.getAll();
-      console.log("Dados de solicitações:", data); // Debug
-      
-      // Conte apenas as solicitações pendentes
+
       const pendingCount = data.pendingRequests?.length || 0;
-      console.log("Contagem de pendentes:", pendingCount); // Debug
       setPendingRequestsCount(pendingCount);
     } catch (error) {
       console.error('Erro ao carregar solicitações:', error);
-      // Em caso de erro, não mostrar o toast para não incomodar
       setPendingRequestsCount(0);
     } finally {
       setLoadingRequests(false);
     }
   }, []);
+  const initRef = useRef(false);
 
-  // Carregar dados quando user estiver disponível - APENAS UMA VEZ
   useEffect(() => {
-    if (user) {
-      console.log("useEffect: Usuário disponível, carregando dados"); // Debug
-      loadPessoas();
-      loadAccessRequests();
+    if (!user) return;
+
+    const initRan = initRef.current;
+    if (initRan) return;
+    initRef.current = true;
+
+    const init = async () => {
+      try {
+        await carregarContexts();
+
+        const hasUnitsInAuth = Array.isArray((user as any)?.unidades) && (user as any).unidades.length > 0;
+        if (!hasUnitsInAuth && (user as any)?.pessoa_id) {
+          try {
+            const resp = await api.get(`${API_ENDPOINTS.USERS}/${(user as any).pessoa_id}`);
+            setFetchedUserDetails(resp.data);
+
+            const first = resp.data?.unidades?.[0];
+            const resolvedUnidadeId = first?.unidade_id ?? first?.unidade?.unidade_id ?? first?.unidade?.id;
+            const resolvedRegionalId = first?.unidade?.regional_id ?? first?.regional_id ?? first?.unidade?.regional?.regional_id ?? first?.regional?.id;
+            if (resolvedUnidadeId) setSelectedUnidadeId(resolvedUnidadeId as number);
+            if (resolvedRegionalId) setSelectedRegionalId(resolvedRegionalId as number);
+          } catch (err) {
+            console.debug('Não foi possível buscar detalhes completos do usuário:', err);
+          }
+        }
+
+        const unidadeFromAuth = (user as any)?.unidades?.[0]?.unidade_id ?? (user as any)?.unidades?.[0]?.unidade?.unidade_id;
+        const unidadeFromFetched = fetchedUserDetails?.unidades?.[0]?.unidade_id ?? fetchedUserDetails?.unidades?.[0]?.unidade?.unidade_id;
+        const unidadeFromContexts = unidades?.[0]?.unidade_id ?? unidades?.[0]?.id ?? unidades?.[0]?.unidade?.unidade_id;
+        const unidadeResolved = selectedUnidadeId || unidadeFromFetched || unidadeFromContexts || unidadeFromAuth;
+
+        if (unidadeResolved) {
+          await fetchPessoasForUnit(unidadeResolved as number);
+        } else {
+          await loadPessoas();
+        }
+
+        await loadAccessRequests();
+      } catch (err) {
+        console.error('Erro durante inicialização de usuário:', err);
+      }
+    };
+
+    init();
+  }, [user && (user as any)?.pessoa_id]);
+
+  const carregarContexts = async () => {
+    try {
+      const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
+
+      if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS || userTipoLocal === TipoUsuario.REGIONAL) {
+        const respRegionais = await api.get(API_ENDPOINTS.REGIONALS);
+        const regionaisData = respRegionais.data || [];
+        setRegionais(Array.isArray(regionaisData) ? regionaisData : []);
+      } else {
+        setRegionais([]);
+      }
+
+      const respContexts = await api.get(API_ENDPOINTS.CONTEXTS);
+      const data = respContexts.data || {};
+      const loadedUnidades = Array.isArray(data.unidades) ? data.unidades : [];
+      if (!selectedUnidadeId && fetchedUserDetails?.unidades?.length) {
+        const first = fetchedUserDetails.unidades[0];
+        const uid = first.unidade_id || first.unidade?.unidade_id || first.unidade?.id;
+        if (uid) setSelectedUnidadeId(uid as number);
+      }
+      if (!selectedUnidadeId && loadedUnidades.length) {
+        setSelectedUnidadeId(loadedUnidades[0].unidade_id || loadedUnidades[0].id);
+      }
+      setUnidades(loadedUnidades);
+    } catch (error) {
+      console.error('Erro ao carregar regionais/unidades:', error);
+      setRegionais([]);
+      setUnidades([]);
     }
-  }, [user && (user as any)?.pessoa_id]); // Só re-executa se o ID do usuário mudar
+  };
+
+  useEffect(() => {
+    const loadUnidadesPorRegional = async (regionalId?: number) => {
+      if (!regionalId) {
+        setUnidades([]);
+        return;
+      }
+
+      try {
+        const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
+
+        if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS || userTipoLocal === TipoUsuario.REGIONAL) {
+          const resp = await api.get(API_ENDPOINTS.REGIONAL_UNIDADES, { params: { regional_id: regionalId } });
+          setUnidades(Array.isArray(resp.data) ? resp.data : []);
+        } else {
+          const first = fetchedUserDetails?.unidades?.[0] || (user as any)?.unidades?.[0];
+          if (first) {
+            const unidadeObj = first.unidade || first;
+            setUnidades([unidadeObj]);
+          } else {
+            setUnidades([]);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar unidades por regional:', error);
+        setUnidades([]);
+      }
+    };
+
+    loadUnidadesPorRegional(selectedRegionalId);
+  }, [selectedRegionalId]);
 
   const handleAddPessoa = async () => {
     if (!novaPessoa.nome || !novaPessoa.email) {
@@ -124,10 +264,51 @@ export const PessoasConfig: React.FC = () => {
 
     setLoading(true);
     try {
-      const dadosPessoa = {
+      const tipo = novaPessoa.tipo_usuario as TipoUsuario;
+
+      if (tipo === TipoUsuario.REGIONAL) {
+        if (!selectedRegionalId) {
+          toast({ variant: 'destructive', title: 'Campo obrigatório', description: 'Selecione a regional para o tipo Regional' });
+          setLoading(false);
+          return;
+        }
+      } else if (tipo !== TipoUsuario.ADMINISTRADOR && tipo !== TipoUsuario.CPS) {
+        if (!selectedRegionalId) {
+          toast({ variant: 'destructive', title: 'Campo obrigatório', description: 'Selecione a regional' });
+          setLoading(false);
+          return;
+        }
+        if (!selectedUnidadeId) {
+          toast({ variant: 'destructive', title: 'Campo obrigatório', description: 'Selecione a unidade' });
+          setLoading(false);
+          return;
+        }
+      }
+
+      const dadosPessoa: any = {
         ...novaPessoa,
-        unidade_id: novaPessoa.unidade_id || unidadeId // Usar o ID mockado
       };
+
+      const unitRoles = [
+        TipoUsuario.DIRETOR,
+        TipoUsuario.COORDENADOR,
+        TipoUsuario.ADMINISTRATIVO,
+        TipoUsuario.DOCENTE,
+      ];
+
+      const isUnitRole = unitRoles.includes(tipo as TipoUsuario);
+
+      if (tipo === TipoUsuario.REGIONAL) {
+        dadosPessoa.regional_id = selectedRegionalId || novaPessoa.regional_id || fetchedUserDetails?.unidades?.[0]?.regional_id;
+        delete dadosPessoa.unidade_id;
+      } else if (isUnitRole) {
+        const unidadeToSend = selectedUnidadeId || novaPessoa.unidade_id || fetchedUserDetails?.unidades?.[0]?.unidade_id || unidadeId;
+        const regionalToSend = selectedRegionalId || novaPessoa.regional_id || fetchedUserDetails?.unidades?.[0]?.regional_id;
+        dadosPessoa.unidade_id = unidadeToSend;
+        dadosPessoa.regional_id = regionalToSend;
+      } else {
+        delete dadosPessoa.unidade_id;
+      }
 
       const novaPessoaCriada = await userService.create(dadosPessoa);
       
@@ -139,6 +320,8 @@ export const PessoasConfig: React.FC = () => {
         tipo_usuario: TipoUsuario.DOCENTE,
         unidade_id: undefined
       });
+      setSelectedRegionalId(undefined);
+      setSelectedUnidadeId(undefined);
 
       toast({
         title: "Sucesso",
@@ -183,21 +366,42 @@ export const PessoasConfig: React.FC = () => {
     }
   };
 
-  // Função para obter nome da unidade
   const getUnidadeNome = (pessoa: User) => {
     if (!pessoa.unidades || pessoa.unidades.length === 0) {
       return 'Unidade não definida';
     }
-    
-    // A estrutura correta tem unidade aninhado como vimos no backend
-    if (pessoa.unidades[0].unidade && pessoa.unidades[0].unidade.nome_completo) {
-      return pessoa.unidades[0].unidade.nome_completo;
+
+    if (pessoa.unidades[0].unidade && pessoa.unidades[0].unidade.nome_unidade) {
+      return pessoa.unidades[0].unidade.nome_unidade;
     }
     
     return 'Nome não disponível';
   };
 
-  // Lista de tipos de usuário conforme a hierarquia atual do sistema
+  const getRegionalNameById = (id?: number) => {
+    if (!id) return undefined;
+    const found = regionais.find(r => r.regional_id === id || r.id === id);
+    if (found) return found.nome || found.nome_regional || found.title || found.label;
+
+    const first = fetchedUserDetails?.unidades?.[0] || (user as any)?.unidades?.[0];
+    const fromUser = first?.regional?.nome || first?.unidade?.regional?.nome || first?.regional_nome || first?.nome_regional || first?.unidade?.nome || first?.unidade?.nome_unidade;
+    if (fromUser) return fromUser;
+
+    return undefined;
+  };
+
+  const getLoggedUserUnidadeNome = () => {
+    const first = fetchedUserDetails?.unidades?.[0] || (user as any)?.unidades?.[0];
+    if (!first) return 'Unidade não definida';
+    if (first.unidade && (first.unidade.nome_unidade || first.unidade.nome)) return first.unidade.nome_unidade || first.unidade.nome;
+    if (first.nome_unidade) return first.nome_unidade;
+    if (first.nome) return first.nome;
+    if (first.unidade_nome) return first.unidade_nome;
+    const maybeUnidade = first.unidade || first;
+    const possibleName = maybeUnidade?.nome_unidade || maybeUnidade?.nome || maybeUnidade?.title;
+    return possibleName || 'Unidade não definida';
+  };
+
   const tiposUsuario = [
     { value: TipoUsuario.ADMINISTRADOR, label: "Administrador" },
     { value: TipoUsuario.CPS, label: "CPS" },
@@ -207,31 +411,30 @@ export const PessoasConfig: React.FC = () => {
     { value: TipoUsuario.ADMINISTRATIVO, label: "Administrativo" },
     { value: TipoUsuario.DOCENTE, label: "Docente" },
   ];
-  
-  // Filtrar tipos de usuário baseado nas permissões
+
   const getTiposUsuarioPermitidos = () => {
     const userTipo = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
     
     if (userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) {
-      return tiposUsuario; // Admin pode criar qualquer tipo
+      return tiposUsuario;
     } else if (userTipo === TipoUsuario.DIRETOR) {
-      // Diretor pode criar coordenador, administrativo e docente
       return tiposUsuario.filter(tipo => 
         [TipoUsuario.COORDENADOR, TipoUsuario.ADMINISTRATIVO, TipoUsuario.DOCENTE].includes(tipo.value as TipoUsuario)
       );
     } else {
-      // Outros podem criar apenas docente e administrativo
       return tiposUsuario.filter(tipo => 
         [TipoUsuario.ADMINISTRATIVO, TipoUsuario.DOCENTE].includes(tipo.value as TipoUsuario)
       );
     }
   };
   
-  const filteredPessoas = pessoas.filter(pessoa => 
-    pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (pessoa.email && pessoa.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    pessoa.tipo_usuario.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPessoas = pessoas.filter(pessoa => {
+    const nome = (pessoa.nome || '').toString().toLowerCase();
+    const email = (pessoa.email || '').toString().toLowerCase();
+    const tipo = (pessoa.tipo_usuario || '').toString().toLowerCase();
+    const term = (searchTerm || '').toLowerCase();
+    return nome.includes(term) || email.includes(term) || tipo.includes(term);
+  });
 
   const getTypeBadgeColor = (tipo: TipoUsuario) => {
     switch(tipo) {
@@ -250,7 +453,6 @@ export const PessoasConfig: React.FC = () => {
     setShowAccessRequests(!showAccessRequests);
   };
 
-  // Verificar se usuário pode gerenciar pessoas
   const userTipo = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
   const canManagePessoas = userTipo && [
     TipoUsuario.ADMINISTRADOR, 
@@ -259,19 +461,12 @@ export const PessoasConfig: React.FC = () => {
     TipoUsuario.COORDENADOR
   ].includes(userTipo);
 
-  console.log("canManagePessoas:", canManagePessoas); // Debug
-  console.log("userTipo:", userTipo); // Debug
-
-  // Verificar se pode ver solicitações de acesso (incluindo diretores)
   const canViewAccessRequests = userTipo && [
     TipoUsuario.ADMINISTRADOR, 
     TipoUsuario.CPS,
-    TipoUsuario.DIRETOR  // Adicionando diretor à lista
+    TipoUsuario.DIRETOR
   ].includes(userTipo);
 
-  console.log("canViewAccessRequests:", canViewAccessRequests); // Debug
-
-  // Se não tem usuário ainda
   if (!user) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -393,6 +588,109 @@ export const PessoasConfig: React.FC = () => {
                       </Select>
                     </div>
                   </div>
+                  {/* Seleções condicionais: regional / unidade */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                    {/* Exibir diferentes campos dependendo do tipo selecionado */}
+                    {(() => {
+                      const tipoSelecionado = novaPessoa.tipo_usuario as TipoUsuario;
+
+                      if (tipoSelecionado === TipoUsuario.ADMINISTRADOR || tipoSelecionado === TipoUsuario.CPS) {
+                        return (
+                          <div className="lg:col-span-3 text-sm text-gray-600">
+                            Não é necessário selecionar Regional ou Unidade para Administrador/CPS.
+                          </div>
+                        );
+                      }
+
+                      if (tipoSelecionado === TipoUsuario.REGIONAL) {
+                        return (
+                          <div>
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Regional</label>
+                            <Select
+                              value={selectedRegionalId?.toString() || ""}
+                              onValueChange={(v) => setSelectedRegionalId(v ? parseInt(v) : undefined)}
+                              disabled={regionais.length === 0}
+                            >
+                              <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
+                                <SelectValue placeholder={regionais.length ? "Selecione uma regional" : "Sem regionais disponíveis"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {regionais.map(r => (
+                                    <SelectItem key={r.regional_id} value={r.regional_id?.toString() || ''}>{r.nome}</SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      }
+
+                      const isAdminView = ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.ADMINISTRADOR || ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.CPS;
+
+                      if (isAdminView) {
+                        return (
+                          <>
+                            <div>
+                              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Regional</label>
+                              <Select
+                                value={selectedRegionalId?.toString() || ""}
+                                onValueChange={(v) => setSelectedRegionalId(v ? parseInt(v) : undefined)}
+                                disabled={regionais.length === 0}
+                              >
+                                <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
+                                  <SelectValue placeholder={regionais.length ? "Selecione uma regional" : "Sem regionais disponíveis"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {regionais.map(r => (
+                                      <SelectItem key={r.regional_id} value={r.regional_id?.toString() || ''}>{r.nome}</SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Unidade</label>
+                              <Select
+                                value={selectedUnidadeId?.toString() || ""}
+                                onValueChange={(v) => setSelectedUnidadeId(v ? parseInt(v) : undefined)}
+                                disabled={unidades.length === 0}
+                              >
+                                <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
+                                  <SelectValue placeholder={unidades.length ? "Selecione uma unidade" : "Sem unidades disponíveis"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {unidades.map(u => (
+                                      <SelectItem key={u.unidade_id} value={u.unidade_id.toString()}>{u.nome_unidade}</SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      return (
+                        <>
+                          <div>
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Regional</label>
+                            <div className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm text-gray-700">
+                              {getRegionalNameById(selectedRegionalId) || 'Regional não disponível'}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Unidade</label>
+                            <div className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm text-gray-700">
+                              {getLoggedUserUnidadeNome()}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                   
                   <div className="flex justify-end">
                     <Button 
@@ -489,7 +787,9 @@ export const PessoasConfig: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredPessoas
-                    .sort((a, b) => a.nome.localeCompare(b.nome))
+                    .sort((a, b) =>
+                      (a.nome || '').toString().localeCompare((b.nome || '').toString()),
+                    )
                     .map(pessoa => (
                       <TableRow key={pessoa.pessoa_id} className="hover:bg-gray-50">
                         <TableCell className="font-medium text-gray-700">
@@ -512,7 +812,7 @@ export const PessoasConfig: React.FC = () => {
                                         key={u.unidade_id}
                                         className="py-1 border-b last:border-0"
                                       >
-                                        {u.unidade && u.unidade.nome_completo ? u.unidade.nome_completo : "Nome não disponível"}
+                                        {u.unidade && u.unidade.nome_unidade ? u.unidade.nome_unidade : "Nome não disponível"}
                                       </li>
                                     ))}
                                   </ul>
