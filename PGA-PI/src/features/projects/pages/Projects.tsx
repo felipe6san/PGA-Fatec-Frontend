@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { projectService } from '../services/projectService';
 import { anexoService } from '../../anexos/services/anexoService';
 import { AcaoProjeto, Attachment } from '@/types/api';
+import ProjectEditForm from '../components/projectEditForm';
 
 const formatCurrencyForDisplay = (value?: number): string => {
   if (value === undefined || value === null) return "R$ 0,00";
@@ -26,6 +27,9 @@ export const Projects = (): JSX.Element => {
   const [editingPga, setEditingPga] = useState<any | null>(null);
   const [pgaForm, setPgaForm] = useState<any>({ versao: '', analise_cenario: '', data_elaboracao: '', status: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [editingProject, setEditingProject] = useState<AcaoProjeto | null>(null);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -65,10 +69,17 @@ export const Projects = (): JSX.Element => {
     setExpandedProjectId(expandedProjectId === id ? null : id);
   };
 
-  const handleEdit = (event: React.MouseEvent, projectId: number) => {
+  const handleEdit = async (event: React.MouseEvent, projectId: number) => {
     event.stopPropagation();
-    // TODO: Implement edit functionality
-    console.log(`Edit project ${projectId}`);
+    try {
+      const project = await projectService.getById(projectId);
+      setEditingProject(project);
+      setIsEditingProject(true);
+      setProjectModalOpen(true);
+    } catch (err) {
+      console.error('Erro ao carregar projeto para edição:', err);
+      toast({ title: 'Erro', description: 'Não foi possível carregar o projeto.', variant: 'destructive' });
+    }
   };
 
   const handleEditPga = async (event: React.MouseEvent, pgaId?: number | null) => {
@@ -397,6 +408,25 @@ export const Projects = (): JSX.Element => {
           </div>
         </CardContent>
       </Card>
+
+        <Modal isOpen={projectModalOpen} onClose={() => { setProjectModalOpen(false); setEditingProject(null); setIsEditingProject(false); }} title="Editar Projeto">
+          {editingProject && (
+            <ProjectEditForm
+              project={editingProject}
+              onSave={async (updated) => {
+                setProjectModalOpen(false);
+                setEditingProject(null);
+                toast({title: 'Sucesso', description: 'Projeto atualizado com sucesso.', variant: 'success'});
+                const refreshed = await projectService.getAll();
+                setProjetos(refreshed);
+              }}
+              onCancel={() => {
+                setProjectModalOpen(false);
+                setEditingProject(null);
+              }}
+            />
+          )}
+        </Modal>
 
         <Modal isOpen={pgaModalOpen} onClose={() => { setPgaModalOpen(false); setEditingPga(null); setIsEditing(false); }} title={isEditing ? "Editar PGA" : "Dados do PGA"}>
           <div className="space-y-4">
