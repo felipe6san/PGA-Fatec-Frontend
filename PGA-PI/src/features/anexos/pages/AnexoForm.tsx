@@ -184,7 +184,7 @@ export const AnexoForm = () => {
                   <option value="">Selecione um projeto</option>
                   {projetos.map(projeto => (
                     <option key={projeto.acao_projeto_id} value={projeto.acao_projeto_id.toString()}>
-                      {projeto.tema}
+                      {`${projeto.nome_projeto ?? projeto.codigo_projeto ?? `Projeto ${projeto.acao_projeto_id}`}${projeto.tema ? ` — ${projeto.tema.tema_num.toString().padStart(2, '0')} - ${projeto.tema.descricao}` : ''}`}
                     </option>
                   ))}
                 </select>

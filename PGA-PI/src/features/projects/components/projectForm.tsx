@@ -34,10 +34,6 @@ const formatCurrency = (value: string): string => {
   }).format(number);
 };
 
-const parseCurrencyInput = (value: string): string => {
-  return value.replace(/\D/g, "");
-};
-
 interface ProjectFormProps {
   eixoSelecionado?: {
     eixo_id: number;
@@ -103,12 +99,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
   const [etapasProcesso, setEtapasProcesso] = useState<EtapaProcesso[]>([
     { id: 0, descricao: "", statusVerificacao: StatusVerificacao.Pendente },
   ]);
-  const [situacoesProblema, setSituacoesProblema] = useState<
-    Array<{
-      id: string;
-      descricao: string;
-    }>
-  >([{ id: "", descricao: "" }]);
+  const [situacoesProblema, setSituacoesProblema] = useState<string[]>([""]);
   const [aquisicoes, setAquisicoes] = useState<AttachmentItem[]>([]);
 
   const [pgas, setPgas] = useState<any[]>([]);
@@ -391,7 +382,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
   };
 
   const handleAddSituacaoProblema = () => {
-    setSituacoesProblema([...situacoesProblema, { id: "", descricao: "" }]);
+    setSituacoesProblema([...situacoesProblema, ""]);
   };
 
   const handleSituacaoProblemaChange = (
@@ -399,32 +390,24 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const { value } = event.target;
-    const situacao = situacoesProblemaAPI.find(
-      (s) => s.situacao_id.toString() === value
-    );
-
-    const newSituacoesProblema = [...situacoesProblema];
-    newSituacoesProblema[index] = {
-      id: value,
-      descricao: situacao 
-        ? `${situacao.codigo_categoria} - ${situacao.descricao}` 
-        : "",
-    };
-
-    setSituacoesProblema(newSituacoesProblema);
+    const newSituacoes = [...situacoesProblema];
+    newSituacoes[index] = value;
+    setSituacoesProblema(newSituacoes);
   };
 
   const handleRemoveSituacaoProblema = (index: number) => {
-    const newSituacoesProblema = situacoesProblema.filter(
-      (_, i) => i !== index
-    );
-    setSituacoesProblema(newSituacoesProblema);
+    const newSituacoes = situacoesProblema.filter((_, i) => i !== index);
+    setSituacoesProblema(newSituacoes);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     try {
+      const situacaoIds = situacoesProblema
+        .filter((s) => s && s !== "")
+        .map((s) => parseInt(s));
+
       const projetoCriado = await projectService.create({
         codigo_projeto: "",
         nome_projeto: nomeProjeto,
@@ -443,6 +426,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
           ? parseFloat(custoEstimado.replace(/[^\d]/g, "")) / 100
           : 0,
         fonte_recursos: fonteRecursos,
+        situacao_problema_ids: situacaoIds,
       });
 
       const acaoProjetoId = projetoCriado.acao_projeto_id;
@@ -499,7 +483,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
           }
         }
       }
-
 
       alert("Projeto registrado com sucesso!");
 
@@ -1182,9 +1165,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         </h3>
         {situacoesProblema.map((situacao, index) => (
           <div key={index} className="flex items-center mb-2">
-            <select
-              value={situacao.id}
-              onChange={(e) => handleSituacaoProblemaChange(index, e)}
+              <select
+                value={situacao}
+                onChange={(e) => handleSituacaoProblemaChange(index, e)}
               className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mr-2 bg-white"
               disabled={loadingSituacoes}
             >

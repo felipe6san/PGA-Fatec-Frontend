@@ -185,6 +185,7 @@ export interface CreateProject1Dto {
   codigo_projeto?: string;
   custo_total_estimado?: number;
   fonte_recursos?: string;
+  situacao_problema_ids?: number[];
 }
 
 export interface UpdateProject1Dto {

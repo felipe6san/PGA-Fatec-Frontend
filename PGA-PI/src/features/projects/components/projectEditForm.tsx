@@ -92,10 +92,14 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
       );
 
       setSituacoesProblema(
-        (project.situacoesProblemas || []).map((sp: any) => ({
-          situacao_id: sp.situacao_id,
-          descricao: sp.descricao,
-        }))
+        (project.situacoesProblemas || []).map((sp: any) => {
+          const situacaoId = sp.situacao_id ?? sp.situacao_problema_id ?? sp.situacaoProblema?.situacao_id;
+          const descricao = sp.descricao ?? sp.situacaoProblema?.descricao;
+          return {
+            situacao_id: situacaoId,
+            descricao,
+          };
+        })
       );
     }
   }, [project]);
