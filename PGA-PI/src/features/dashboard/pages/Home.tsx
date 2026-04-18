@@ -45,7 +45,7 @@ export const Home = (): JSX.Element => {
         const [projetosData, pgasData]: [AcaoProjeto[], PgaComUnidade[]] =
           await Promise.all([
             projectService.getAll(),
-            api.get(API_ENDPOINTS.PGAS).then((r) => r.data),
+            api.get(API_ENDPOINTS.PGA).then((r) => r.data),
           ]);
 
         // Identificar o PGA da unidade do usuário logado

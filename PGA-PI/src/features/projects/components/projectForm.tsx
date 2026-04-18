@@ -5,7 +5,7 @@ import {
   ProjetoPessoa,
   StatusVerificacao,
   EtapaProcesso,
-  AquisicaoItem,
+  AttachmentItem,
   PrioridadeAcao,
   PessoaAPI,
 } from "./projectFormTypes";
@@ -20,6 +20,11 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { situacoesService } from "@/features/settings/services/situacoesService";
 import { TipoUsuario, EntregavelLinkSei, SituacaoProblema } from "@/types/api"; // Importar tipo do entregável
+import { projectService } from "@/features/projects/services/projectService";
+import { processStepService } from "@/services/processStepService";
+import { anexoService } from "@/features/anexos/services/anexoService";
+import { projetoPessoaService } from "@/services/projectPersonService";
+import { pgaService } from "@/services/pgaService";
 
 // --- Utility Functions ---
 const formatCurrency = (value: string): string => {
@@ -34,7 +39,6 @@ const parseCurrencyInput = (value: string): string => {
   return value.replace(/\D/g, "");
 };
 
-// Modificar a interface de props para receber o eixoTematico selecionado
 interface ProjectFormProps {
   eixoSelecionado?: {
     eixo_id: number;
@@ -44,51 +48,40 @@ interface ProjectFormProps {
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
-  // Obter usuário autenticado
   const { user } = useAuth();
 
-  // Estado para armazenar os eixos temáticos do backend
   const [eixosTematicos, setEixosTematicos] = useState<any[]>([]);
   const [loadingEixos, setLoadingEixos] = useState(false);
   const [errorEixos, setErrorEixos] = useState<string | null>(null);
 
-  // NOVO: Estados para prioridades
   const [prioridades, setPrioridades] = useState<PrioridadeAcao[]>([]);
   const [loadingPrioridades, setLoadingPrioridades] = useState(false);
   const [errorPrioridades, setErrorPrioridades] = useState<string | null>(null);
 
-  // NOVO: Estados para temas
   const [temas, setTemas] = useState<any[]>([]);
   const [filteredTemas, setFilteredTemas] = useState<any[]>([]);
   const [loadingTemas, setLoadingTemas] = useState(false);
   const [errorTemas, setErrorTemas] = useState<string | null>(null);
 
-  // NOVO: Estados para tipos de vínculo HAE
   const [tiposVinculoHAE, setTiposVinculoHAE] = useState<TipoVinculoHAE[]>([]);
   const [loadingVinculos, setLoadingVinculos] = useState(false);
   const [errorVinculos, setErrorVinculos] = useState<string | null>(null);
 
-  // Estado para entregáveis
   const [entregaveis, setEntregaveis] = useState<EntregavelLinkSei[]>([]);
   const [loadingEntregaveis, setLoadingEntregaveis] = useState(false);
   const [errorEntregaveis, setErrorEntregaveis] = useState<string | null>(null);
 
-  // Estado para situações problema
   const [situacoesProblemaAPI, setSituacoesProblemaAPI] = useState<SituacaoProblema[]>([]);
   const [loadingSituacoes, setLoadingSituacoes] = useState(false);
   const [errorSituacoes, setErrorSituacoes] = useState<string | null>(null);
 
-  // Inicializar o eixoId com o valor do eixo selecionado
   const [eixoId, setEixoId] = useState<string>(
     eixoSelecionado ? eixoSelecionado.eixo_id.toString() : ""
   );
 
-  // Estado para tema selecionado
   const [temaId, setTemaId] = useState<string>("");
 
   const [nomeProjeto, setNomeProjeto] = useState<string>("");
-  const [ano, setAno] = useState<number>(new Date().getFullYear());
-  const [origem, setOrigem] = useState<string>("");
   const [oQueSeraFeito, setOQueSeraFeito] = useState<string>("");
   const [porQueSeraFeito, setPorQueSeraFeito] = useState<string>("");
   const [dataInicio, setDataInicio] = useState<string>("");
@@ -104,7 +97,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     useState<boolean>(false);
   const [obrigatorioSustentabilidade, setObrigatorioSustentabilidade] =
     useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   const [pessoasProjeto, setPessoasProjeto] = useState<ProjetoPessoa[]>([
     { id: 0, pessoaId: "", nome: "", papel: PapelProjeto.Responsavel },
@@ -118,9 +110,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
       descricao: string;
     }>
   >([{ id: "", descricao: "" }]);
-  const [aquisicoes, setAquisicoes] = useState<AquisicaoItem[]>([]);
+  const [aquisicoes, setAquisicoes] = useState<AttachmentItem[]>([]);
 
-  // Carregar dados iniciais ao montar o componente
+  const [pgas, setPgas] = useState<any[]>([]);
+  const [loadingPgas, setLoadingPgas] = useState(false);
+  const [errorPgas, setErrorPgas] = useState<string | null>(null);
+  const [pgaId, setPgaId] = useState<string>("");
+
   useEffect(() => {
     carregarEixosTematicos();
     carregarPrioridades();
@@ -128,24 +124,22 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     carregarPessoas();
     carregarTiposVinculoHAE();
     carregarEntregaveis();
-    carregarSituacoesProblema(); // Adicionar esta chamada
+    carregarSituacoesProblema();
+    carregarPGAs();
   }, []);
 
-  // Filtrar temas baseados no eixo selecionado
   useEffect(() => {
     if (eixoId && temas.length > 0) {
       const temasDoEixo = temas.filter(
         (tema) => tema.eixo_id === parseInt(eixoId)
       );
       setFilteredTemas(temasDoEixo);
-      // Limpar seleção de tema se mudar de eixo
       setTemaId("");
     } else {
       setFilteredTemas([]);
     }
   }, [eixoId, temas]);
 
-  // Função para carregar eixos temáticos
   const carregarEixosTematicos = async () => {
     try {
       setLoadingEixos(true);
@@ -162,7 +156,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // NOVO: Função para carregar prioridades
   const carregarPrioridades = async () => {
     try {
       setLoadingPrioridades(true);
@@ -179,7 +172,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // NOVO: Função para carregar temas
   const carregarTemas = async () => {
     try {
       setLoadingTemas(true);
@@ -196,18 +188,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // Estado para pessoas
   const [pessoas, setPessoas] = useState<PessoaAPI[]>([]);
   const [loadingPessoas, setLoadingPessoas] = useState(false);
   const [errorPessoas, setErrorPessoas] = useState<string | null>(null);
 
-  // Função para carregar pessoas
   const carregarPessoas = async () => {
     try {
       setLoadingPessoas(true);
       setErrorPessoas(null);
 
-      // Se não tivermos usuário logado, não fazer nada
       if (!user) return;
 
       let pessoasData: PessoaAPI[] = [];
@@ -218,7 +207,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
 
       console.log("Tipo de usuário:", userTipo);
 
-      // Se for administrador ou CPS, pode ver todas as pessoas
       if (
         userTipo === TipoUsuario.ADMINISTRADOR ||
         userTipo === TipoUsuario.CPS
@@ -226,7 +214,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         console.log("Carregando todas as pessoas (admin/CPS)");
         pessoasData = await userService.getAll();
       } else {
-        // Caso contrário, carregar pessoas da unidade do usuário
         console.log(`Carregando pessoas da unidade: ${unidadeId}`);
         pessoasData = await userService.getByUnidade(unidadeId);
       }
@@ -241,7 +228,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // Função para carregar tipos de vínculo HAE
   const carregarTiposVinculoHAE = async () => {
     try {
       setLoadingVinculos(true);
@@ -258,7 +244,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // NOVO: Função para carregar entregáveis
   const carregarEntregaveis = async () => {
     try {
       setLoadingEntregaveis(true);
@@ -275,7 +260,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     }
   };
 
-  // Função para carregar situações problema
   const carregarSituacoesProblema = async () => {
     try {
       setLoadingSituacoes(true);
@@ -289,6 +273,19 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
       setErrorSituacoes('Não foi possível carregar a lista de situações problema.');
     } finally {
       setLoadingSituacoes(false);
+    }
+  };
+
+  const carregarPGAs = async () => {
+    try {
+      setLoadingPgas(true);
+      setErrorPgas(null);
+      const data = await pgaService.getAll();
+      setPgas(data);
+    } catch (error) {
+      setErrorPgas("Não foi possível carregar os PGAs.");
+    } finally {
+      setLoadingPgas(false);
     }
   };
 
@@ -431,111 +428,96 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     setSituacoesProblema(newSituacoesProblema);
   };
 
-  const handleAddAquisicao = () => {
-    setAquisicoes([
-      ...aquisicoes,
-      {
-        id: aquisicoes.length,
-        tipoAnexo: "",
-        descricaoItem: "",
-        unidadeMedida: "",
-        quantidade: "1",
-        justificativa: "",
-        valorUnitarioEstimado: "0",
-        valorTotalEstimado: "0",
-      },
-    ]);
-  };
-
-  const handleAquisicaoChange = (
-    index: number,
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = event.target;
-    const newAquisicoes = [...aquisicoes];
-    let updatedAquisicao = { ...newAquisicoes[index], [name]: value };
-
-    if (name === "quantidade" || name === "valorUnitarioEstimado") {
-      const qtd =
-        parseFloat(
-          name === "quantidade" ? value : updatedAquisicao.quantidade
-        ) || 0;
-      const valorUnit =
-        parseFloat(
-          name === "valorUnitarioEstimado"
-            ? parseCurrencyInput(value)
-            : parseCurrencyInput(updatedAquisicao.valorUnitarioEstimado || "0")
-        ) / 100;
-      updatedAquisicao.valorTotalEstimado = (qtd * valorUnit).toFixed(2);
-    }
-    if (name === "valorUnitarioEstimado") {
-      updatedAquisicao.valorUnitarioEstimado = parseCurrencyInput(value);
-    }
-
-    newAquisicoes[index] = updatedAquisicao;
-    setAquisicoes(newAquisicoes);
-  };
-
-  const handleRemoveAquisicao = (index: number) => {
-    const newAquisicoes = aquisicoes.filter((_, i) => i !== index);
-    setAquisicoes(newAquisicoes);
-  };
-
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const formData = {
-      temaId: parseInt(temaId) || null,
-      eixoId: parseInt(eixoId) || null,
-      prioridadeId: parseInt(prioridadeId) || null,
-      oQueSeraFeito,
-      porQueSeraFeito,
-      dataInicio,
-      dataFinal,
-      objetivosInstitucionaisReferenciados,
-      obrigatorioInclusao,
-      obrigatorioSustentabilidade,
-      pessoas: pessoasProjeto.map((p) => ({
-        pessoaId: p.pessoaId,
-        papel: p.papel,
-        cargaHorariaSemanal: p.cargaHorariaSemanal
-          ? parseInt(p.cargaHorariaSemanal)
-          : undefined,
-        tipoVinculoHAE: p.tipoVinculoHAE,
-      })),
-      etapas: etapasProcesso.map((e) => ({
-        descricao: e.descricao,
-        // Apenas incluir os campos opcionais se estiverem presentes
-        ...(e.entregavelLinkSei ? { entregavel_id: parseInt(e.entregavelLinkSei) } : {}),
-        ...(e.numeroRef ? { numero_ref: e.numeroRef } : {}),
-        ...(e.statusVerificacao ? { status_verificacao: e.statusVerificacao } : {}),
-        ...(e.dataVerificacaoPrevista ? { data_verificacao_prevista: e.dataVerificacaoPrevista } : {}),
-        ...(e.dataVerificacaoRealizada ? { data_verificacao_realizada: e.dataVerificacaoRealizada } : {}),
-      })),
-      aquisicoes: aquisicoes.map((a) => ({
-        ...a,
-        quantidade: parseInt(a.quantidade) || 0,
-        valorUnitarioEstimado: a.valorUnitarioEstimado
-          ? parseFloat(a.valorUnitarioEstimado.replace(/[^\d]/g, "")) / 100
-          : undefined,
-        valorTotalEstimado: a.valorTotalEstimado
-          ? parseFloat(a.valorTotalEstimado.replace(/[^\d]/g, "")) / 100
-          : undefined,
-      })),
-      nomeProjeto,
-      ano,
-      origem,
-      custoTotalEstimadoProjeto: custoEstimado
-        ? parseFloat(parseCurrencyInput(custoEstimado)) / 100
-        : 0,
-      fonteRecursos,
-      situacoesProblema: situacoesProblema
-        .map((sit) => sit.descricao)
-        .filter((s) => s),
-    };
-    console.log("Form Data:", formData);
-    //TODO Here you would typically send the form data to your backend
+
+    try {
+      const projetoCriado = await projectService.create({
+        codigo_projeto: "",
+        nome_projeto: nomeProjeto,
+        pga_id: parseInt(pgaId),
+        tema_id: parseInt(temaId),
+        eixo_id: parseInt(eixoId),
+        prioridade_id: parseInt(prioridadeId),
+        o_que_sera_feito: oQueSeraFeito,
+        por_que_sera_feito: porQueSeraFeito,
+        data_inicio: dataInicio,
+        data_final: dataFinal,
+        objetivos_institucionais_referenciados: objetivosInstitucionaisReferenciados,
+        obrigatorio_inclusao: obrigatorioInclusao,
+        obrigatorio_sustentabilidade: obrigatorioSustentabilidade,
+        custo_total_estimado: custoEstimado
+          ? parseFloat(custoEstimado.replace(/[^\d]/g, "")) / 100
+          : 0,
+        fonte_recursos: fonteRecursos,
+      });
+
+      const acaoProjetoId = projetoCriado.acao_projeto_id;
+
+      // 2. Criar pessoas vinculadas ao projeto
+      for (const pessoa of pessoasProjeto) {
+        await projetoPessoaService.create({
+          acao_projeto_id: acaoProjetoId,
+          pessoa_id: parseInt(pessoa.pessoaId),
+          papel: pessoa.papel,
+          carga_horaria_semanal: pessoa.cargaHorariaSemanal
+            ? parseInt(pessoa.cargaHorariaSemanal)
+            : undefined,
+          tipo_vinculo_hae_id:
+            pessoa.tipoVinculoHAE && pessoa.tipoVinculoHAE !== "NaoSeAplica"
+              ? parseInt(pessoa.tipoVinculoHAE)
+              : undefined,
+        });
+      }
+
+      // 3. Criar etapas do processo e anexos vinculados
+      for (const etapa of etapasProcesso) {
+        const etapaCriada = await processStepService.create({
+          acao_projeto_id: acaoProjetoId,
+          descricao: etapa.descricao,
+          entregavel_id: etapa.entregavelLinkSei
+            ? parseInt(etapa.entregavelLinkSei)
+            : undefined,
+          numero_ref: etapa.numeroRef,
+          data_verificacao_prevista: etapa.dataVerificacaoPrevista
+            ? new Date(etapa.dataVerificacaoPrevista).toISOString()
+            : undefined,
+          data_verificacao_realizada: etapa.dataVerificacaoRealizada
+            ? new Date(etapa.dataVerificacaoRealizada).toISOString()
+            : undefined,
+          status_verificacao: etapa.statusVerificacao,
+        });
+
+        if (etapa.anexos && etapa.anexos.length > 0) {
+          for (const anexo of etapa.anexos) {
+            await anexoService.create({
+              etapa_processo_id: etapaCriada.etapa_id,
+              entregavel_id: etapa.entregavelLinkSei
+                ? parseInt(etapa.entregavelLinkSei)
+                : undefined,
+              item: anexo.descricao,
+              descricao: anexo.descricao || "",
+              quantidade: anexo.quantidade,
+              preco_unitario_estimado: anexo.preco_unitario_estimado
+                ? anexo.preco_unitario_estimado
+                : 0,
+              preco_total_estimado: anexo.preco_total_estimado
+                ? anexo.preco_total_estimado
+                : 0,
+            });
+          }
+        }
+      }
+
+      // 4. (Opcional) Situações problema, se houver endpoint específico
+
+      alert("Projeto registrado com sucesso!");
+      // Redirecionar ou resetar formulário conforme necessário
+
+    } catch (error) {
+      console.error("Erro ao registrar projeto:", error);
+      alert("Erro ao registrar projeto. Verifique os dados e tente novamente.");
+    }
   };
 
   return (
@@ -645,19 +627,31 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
 
         <div>
           <label
-            htmlFor="ano"
+            htmlFor="pgaId"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             Ano (PGA):
           </label>
-          <input
-            type="number"
-            id="ano"
-            value={ano}
-            onChange={(e) => setAno(parseInt(e.target.value))}
+          <select
+            id="pgaId"
+            value={pgaId}
+            onChange={(e) => setPgaId(e.target.value)}
             required
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            disabled={loadingPgas}
+          >
+            <option value="">
+              {loadingPgas ? "Carregando anos do PGA..." : "Selecione o ano do PGA"}
+            </option>
+            {pgas.map((pga) => (
+              <option key={pga.pga_id} value={pga.pga_id}>
+                {pga.ano}
+              </option>
+            ))}
+          </select>
+          {errorPgas && (
+            <p className="text-red-500 text-sm mt-1">{errorPgas}</p>
+          )}
         </div>
       </div>
 

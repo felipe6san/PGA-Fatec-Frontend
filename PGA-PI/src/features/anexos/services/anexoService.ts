@@ -1,23 +1,11 @@
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
-import { Attachment1, AnexoProjetoUm } from '@/types/api';
-
-export interface CreateAttachment1Dto {
-  item: string;
-  flag: AnexoProjetoUm;
-  // outros campos conforme necessário
-}
-
-export interface UpdateAttachment1Dto {
-  item?: string;
-  flag?: AnexoProjetoUm;
-  // outros campos conforme necessário
-}
+import { Attachment, CreateAttachmentDto, UpdateAttachmentDto, AnexoProjetoUm } from '@/types/api';
 
 class AnexoService {
-  async getAll(): Promise<Attachment1[]> {
+  async getAll(): Promise<Attachment[]> {
     try {
-      const response = await api.get<Attachment1[]>(API_ENDPOINTS.ATTACHMENTS);
+      const response = await api.get<Attachment[]>(API_ENDPOINTS.ATTACHMENTS);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar anexos:', error);
@@ -25,9 +13,9 @@ class AnexoService {
     }
   }
 
-  async getById(id: number): Promise<Attachment1> {
+  async getById(id: number): Promise<Attachment> {
     try {
-      const response = await api.get<Attachment1>(`${API_ENDPOINTS.ATTACHMENTS}/${id}`);
+      const response = await api.get<Attachment>(`${API_ENDPOINTS.ATTACHMENTS}/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar anexo:', error);
@@ -35,9 +23,9 @@ class AnexoService {
     }
   }
 
-  async create(data: CreateAttachment1Dto): Promise<Attachment1> {
+  async create(data: CreateAttachmentDto): Promise<Attachment> {
     try {
-      const response = await api.post<Attachment1>(API_ENDPOINTS.ATTACHMENTS, data);
+      const response = await api.post<Attachment>(API_ENDPOINTS.ATTACHMENTS, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar anexo:', error);
@@ -45,9 +33,9 @@ class AnexoService {
     }
   }
 
-  async update(id: number, data: UpdateAttachment1Dto): Promise<Attachment1> {
+  async update(id: number, data: UpdateAttachmentDto): Promise<Attachment> {
     try {
-      const response = await api.put<Attachment1>(`${API_ENDPOINTS.ATTACHMENTS}/${id}`, data);
+      const response = await api.put<Attachment>(`${API_ENDPOINTS.ATTACHMENTS}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar anexo:', error);

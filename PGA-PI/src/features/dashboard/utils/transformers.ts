@@ -57,6 +57,10 @@ function derivePriority(dateStr: string): 'high' | 'medium' | 'low' {
   return 'low';
 }
 
+function projectDisplayName(proj: AcaoProjeto): string {
+  return proj.tema?.descricao ?? proj.nome_projeto ?? 'Sem tema';
+}
+
 export function buildEmployees(projetos: AcaoProjeto[]): EmployeeData[] {
   const map = new Map<number, { name: string; hours: number; projects: Set<number>; department: string }>();
 
@@ -101,7 +105,7 @@ export function buildProjectCards(projetos: AcaoProjeto[]): ProjectCardData[] {
 
     return {
       id: String(proj.acao_projeto_id),
-      name: proj.tema,
+      name: projectDisplayName(proj),
       progress,
       responsible: responsavel?.pessoa?.nome ?? '—',
       deadline: deadlineFormatted,
@@ -128,7 +132,7 @@ export function buildDeadlines(projetos: AcaoProjeto[]): DeadlineData[] {
         date: etapa.data_verificacao_prevista,
         type: 'milestone',
         priority: derivePriority(etapa.data_verificacao_prevista),
-        project: proj.tema,
+        project: projectDisplayName(proj),
       });
     }
 
@@ -137,13 +141,14 @@ export function buildDeadlines(projetos: AcaoProjeto[]): DeadlineData[] {
       const d = new Date(proj.data_final);
       if (d >= cutoffPast) {
         const dateStr = d.toISOString().split('T')[0];
+        const label = projectDisplayName(proj);
         items.push({
           id: `proj-deadline-${proj.acao_projeto_id}`,
-          title: `Prazo final: ${proj.tema}`,
+          title: `Prazo final: ${label}`,
           date: dateStr,
           type: 'deadline',
           priority: derivePriority(dateStr),
-          project: proj.tema,
+          project: label,
         });
       }
     }

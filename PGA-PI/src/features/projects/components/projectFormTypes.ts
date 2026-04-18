@@ -1,3 +1,5 @@
+import { Attachment } from "@/types/api";
+
 export enum PapelProjeto {
   Responsavel = "Responsavel",
   Colaborador = "Colaborador",
@@ -42,6 +44,7 @@ export interface EtapaProcesso {
   dataVerificacaoPrevista?: string;
   dataVerificacaoRealizada?: string;
   statusVerificacao?: StatusVerificacao | string;
+  anexos?: AttachmentItem[];
 }
 
 export enum TipoAnexo {
@@ -52,15 +55,17 @@ export enum TipoAnexo {
   Software = "Software",
 }
 
-export interface AquisicaoItem {
-  id: number; // Frontend local ID
-  tipoAnexo: TipoAnexo | string;
-  descricaoItem: string;
-  unidadeMedida?: string;
-  quantidade: string; // number in schema, keep string for input
-  justificativa?: string;
-  valorUnitarioEstimado?: string; // number in schema, keep string for input
-  valorTotalEstimado?: string; // number in schema, keep string for input
+export interface AttachmentItem {
+  anexo_id: number;
+  etapa_processo_id: number;
+  entregavel_id?: number;
+  item: string;
+  descricao: string;
+  quantidade: number;
+  preco_unitario_estimado: number;
+  preco_total_estimado: number;
+  criado_em?: string;
+  atualizado_em?: string;
 }
 
 export interface EixoTematico {
