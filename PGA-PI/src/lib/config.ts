@@ -16,4 +16,5 @@ export const API_ENDPOINTS = {
   PROCESS_STEPS: `${API_URL}/process-step`,
   PROJECT_PERSON: `${API_URL}/project-person`,
   PGA: `${API_URL}/pga`,
+  UNITS: `${API_URL}/unit`,
 };
