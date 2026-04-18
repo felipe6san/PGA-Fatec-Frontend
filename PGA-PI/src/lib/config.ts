@@ -13,4 +13,6 @@ export const API_ENDPOINTS = {
   DELIVERABLES: `${API_URL}/deliverable`,
   SITUATIONS: `${API_URL}/problem-situation`,
   WORKLOAD_HAE: `${API_URL}/workload-hae`,
+  PGAS: `${API_URL}/pga`,
+  UNITS: `${API_URL}/unit`,
 };

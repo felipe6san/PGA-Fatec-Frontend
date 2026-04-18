@@ -1,118 +1,130 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "../components/cardDashboard";
 import { StatsCard } from "../components/StatsCard";
 import { ProjectProgressCard } from "../components/ProjectProgressCard";
 import { EmployeeChart } from "../components/EmployeeChart";
 import { UpcomingDeadlines } from "../components/UpcomingDeadlines";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../components/ui/tabs";
-import { 
-  Users, 
-  Briefcase, 
-  Clock, 
-  TrendingUp, 
-  Building2, 
+import {
+  Users,
+  Briefcase,
+  Clock,
+  TrendingUp,
+  Building2,
   Calendar,
   BarChart3,
   Target,
   AlertCircle
 } from "lucide-react";
-
-// Dados mockados para demonstração
-const mockEmployees = [
-  {
-    id: "1",
-    name: "Ana Silva",
-    hoursAllocated: 40,
-    projectsCount: 3,
-    department: "Desenvolvimento"
-  },
-  {
-    id: "2",
-    name: "Carlos Santos",
-    hoursAllocated: 35,
-    projectsCount: 2,
-    department: "Design"
-  },
-  {
-    id: "3",
-    name: "Maria Oliveira",
-    hoursAllocated: 30,
-    projectsCount: 4,
-    department: "Gestão"
-  },
-  {
-    id: "4",
-    name: "João Costa",
-    hoursAllocated: 25,
-    projectsCount: 2,
-    department: "Infraestrutura"
-  }
-];
-
-const mockProjects = [
-  {
-    id: "1",
-    name: "Sistema de Gestão Acadêmica",
-    progress: 75,
-    responsible: "Ana Silva",
-    deadline: "15/03/2025",
-    status: "on-track" as const
-  },
-  {
-    id: "2",
-    name: "Modernização Laboratórios",
-    progress: 45,
-    responsible: "Carlos Santos",
-    deadline: "28/02/2025",
-    status: "at-risk" as const
-  },
-  {
-    id: "3",
-    name: "Portal de Comunicação",
-    progress: 20,
-    responsible: "Maria Oliveira",
-    deadline: "10/02/2025",
-    status: "delayed" as const
-  }
-];
-
-const mockDeadlines = [
-  {
-    id: "1",
-    title: "Entrega do Relatório Mensal",
-    date: "2025-02-05",
-    type: "deadline" as const,
-    priority: "high" as const,
-    project: "Sistema de Gestão Acadêmica"
-  },
-  {
-    id: "2",
-    title: "Reunião de Acompanhamento",
-    date: "2025-02-08",
-    type: "meeting" as const,
-    priority: "medium" as const,
-    project: "Modernização Laboratórios"
-  },
-  {
-    id: "3",
-    title: "Marco de Desenvolvimento",
-    date: "2025-02-12",
-    type: "milestone" as const,
-    priority: "high" as const,
-    project: "Portal de Comunicação"
-  }
-];
+import { projectService } from "@/features/projects/services/projectService";
+import api from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/config";
+import { useAuth } from "@/context/AuthContext";
+import { AcaoProjeto, PgaComUnidade } from "@/types/api";
+import {
+  buildEmployees,
+  buildProjectCards,
+  buildDeadlines,
+} from "../utils/transformers";
 
 export const Home = (): JSX.Element => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+
+  const [projetos, setProjetos] = useState<AcaoProjeto[]>([]);
+  const [pgaAtual, setPgaAtual] = useState<PgaComUnidade | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [projetosData, pgasData]: [AcaoProjeto[], PgaComUnidade[]] =
+          await Promise.all([
+            projectService.getAll(),
+            api.get(API_ENDPOINTS.PGAS).then((r) => r.data),
+          ]);
+
+        // Identificar o PGA da unidade do usuário logado
+        const unidadeId: number | undefined =
+          (user as any)?.unidades?.[0]?.unidade_id ?? undefined;
+
+        let pga: PgaComUnidade | null = null;
+        if (unidadeId) {
+          const pgasDaUnidade = pgasData.filter(
+            (p) => p.unidade_id === unidadeId
+          );
+          pga =
+            pgasDaUnidade.sort((a, b) => b.ano - a.ano)[0] ??
+            pgasData[0] ??
+            null;
+        } else {
+          pga = pgasData.sort((a, b) => b.ano - a.ano)[0] ?? null;
+        }
+
+        setPgaAtual(pga);
+
+        // Filtrar projetos pelo PGA identificado
+        const projetosFiltrados = pga
+          ? projetosData.filter((p) => p.pga_id === pga!.pga_id)
+          : projetosData;
+
+        setProjetos(projetosFiltrados);
+      } catch (err) {
+        console.error("Erro ao carregar dados do dashboard:", err);
+        setError("Erro ao carregar dados do dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Carregando dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  const employees = buildEmployees(projetos);
+  const projectCards = buildProjectCards(projetos);
+  const deadlines = buildDeadlines(projetos);
+
+  const totalHoras = employees.reduce((acc, emp) => acc + emp.hoursAllocated, 0);
+  const progressoMedio =
+    projectCards.length > 0
+      ? Math.round(
+          projectCards.reduce((acc, p) => acc + p.progress, 0) /
+            projectCards.length
+        )
+      : 0;
+
+  const anoAtual = pgaAtual?.ano ?? new Date().getFullYear();
+  const codigoUnidade = pgaAtual?.unidade?.codigo_fnnn ?? "—";
+  const nomeUnidade = pgaAtual?.unidade?.nome_completo ?? "—";
+  const diretorNome = pgaAtual?.unidade?.diretor_nome ?? "—";
 
   return (
     <div className="space-y-6">
       <h1 className="font-extrabold text-black text-2xl md:text-[32px] text-center">
-        Dashboard PGA 2025
+        Dashboard PGA {anoAtual}
       </h1>
 
-      {/* Card da Instituição - Melhorado */}
+      {/* Card da Instituição */}
       <Card className="w-full shadow-[0px_0px_25px_#00000026] rounded-xl mb-6 md:mb-[30px] bg-gradient-to-r from-[#ae0f0a] to-[#8e0c08] text-white">
         <CardHeader className="bg-white/10 backdrop-blur-sm rounded-t-xl py-4 md:py-6 px-6 md:px-8">
           <div className="flex items-center gap-4">
@@ -128,14 +140,14 @@ export const Home = (): JSX.Element => {
               <p className="font-medium text-white/80 text-base md:text-lg mb-2">
                 Código da Unidade
               </p>
-              <p className="font-bold text-white text-2xl md:text-3xl">F301</p>
+              <p className="font-bold text-white text-2xl md:text-3xl">{codigoUnidade}</p>
             </div>
             <div className="text-center md:text-left">
               <p className="font-medium text-white/80 text-base md:text-lg mb-2">
                 Unidade
               </p>
               <p className="font-bold text-white text-2xl md:text-3xl">
-                Fatec Votorantim
+                {nomeUnidade}
               </p>
             </div>
             <div className="text-center md:text-left">
@@ -143,7 +155,7 @@ export const Home = (): JSX.Element => {
                 Diretor(a)
               </p>
               <p className="font-bold text-white text-2xl md:text-3xl">
-                Prof. Dr. Mauro Tomazela
+                {diretorNome}
               </p>
             </div>
           </div>
@@ -198,31 +210,27 @@ export const Home = (): JSX.Element => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mobile-container">
               <StatsCard
                 title="Total de Projetos"
-                value={mockProjects.length}
+                value={projetos.length}
                 description="Projetos ativos no PGA"
                 icon={<Briefcase className="w-5 h-5" />}
-                trend={{ value: 12, isPositive: true }}
               />
               <StatsCard
                 title="Funcionários Alocados"
-                value={mockEmployees.length}
+                value={employees.length}
                 description="Membros da equipe"
                 icon={<Users className="w-5 h-5" />}
-                trend={{ value: 8, isPositive: true }}
               />
               <StatsCard
                 title="Horas Totais"
-                value={mockEmployees.reduce((acc, emp) => acc + emp.hoursAllocated, 0)}
+                value={totalHoras}
                 description="Horas alocadas"
                 icon={<Clock className="w-5 h-5" />}
-                trend={{ value: 5, isPositive: true }}
               />
               <StatsCard
                 title="Progresso Médio"
-                value={`${Math.round(mockProjects.reduce((acc, proj) => acc + proj.progress, 0) / mockProjects.length)}%`}
+                value={`${progressoMedio}%`}
                 description="Dos projetos"
                 icon={<TrendingUp className="w-5 h-5" />}
-                trend={{ value: 15, isPositive: true }}
               />
             </div>
 
@@ -233,17 +241,17 @@ export const Home = (): JSX.Element => {
                   <Target className="w-5 h-5" />
                   Projetos em Destaque
                 </h3>
-                {mockProjects.slice(0, 2).map((project) => (
+                {projectCards.slice(0, 2).map((project) => (
                   <ProjectProgressCard key={project.id} project={project} />
                 ))}
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />
                   Próximas Datas
                 </h3>
-                <UpcomingDeadlines deadlines={mockDeadlines.slice(0, 3)} />
+                <UpcomingDeadlines deadlines={deadlines.slice(0, 3)} />
               </div>
             </div>
           </div>
@@ -257,7 +265,7 @@ export const Home = (): JSX.Element => {
               Andamento dos Projetos
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mobile-stack">
-              {mockProjects.map((project) => (
+              {projectCards.map((project) => (
                 <ProjectProgressCard key={project.id} project={project} />
               ))}
             </div>
@@ -267,14 +275,14 @@ export const Home = (): JSX.Element => {
         {/* Aba Equipe */}
         <TabsContent value="team" isActive={activeTab === "team"}>
           <div className="space-y-6">
-            <EmployeeChart employees={mockEmployees} />
+            <EmployeeChart employees={employees} />
           </div>
         </TabsContent>
 
         {/* Aba Cronograma */}
         <TabsContent value="schedule" isActive={activeTab === "schedule"}>
           <div className="space-y-6">
-            <UpcomingDeadlines deadlines={mockDeadlines} />
+            <UpcomingDeadlines deadlines={deadlines} />
           </div>
         </TabsContent>
       </Tabs>

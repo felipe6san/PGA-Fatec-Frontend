@@ -81,6 +81,43 @@ export interface Tema {
   descricao: string;
 }
 
+export interface ProjetoPessoa {
+  projeto_pessoa_id?: number;
+  pessoa_id: number;
+  papel: 'Responsavel' | 'Colaborador';
+  carga_horaria_semanal?: number;
+  tipo_vinculo_hae_id?: number;
+  pessoa: {
+    pessoa_id: number;
+    nome: string;
+    email?: string;
+    tipo_usuario?: string;
+  };
+}
+
+export interface EtapaProjeto {
+  etapa_id: number;
+  descricao: string;
+  data_verificacao_prevista?: string;
+  data_verificacao_realizada?: string;
+  status_verificacao?: 'Pendente' | 'OK' | 'RequerAcao';
+  numero_ref?: string;
+}
+
+export interface PgaComUnidade {
+  pga_id: number;
+  ano: number;
+  unidade_id: number;
+  status: string;
+  versao?: string;
+  unidade?: {
+    unidade_id: number;
+    codigo_fnnn: string;
+    nome_completo: string;
+    diretor_nome?: string;
+  };
+}
+
 export interface AcaoProjeto {
   acao_projeto_id: number;
   pga_id: number;
@@ -98,9 +135,10 @@ export interface AcaoProjeto {
   // Relacionamentos
   eixo?: EixoTematico;
   prioridade?: PrioridadeAcao;
+  pga?: PgaComUnidade;
   aquisicoes?: Attachment1[];
-  etapas?: any[];
-  pessoas?: any[];
+  etapas?: EtapaProjeto[];
+  pessoas?: ProjetoPessoa[];
 }
 
 export interface Attachment1 {
