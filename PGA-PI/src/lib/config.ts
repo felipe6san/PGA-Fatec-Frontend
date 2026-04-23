@@ -5,6 +5,8 @@ console.log('Base route:', BASE_ROUTE);
 export const API_ENDPOINTS = {
   LOGIN: `${API_URL}/auth/login`,
   USERS: `${API_URL}/users`,
+  REGIONALS: `${API_URL}/regional`,
+  REGIONAL_UNIDADES: `${API_URL}/regional/unidades`,
   THEMES: `${API_URL}/themes`,
   THEMATIC_AXIS: `${API_URL}/thematic-axis`,
   PROJECTS: `${API_URL}/project1`,
@@ -16,5 +18,6 @@ export const API_ENDPOINTS = {
   PROCESS_STEPS: `${API_URL}/process-step`,
   PROJECT_PERSON: `${API_URL}/project-person`,
   PGA: `${API_URL}/pga`,
-  UNITS: `${API_URL}/unit`,
+  CONTEXTS: `${API_URL}/auth/contexts`,
+  SELECT_CONTEXT: `${API_URL}/auth/select-context`,
 };

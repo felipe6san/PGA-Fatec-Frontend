@@ -39,7 +39,7 @@ export interface User {
     unidade: {
       unidade_id: number;
       codigo_fnnn: string;
-      nome_completo: string;
+      nome_unidade: string;
       diretor_nome?: string;
     }
   }>;
@@ -54,7 +54,7 @@ export interface Pessoa {
   criado_em?: string;
   unidades?: Array<{
     unidade_id: number;
-    nome_completo: string;
+    nome_unidade: string;
     ativo: boolean;
   }>;
 }
@@ -62,7 +62,7 @@ export interface Pessoa {
 export interface EixoTematico {
   eixo_id: number;
   numero: number;
-  nome: string;
+  nome_eixo: string;
   descricao?: string;
 }
 
@@ -222,6 +222,7 @@ export interface CreateProject1Dto {
   codigo_projeto?: string;
   custo_total_estimado?: number;
   fonte_recursos?: string;
+  situacao_problema_ids?: number[];
 }
 
 export interface UpdateProject1Dto {
@@ -284,7 +285,7 @@ export interface SolicitacaoAcesso {
   tipo_usuario_concedido?: string | null;
   unidade?: {
     unidade_id: number;
-    nome_completo: string;
+    nome_unidade: string;
     codigo_fnnn: string;
   };
   processador?: {

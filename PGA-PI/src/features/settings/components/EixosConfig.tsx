@@ -21,7 +21,6 @@ export const EixosConfig = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Estados do modal de confirmação
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eixoToDelete, setEixoToDelete] = useState<EixoTematico | null>(null);
   
@@ -35,7 +34,6 @@ export const EixosConfig = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Carrega dados iniciais
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -56,8 +54,7 @@ export const EixosConfig = () => {
         title: "Conectando com dados de exemplo",
         description: "Não foi possível conectar ao servidor. Usando dados locais.",
       });
-      
-      // Fallback para dados mock em caso de erro
+
       setEixosTematicos([
         { eixo_id: 1, numero: 1, nome: "Didático-pedagógico" },
         { eixo_id: 2, numero: 2, nome: "Laboratórios - Ensino e Equipamentos Associados" },
@@ -98,7 +95,7 @@ export const EixosConfig = () => {
       
       const novoEixoCreated = await eixosService.create({
         numero: novoEixo.numero,
-        nome: novoEixo.nome
+        nome_eixo: novoEixo.nome
       });
       
       setEixosTematicos([...eixosTematicos, novoEixoCreated]);
@@ -122,19 +119,16 @@ export const EixosConfig = () => {
     }
   };
 
-  // Função para abrir o modal de confirmação
   const handleShowDeleteModal = (eixo: EixoTematico) => {
     setEixoToDelete(eixo);
     setShowDeleteModal(true);
   };
 
-  // Função para fechar o modal
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
     setEixoToDelete(null);
   };
 
-  // Função para confirmar a remoção
   const handleConfirmDelete = async () => {
     if (!eixoToDelete) return;
     
@@ -163,13 +157,11 @@ export const EixosConfig = () => {
     }
   };
 
-  // Filtragem de eixos com base no termo de busca
   const filteredEixos = eixosTematicos.filter(eixo => 
     eixo.numero.toString().includes(searchTerm) ||
-    eixo.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    eixo.nome_eixo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-48 sm:h-64">
@@ -307,7 +299,7 @@ export const EixosConfig = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium text-gray-700 px-3 py-3 text-xs sm:text-sm">
-                          {eixo.nome}
+                          {eixo.nome_eixo}
                         </TableCell>
                         <TableCell className="text-right px-3 py-3">
                           <Button 
@@ -368,7 +360,7 @@ export const EixosConfig = () => {
                   {eixoToDelete.numero.toString().padStart(2, '0')}
                 </Badge>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{eixoToDelete.nome}</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{eixoToDelete.nome_eixo}</p>
                   <p className="text-xs sm:text-sm text-gray-500">Eixo Temático</p>
                 </div>
               </div>

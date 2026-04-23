@@ -11,6 +11,16 @@ class PgaService {
       throw error;
     }
   }
+
+  async getById(id: number) {
+    try {
+      const response = await api.get(`${API_ENDPOINTS.PGA}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar PGA por id:', error);
+      throw error;
+    }
+  }
 }
 
 export const pgaService = new PgaService();

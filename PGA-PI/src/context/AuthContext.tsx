@@ -7,6 +7,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  refreshUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,7 +21,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há dados de usuário salvos
     const checkStoredAuth = () => {
       try {
         if (authService.isAuthenticated()) {
@@ -30,7 +30,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
-        // Limpar dados corrompidos
         authService.logout();
       } finally {
         setIsLoading(false);
@@ -42,11 +41,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // O authService.login retorna UserData diretamente
       const userData = await authService.login({ email, senha: password });
       console.log('Login realizado com:', userData);
-      
-      // O authService já salva no localStorage, então só precisamos atualizar o state
+
       setUser(userData);
       return true;
     } catch (error) {
@@ -60,12 +57,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = () => {
+    try {
+      const current = authService.getCurrentUser();
+      setUser(current);
+    } catch (err) {
+      console.error('Erro ao atualizar usuário do localStorage:', err);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
+    refreshUser,
   };
 
   return (
@@ -83,5 +90,4 @@ export const useAuth = () => {
   return context;
 };
 
-// Re-exportar o tipo UserData do authService
 export type { UserData } from '@/features/auth/services/authService';

@@ -17,6 +17,21 @@ export interface LoginResponse {
   user: UserData;
 }
 
+export interface ContextsResponse {
+  regionais?: Array<{ pessoa_id: number; nome: string }>;
+  unidades?: Array<{ unidade_id: number; nome_unidade: string }>;
+}
+
+export interface SelectContextPayload {
+  tipo: 'unidade' | 'regional' | 'global';
+  id?: number | null;
+}
+
+export interface SelectContextResponse {
+  access_token: string;
+  refresh_token?: string;
+}
+
 /** Função de autenticação */
 export const authService = {
   /** Realiza o login do usuário
@@ -44,6 +59,40 @@ export const authService = {
       return data.user;
     } catch (error) {
       console.error("Erro durante o login:", error);
+      throw error;
+    }
+  },
+
+  async getContexts(): Promise<ContextsResponse> {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const response = await api.get<ContextsResponse>(API_ENDPOINTS.CONTEXTS, { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar contexts:', error);
+      return {} as ContextsResponse;
+    }
+  },
+
+  async selectContext(payload: SelectContextPayload): Promise<SelectContextResponse> {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const response = await api.post<SelectContextResponse>(API_ENDPOINTS.SELECT_CONTEXT, payload, { headers });
+      if (response.status === 200) {
+        const data = response.data;
+        if (data.access_token) {
+          localStorage.setItem('accessToken', data.access_token);
+          const userData = parseJwt(data.access_token);
+          localStorage.setItem('userData', JSON.stringify(userData));
+        }
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao selecionar contexto:', error);
       throw error;
     }
   },
