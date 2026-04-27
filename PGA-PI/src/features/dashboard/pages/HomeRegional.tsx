@@ -114,6 +114,8 @@ export const HomeRegional = (): JSX.Element => {
           const map: Record<string, PessoaBasica[]> = {};
           for (const r of results) map[r.unidade_id] = r.pessoas;
           setPessoasPorUnidade(map);
+          // Mark team data as loaded so the lazy Equipe tab does not re-fetch
+          setTeamLoaded(true);
         }
       } catch {
         setError('Erro ao carregar dados da regional.');
@@ -165,12 +167,15 @@ export const HomeRegional = (): JSX.Element => {
   }, [selectedPgaId]);
 
   // Unique units derived from allPgas (for the Projetos selector)
+  // Filter out entries with null unidade_id to avoid using null as a Map key
   const unidadesComPga = Array.from(
     new Map(
-      allPgas.map((p) => [
-        p.unidade_id,
-        { id: p.unidade_id, nome: p.unidade?.nome_unidade ?? String(p.unidade_id) },
-      ]),
+      allPgas
+        .filter((p): p is typeof p & { unidade_id: string } => p.unidade_id !== null)
+        .map((p) => [
+          p.unidade_id,
+          { id: p.unidade_id, nome: p.unidade?.nome_unidade ?? p.unidade_id },
+        ]),
     ).values(),
   );
 

@@ -18,6 +18,15 @@ interface CreateUserData {
   unidade_id?: number;
 }
 
+// Tipo para atualização de usuário (inclui campos adicionais como ativo)
+interface UpdateUserData {
+  nome?: string;
+  email?: string;
+  tipo_usuario?: TipoUsuario;
+  unidade_id?: number;
+  ativo?: boolean;
+}
+
 // EixoTematico Service
 export const eixoTematicoService = {
   async getAll(): Promise<EixoTematico[]> {
@@ -93,7 +102,7 @@ async getByUnidade(unidadeId: string): Promise<User[]> {
     }
   }
 
-  async update(id: string, data: Partial<CreateUserData>): Promise<User> {
+  async update(id: string, data: UpdateUserData): Promise<User> {
     try {
       const response = await api.put<User>(`${API_ENDPOINTS.USERS}/${id}`, data);
       return response.data;
@@ -186,7 +195,7 @@ export const accessRequestService = new AccessRequestService();
 export const workloadHaeService = new WorkloadHaeService();
 
 // Exportar tipos para uso em outros arquivos
-export type { CreateUserData };
+export type { CreateUserData, UpdateUserData };
 
 // Serviço para entregáveis (linkSei)
 export const entregaveisService = {

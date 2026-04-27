@@ -1,4 +1,4 @@
-﻿import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { AdminPgaView } from '../components/AdminPgaView';
 import { RegionalPgaView } from '../components/RegionalPgaView';
 import { DiretorPgaView } from '../components/DiretorPgaView';

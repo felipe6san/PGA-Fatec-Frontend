@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { PendingAccessRequestsTab } from "./PendingAccessRequests";
 import { TipoUsuario, User } from "@/types/api";
-import { accessRequestService, userService, type CreateUserData } from "@/services/commonServices";
+import { accessRequestService, userService, type CreateUserData, type UpdateUserData } from "@/services/commonServices";
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { toast } from "@/components/ui/use-toast";
@@ -64,6 +64,25 @@ export const PessoasConfig: React.FC = () => {
     if (resolvedUnidadeId) setSelectedUnidadeId(String(resolvedUnidadeId));
     if (resolvedRegionalId) setSelectedRegionalId(String(resolvedRegionalId));
   }, [user]);
+
+  /** Shared helper: fetch and deduplicate users from a list of unit objects */
+  const fetchPessoasDeUnidades = useCallback(async (units: any[]): Promise<User[]> => {
+    const results = await Promise.allSettled(
+      units.map((u: any) =>
+        api.get(`${API_ENDPOINTS.USERS_BY_UNIDADE}/${u.unidade_id ?? u.id}`).then(r => r.data as User[])
+      )
+    );
+    let data: User[] = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+    const seen = new Set<string>();
+    data = data.filter(p => {
+      const key = (p as any).pessoa_id as string;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return data;
+  }, []);
+
   const loadPessoas = useCallback(async () => {
     if (!user) return;
 
@@ -77,23 +96,12 @@ export const PessoasConfig: React.FC = () => {
         pessoasData = await userService.getAll();
       } else if (userTipo === TipoUsuario.REGIONAL) {
         // Load people from all units of the regional
-        const unitList = unidades.length > 0 ? unidades : [];
+        let unitList = unidades.length > 0 ? unidades : [];
         if (unitList.length === 0 && selectedRegionalId) {
           const resp = await api.get(API_ENDPOINTS.REGIONAL_UNIDADES, { params: { regional_id: selectedRegionalId } });
-          const fetched = Array.isArray(resp.data) ? resp.data : [];
-          const results = await Promise.allSettled(
-            fetched.map((u: any) => api.get(`${API_ENDPOINTS.USERS_BY_UNIDADE}/${u.unidade_id ?? u.id}`).then(r => r.data as User[]))
-          );
-          pessoasData = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-        } else {
-          const results = await Promise.allSettled(
-            unitList.map((u: any) => api.get(`${API_ENDPOINTS.USERS_BY_UNIDADE}/${u.unidade_id ?? u.id}`).then(r => r.data as User[]))
-          );
-          pessoasData = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+          unitList = Array.isArray(resp.data) ? resp.data : [];
         }
-        // Deduplicate by pessoa_id
-        const seen = new Set<any>();
-        pessoasData = pessoasData.filter(p => { const key = (p as any).pessoa_id; if (seen.has(key)) return false; seen.add(key); return true; });
+        pessoasData = await fetchPessoasDeUnidades(unitList);
       } else {
         const unidadeFromAuth = (user as any)?.unidades?.[0]?.unidade_id ?? (user as any)?.unidades?.[0]?.unidade?.unidade_id;
         const unidadeFromFetched = fetchedUserDetails?.unidades?.[0]?.unidade_id ?? fetchedUserDetails?.unidades?.[0]?.unidade?.unidade_id;
@@ -120,7 +128,7 @@ export const PessoasConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, selectedUnidadeId, fetchedUserDetails]);
+  }, [user, selectedUnidadeId, fetchedUserDetails, fetchPessoasDeUnidades]);
 
   useEffect(() => {
     if (!selectedUnidadeId) return;
@@ -193,12 +201,7 @@ export const PessoasConfig: React.FC = () => {
             if (units.length > 0) {
               setLoading(true);
               try {
-                const results = await Promise.allSettled(
-                  units.map((u: any) => api.get(`${API_ENDPOINTS.USERS_BY_UNIDADE}/${u.unidade_id ?? u.id}`).then(r => r.data as User[]))
-                );
-                let pessoasData: User[] = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-                const seen = new Set<any>();
-                pessoasData = pessoasData.filter(p => { const key = (p as any).pessoa_id; if (seen.has(key)) return false; seen.add(key); return true; });
+                const pessoasData = await fetchPessoasDeUnidades(units);
                 setPessoas(pessoasData);
               } catch (err) {
                 console.error('[PessoasConfig] erro ao carregar pessoas da regional:', err);
@@ -270,7 +273,7 @@ export const PessoasConfig: React.FC = () => {
       if (!selectedUnidadeId && fetchedUserDetails?.unidades?.length) {
         const first = fetchedUserDetails.unidades[0];
         const uid = first.unidade_id || first.unidade?.unidade_id || first.unidade?.id;
-        if (uid) setSelectedUnidadeId(uid as number);
+        if (uid) setSelectedUnidadeId(String(uid));
       }
       if (!selectedUnidadeId && loadedUnidades.length) {
         setSelectedUnidadeId(loadedUnidades[0].unidade_id || loadedUnidades[0].id);
@@ -284,7 +287,7 @@ export const PessoasConfig: React.FC = () => {
   };
 
   useEffect(() => {
-    const loadUnidadesPorRegional = async (regionalId?: number) => {
+    const loadUnidadesPorRegional = async (regionalId?: string) => {
       const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
       // REGIONAL: unidades já carregadas no init, não sobrescrever
       if (userTipoLocal === TipoUsuario.REGIONAL) return;
@@ -458,11 +461,12 @@ export const PessoasConfig: React.FC = () => {
 
     setSavingEdit(true);
     try {
-      const updated = await userService.update(editingPessoa.pessoa_id, {
+      const updateData: UpdateUserData = {
         nome: editForm.nome.trim(),
         tipo_usuario: editForm.tipo_usuario,
         ativo: editForm.ativo,
-      } as any);
+      };
+      const updated = await userService.update(editingPessoa.pessoa_id, updateData);
 
       setPessoas(prev =>
         prev.map(p => p.pessoa_id === editingPessoa.pessoa_id ? { ...p, ...updated } : p)

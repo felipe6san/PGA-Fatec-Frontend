@@ -139,7 +139,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
   const handleAddPessoa = (papel: "Responsavel" | "Colaborador") => {
     setPessoasProjeto([
       ...pessoasProjeto,
-      { pessoa_id: 0, papel, carga_horaria_semanal: papel === "Colaborador" ? undefined : 0 },
+      { pessoa_id: '', papel, carga_horaria_semanal: papel === "Colaborador" ? undefined : 0 },
     ]);
   };
 
@@ -172,7 +172,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
   };
 
   const handleAddSituacao = () => {
-    setSituacoesProblema([...situacoesProblema, { situacao_id: 0 }]);
+    setSituacoesProblema([...situacoesProblema, { situacao_id: '' }]);
   };
 
   const handleUpdateSituacao = (index: number, situacao_id: string) => {
