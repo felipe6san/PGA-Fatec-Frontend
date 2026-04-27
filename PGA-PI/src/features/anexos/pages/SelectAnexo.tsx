@@ -38,7 +38,6 @@ export const SelectAnexo = () => {
       setErrorEixos(null);
       
       const data = await eixoTematicoService.getAll();
-      console.log("Eixos temáticos carregados:", data);
       setEixosTematicos(data);
     } catch (error) {
       console.error("Erro ao carregar eixos temáticos:", error);

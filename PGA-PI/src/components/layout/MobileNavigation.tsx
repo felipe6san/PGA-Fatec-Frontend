@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
   ClipboardList, 
   PlusCircle, 
   Settings, 
-  Menu,
-  X
+  LayoutList,
+  X,
+  Menu
 } from 'lucide-react';
 import { useMobile } from '@/hooks/useMobile';
+import { useAuth } from '@/hooks/useAuth';
 import { BASE_ROUTE } from '@lib/config';
 
 interface MobileNavigationProps {
@@ -22,6 +24,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 }) => {
   const location = useLocation();
   const { isMobile } = useMobile();
+  const { user } = useAuth();
+
+  const isRegional = user?.tipo_usuario === 'Regional';
+  const isAdminOrCps = user?.tipo_usuario === 'Administrador' || user?.tipo_usuario === 'CPS';
+  const isDiretor = user?.tipo_usuario === 'Diretor';
 
   const navItems = [
     {
@@ -29,16 +36,15 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
       path: `${BASE_ROUTE}dashboard`,
       icon: Home,
     },
-    {
-      label: "Projetos",
-      path: `${BASE_ROUTE}projects/list`,
-      icon: ClipboardList,
-    },
-    {
-      label: "Criar Formulário",
-      path: `${BASE_ROUTE}projects`,
-      icon: PlusCircle,
-    },
+    ...(isAdminOrCps || isDiretor || isRegional
+      ? [{ label: "PGAs", path: `${BASE_ROUTE}pgas`, icon: LayoutList }]
+      : []),
+    { label: "Projetos", path: `${BASE_ROUTE}projects/list`, icon: ClipboardList },
+    ...(!isRegional
+      ? [
+          { label: "Criar Formulário", path: `${BASE_ROUTE}projects`, icon: PlusCircle },
+        ]
+      : []),
     {
       label: "Configurações",
       path: `${BASE_ROUTE}settings`,

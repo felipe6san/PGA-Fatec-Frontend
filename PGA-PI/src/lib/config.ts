@@ -1,12 +1,14 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 export const BASE_ROUTE = import.meta.env.VITE_IS_DEV === 'true' ? '/' : '/PGA-Fatec-Frontend/';
-console.log('Base route:', BASE_ROUTE);
 
 export const API_ENDPOINTS = {
   LOGIN: `${API_URL}/auth/login`,
   USERS: `${API_URL}/users`,
   REGIONALS: `${API_URL}/regional`,
   REGIONAL_UNIDADES: `${API_URL}/regional/unidades`,
+  REGIONAL_PGAS: `${API_URL}/regional/pgas`,
+  REGIONAL_PROJETOS: `${API_URL}/regional/projetos`,
+  USERS_BY_UNIDADE: `${API_URL}/users/by-unidade`,
   THEMES: `${API_URL}/themes`,
   THEMATIC_AXIS: `${API_URL}/thematic-axis`,
   PROJECTS: `${API_URL}/project1`,
@@ -20,4 +22,6 @@ export const API_ENDPOINTS = {
   PGA: `${API_URL}/pga`,
   CONTEXTS: `${API_URL}/auth/contexts`,
   SELECT_CONTEXT: `${API_URL}/auth/select-context`,
+  ME: `${API_URL}/auth/me`,
+  LOGOUT: `${API_URL}/auth/logout`,
 };

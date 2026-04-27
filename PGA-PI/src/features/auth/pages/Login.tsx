@@ -78,12 +78,6 @@ export const Login = (): JSX.Element => {
       const success = await login(credentials.email, credentials.senha);
       if (success) {
         try {
-          refreshUser();
-        } catch (e) {
-          console.warn('refreshUser falhou após login:', e);
-        }
-
-        try {
           const contexts = await authService.getContexts();
           const numRegionais = contexts.regionais?.length || 0;
           const numUnidades = contexts.unidades?.length || 0;
@@ -103,13 +97,13 @@ export const Login = (): JSX.Element => {
               await authService.selectContext({ tipo: 'regional', id: regional.pessoa_id });
             }
 
-            try { refreshUser(); } catch (err) { console.warn('refreshUser falhou:', err); }
             try {
               toast({ title: 'Contexto ativado', description: 'Contexto selecionado automaticamente.', variant: 'success' });
-            } catch (e) {
-            }
+            } catch (e) {}
           }
 
+          // Recarrega o user do backend após contexto definido
+          await refreshUser();
           navigate('/dashboard');
         } catch (err) {
           console.error('Erro obtendo/selecionando contexts:', err);
@@ -159,10 +153,10 @@ export const Login = (): JSX.Element => {
 
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   const [contextOptions, setContextOptions] = useState<{
-    regionais?: Array<{ pessoa_id: number; nome: string }>;
-    unidades?: Array<{ unidade_id: number; nome_unidade: string }>;
+    regionais?: Array<{ pessoa_id: string; nome: string }>;
+    unidades?: Array<{ unidade_id: string; nome_unidade: string }>;
   } | null>(null);
-  const [selectedContext, setSelectedContext] = useState<{ tipo: string; id?: number | null }>({ tipo: '', id: null });
+  const [selectedContext, setSelectedContext] = useState<{ tipo: string; id?: string | null }>({ tipo: '', id: null });
 
   const [isSelectingContext, setIsSelectingContext] = useState(false);
 
@@ -188,7 +182,7 @@ export const Login = (): JSX.Element => {
       }
 
       try {
-        refreshUser();
+        await refreshUser();
       } catch (err) {
         console.warn('refreshUser falhou:', err);
       }
@@ -548,7 +542,7 @@ export const Login = (): JSX.Element => {
                 setSelectedContext({ tipo: 'global', id: null });
               } else {
                 const [tipo, idStr] = val.split(':');
-                setSelectedContext({ tipo, id: Number(idStr) });
+                setSelectedContext({ tipo, id: idStr });
               }
             }}>
               <SelectTrigger className="w-full">

@@ -71,7 +71,7 @@ class UserService {
     }
   }
 
-async getByUnidade(unidadeId: number): Promise<User[]> {
+async getByUnidade(unidadeId: string): Promise<User[]> {
   try {
     const response = await api.get<User[]>(`/users/by-unidade/${unidadeId}`);
     return response.data;
@@ -93,7 +93,7 @@ async getByUnidade(unidadeId: number): Promise<User[]> {
     }
   }
 
-  async update(id: number, data: Partial<CreateUserData>): Promise<User> {
+  async update(id: string, data: Partial<CreateUserData>): Promise<User> {
     try {
       const response = await api.put<User>(`${API_ENDPOINTS.USERS}/${id}`, data);
       return response.data;
@@ -103,7 +103,7 @@ async getByUnidade(unidadeId: number): Promise<User[]> {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await api.delete(`${API_ENDPOINTS.USERS}/${id}`);
     } catch (error) {
@@ -167,7 +167,7 @@ class WorkloadHaeService {
     }
   }
 
-  async getById(id: number): Promise<TipoVinculoHAE> {
+  async getById(id: string): Promise<TipoVinculoHAE> {
     try {
       const response = await api.get<TipoVinculoHAE>(`${API_ENDPOINTS.WORKLOAD_HAE}/${id}`);
       return response.data;
@@ -195,7 +195,7 @@ export const entregaveisService = {
     return response.data;
   },
   
-  async getById(id: number) {
+  async getById(id: string) {
     const response = await api.get(`${API_ENDPOINTS.DELIVERABLES}/${id}`);
     return response.data;
   }

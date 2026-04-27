@@ -18,19 +18,19 @@ interface ProjectEditFormProps {
 }
 
 interface ProjetoPessoaEdit {
-  projeto_pessoa_id?: number;
-  pessoa_id: number;
+  projeto_pessoa_id?: string;
+  pessoa_id: string;
   pessoa_nome?: string;
   papel: "Responsavel" | "Colaborador";
   carga_horaria_semanal?: number;
-  tipo_vinculo_hae_id?: number;
+  tipo_vinculo_hae_id?: string;
   tipo_vinculo_sigla?: string;
 }
 
 interface EtapaEdit {
-  etapa_id?: number;
+  etapa_id?: string;
   descricao: string;
-  entregavel_id?: number;
+  entregavel_id?: string;
   numero_ref?: string;
   status_verificacao?: string;
   data_verificacao_prevista?: string;
@@ -38,7 +38,7 @@ interface EtapaEdit {
 }
 
 interface SituacaoEdit {
-  situacao_id: number;
+  situacao_id: string;
   descricao?: string;
 }
 
@@ -175,7 +175,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
     setSituacoesProblema([...situacoesProblema, { situacao_id: 0 }]);
   };
 
-  const handleUpdateSituacao = (index: number, situacao_id: number) => {
+  const handleUpdateSituacao = (index: number, situacao_id: string) => {
     const updated = [...situacoesProblema];
     const situacao = situacoes.find((s) => s.situacao_id === situacao_id);
     updated[index] = {
@@ -192,11 +192,11 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
   const handleSubmit = async () => {
     try {
       const situacaoIds = situacoesProblema
-        .filter((s) => s.situacao_id && s.situacao_id > 0)
+        .filter((s) => s.situacao_id && s.situacao_id !== "")
         .map((s) => s.situacao_id);
 
       const pessoasData = pessoasProjeto
-        .filter((p) => p.pessoa_id && p.pessoa_id > 0)
+        .filter((p) => p.pessoa_id && p.pessoa_id !== "")
         .map((p) => ({
           pessoa_id: p.pessoa_id,
           papel: p.papel,
@@ -263,7 +263,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
             <select
               value={formData.eixo_id || ""}
               onChange={(e) =>
-                handleInputChange("eixo_id", parseInt(e.target.value))
+                handleInputChange("eixo_id", e.target.value)
               }
               className="mt-1 block w-full border rounded-md p-2"
             >
@@ -283,7 +283,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
             <select
               value={formData.tema_id || ""}
               onChange={(e) =>
-                handleInputChange("tema_id", parseInt(e.target.value))
+                handleInputChange("tema_id", e.target.value)
               }
               className="mt-1 block w-full border rounded-md p-2"
             >
@@ -317,7 +317,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
             <select
               value={formData.prioridade_id || ""}
               onChange={(e) =>
-                handleInputChange("prioridade_id", parseInt(e.target.value))
+                handleInputChange("prioridade_id", e.target.value)
               }
               className="mt-1 block w-full border rounded-md p-2"
             >
@@ -475,7 +475,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
               <select
                 value={pessoa.pessoa_id || ""}
                 onChange={(e) =>
-                  handleUpdatePessoa(index, "pessoa_id", parseInt(e.target.value))
+                  handleUpdatePessoa(index, "pessoa_id", e.target.value)
                 }
                 className="text-sm border rounded p-2 col-span-2"
               >
@@ -508,7 +508,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
                       handleUpdatePessoa(
                         index,
                         "tipo_vinculo_hae_id",
-                        parseInt(e.target.value)
+                        e.target.value
                       )
                     }
                     className="text-sm border rounded p-2"
@@ -577,7 +577,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
                   handleUpdateEtapa(
                     index,
                     "entregavel_id",
-                    parseInt(e.target.value)
+                    e.target.value
                   )
                 }
                 className="text-sm border rounded p-2"
@@ -661,7 +661,7 @@ export const ProjectEditForm: React.FC<ProjectEditFormProps> = ({
             <select
               value={situacao.situacao_id || ""}
               onChange={(e) =>
-                handleUpdateSituacao(index, parseInt(e.target.value))
+                handleUpdateSituacao(index, e.target.value)
               }
               className="text-sm border rounded p-2 flex-grow"
             >

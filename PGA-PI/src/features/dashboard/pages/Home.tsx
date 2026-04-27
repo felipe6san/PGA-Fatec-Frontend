@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { HomeRegional } from "./HomeRegional";
 import { Card, CardContent, CardHeader } from "../components/cardDashboard";
 import { StatsCard } from "../components/StatsCard";
 import { ProjectProgressCard } from "../components/ProjectProgressCard";
@@ -14,29 +16,55 @@ import {
   Calendar,
   BarChart3,
   Target,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { projectService } from "@/features/projects/services/projectService";
 import api from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/config";
+import { API_ENDPOINTS, BASE_ROUTE } from "@/lib/config";
 import { useAuth } from "@/context/AuthContext";
-import { AcaoProjeto, PgaComUnidade } from "@/types/api";
+import { AcaoProjeto, PgaComUnidade, StatusPGA } from "@/types/api";
 import {
   buildEmployees,
   buildProjectCards,
   buildDeadlines,
 } from "../utils/transformers";
 
+const STATUS_LABEL: Record<StatusPGA, string> = {
+  EmElaboracao: 'Em Elaboração',
+  Publicado: 'Publicado',
+  Submetido: 'Submetido — aguardando avaliação regional',
+  Aprovado: 'Aprovado pela Regional',
+  AguardandoCPS: 'Aguardando CPS',
+  AprovadoCPS: 'Aprovado pelo CPS',
+  Reprovado: 'Reprovado — necessita correções',
+};
+
+const STATUS_CLASS: Record<StatusPGA, string> = {
+  EmElaboracao: 'bg-yellow-100 text-yellow-800',
+  Publicado: 'bg-blue-100 text-blue-800',
+  Submetido: 'bg-purple-100 text-purple-800',
+  Aprovado: 'bg-green-100 text-green-800',
+  AguardandoCPS: 'bg-orange-100 text-orange-800',
+  AprovadoCPS: 'bg-green-200 text-green-900',
+  Reprovado: 'bg-red-100 text-red-800',
+};
+
 export const Home = (): JSX.Element => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const [projetos, setProjetos] = useState<AcaoProjeto[]>([]);
-  const [pgaAtual, setPgaAtual] = useState<PgaComUnidade | null>(null);
+  const [allPgas, setAllPgas] = useState<PgaComUnidade[]>([]);
+  const [allProjetos, setAllProjetos] = useState<AcaoProjeto[]>([]);
+  const [selectedPgaId, setSelectedPgaId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Regional tem view própria — não carrega dados de PGA/projetos aqui
+    if (user?.tipo_usuario === 'Regional') return;
+
     const loadData = async () => {
       try {
         setLoading(true);
@@ -48,31 +76,10 @@ export const Home = (): JSX.Element => {
             api.get(API_ENDPOINTS.PGA).then((r) => r.data),
           ]);
 
-        // Identificar o PGA da unidade do usuário logado
-        const unidadeId: number | undefined =
-          (user as any)?.unidades?.[0]?.unidade_id ?? undefined;
-
-        let pga: PgaComUnidade | null = null;
-        if (unidadeId) {
-          const pgasDaUnidade = pgasData.filter(
-            (p) => p.unidade_id === unidadeId
-          );
-          pga =
-            pgasDaUnidade.sort((a, b) => b.ano - a.ano)[0] ??
-            pgasData[0] ??
-            null;
-        } else {
-          pga = pgasData.sort((a, b) => b.ano - a.ano)[0] ?? null;
-        }
-
-        setPgaAtual(pga);
-
-        // Filtrar projetos pelo PGA identificado
-        const projetosFiltrados = pga
-          ? projetosData.filter((p) => p.pga_id === pga!.pga_id)
-          : projetosData;
-
-        setProjetos(projetosFiltrados);
+        const pgasOrdenados = [...pgasData].sort((a, b) => b.ano - a.ano);
+        setAllPgas(pgasOrdenados);
+        setAllProjetos(projetosData);
+        setSelectedPgaId(pgasOrdenados[0]?.pga_id ?? null);
       } catch (err) {
         console.error("Erro ao carregar dados do dashboard:", err);
         setError("Erro ao carregar dados do dashboard");
@@ -83,6 +90,11 @@ export const Home = (): JSX.Element => {
 
     loadData();
   }, [user]);
+
+  // Regional tem dashboard dedicado
+  if (user?.tipo_usuario === 'Regional') {
+    return <HomeRegional />;
+  }
 
   if (loading) {
     return (
@@ -100,6 +112,11 @@ export const Home = (): JSX.Element => {
     );
   }
 
+  const pgaSelecionado = allPgas.find((p) => p.pga_id === selectedPgaId) ?? allPgas[0] ?? null;
+  const projetos = selectedPgaId
+    ? allProjetos.filter((p) => p.pga_id === selectedPgaId)
+    : allProjetos;
+
   const employees = buildEmployees(projetos);
   const projectCards = buildProjectCards(projetos);
   const deadlines = buildDeadlines(projetos);
@@ -113,10 +130,10 @@ export const Home = (): JSX.Element => {
         )
       : 0;
 
-  const anoAtual = pgaAtual?.ano ?? new Date().getFullYear();
-  const codigoUnidade = pgaAtual?.unidade?.codigo_fnnn ?? "—";
-  const nomeUnidade = pgaAtual?.unidade?.nome_completo ?? "—";
-  const diretorNome = pgaAtual?.unidade?.diretor_nome ?? "—";
+  const anoAtual = pgaSelecionado?.ano ?? new Date().getFullYear();
+  const codigoUnidade = pgaSelecionado?.unidade?.codigo_fnnn ?? "—";
+  const nomeUnidade = pgaSelecionado?.unidade?.nome_unidade ?? "—";
+  const diretorNome = pgaSelecionado?.unidade?.diretor?.nome ?? "—";
 
   return (
     <div className="space-y-6">
@@ -161,6 +178,54 @@ export const Home = (): JSX.Element => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Card de status do PGA */}
+      {pgaSelecionado && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Status do PGA</p>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${STATUS_CLASS[pgaSelecionado.status]}`}>
+                {STATUS_LABEL[pgaSelecionado.status]}
+              </span>
+              {pgaSelecionado.status === 'Reprovado' && pgaSelecionado.parecer_regional && (
+                <p className="text-xs text-red-600 mt-1">Parecer: {pgaSelecionado.parecer_regional}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Seletor de ano — sempre visível */}
+            <div className="relative flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <select
+                value={selectedPgaId ?? ""}
+                onChange={(e) => setSelectedPgaId(e.target.value)}
+                disabled={allPgas.length <= 1}
+                className="border border-gray-300 rounded-md pl-2 pr-7 py-1.5 text-sm bg-white text-gray-700 appearance-none disabled:opacity-60 disabled:cursor-default cursor-pointer"
+              >
+                {allPgas.map((pga) => (
+                  <option key={pga.pga_id} value={pga.pga_id}>
+                    PGA {pga.ano}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 pointer-events-none" />
+            </div>
+
+            {/* Link para enviar — só Diretor, só EmElaboracao */}
+            {user?.tipo_usuario === 'Diretor' && pgaSelecionado.status === 'EmElaboracao' && (
+              <Link
+                to={`${BASE_ROUTE}pgas`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[#ae0f0a] text-[#ae0f0a] hover:bg-[#ae0f0a]/5 transition-colors"
+              >
+                Enviar para Regional
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Sistema de Abas */}
       <Tabs className="w-full">

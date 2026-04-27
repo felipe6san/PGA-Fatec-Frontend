@@ -6,7 +6,12 @@ import { useToast } from '@/components/ui/use-toast';
 import { projectService } from '../services/projectService';
 import { anexoService } from '../../anexos/services/anexoService';
 import { AcaoProjeto, Attachment } from '@/types/api';
+import { authService } from '@/features/auth/services/authService';
 import ProjectEditForm from '../components/projectEditForm';
+import { useAuth } from '@/hooks/useAuth';
+import api from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/config';
+import { Building2, ChevronDown, Calendar } from 'lucide-react';
 
 const formatCurrencyForDisplay = (value?: number): string => {
   if (value === undefined || value === null) return "R$ 0,00";
@@ -16,13 +21,29 @@ const formatCurrencyForDisplay = (value?: number): string => {
   }).format(value);
 };
 
+interface PgaBasica {
+  pga_id: string;
+  ano: number;
+  unidade_id: string;
+  unidade?: { unidade_id: string; nome_unidade: string; codigo_fnnn: string };
+}
+
 export const Projects = (): JSX.Element => {
-  const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null);
+  const { user } = useAuth();
+  const isRegional = user?.tipo_usuario === 'Regional';
+
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [projetos, setProjetos] = useState<AcaoProjeto[]>([]);
   const [anexos, setAnexos] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fabOpen, setFabOpen] = useState(false);
+
+  // Regional-only state
+  const [allPgas, setAllPgas] = useState<PgaBasica[]>([]);
+  const [selectedUnidadeId, setSelectedUnidadeId] = useState('');
+  const [selectedPgaId, setSelectedPgaId] = useState('');
+  const [loadingProjetos, setLoadingProjetos] = useState(false);
   const [pgaModalOpen, setPgaModalOpen] = useState(false);
   const [editingPga, setEditingPga] = useState<any | null>(null);
   const [pgaForm, setPgaForm] = useState<any>({ versao: '', analise_cenario: '', data_elaboracao: '', status: '' });
@@ -46,16 +67,26 @@ export const Projects = (): JSX.Element => {
 
   useEffect(() => {
     const loadData = async () => {
+      if (!user) return;
+      setError(null);
       try {
         setLoading(true);
-        const [projetosData, anexosData] = await Promise.all([
-          projectService.getAll(),
-          anexoService.getAll()
-        ]);
-        setProjetos(projetosData);
-        setAnexos(anexosData);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        if (isRegional) {
+          if (!user?.active_context || user.active_context.tipo !== 'regional') {
+            await authService.selectContext({ tipo: 'regional', id: String(user?.pessoa_id) });
+          }
+          const pgasResp = await api.get<PgaBasica[]>(API_ENDPOINTS.REGIONAL_PGAS);
+          setAllPgas(pgasResp.data ?? []);
+        } else {
+          const [projetosData, anexosData] = await Promise.all([
+            projectService.getAll(),
+            anexoService.getAll()
+          ]);
+          setProjetos(projetosData);
+          setAnexos(anexosData);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
         setError('Erro ao carregar projetos e anexos');
       } finally {
         setLoading(false);
@@ -63,13 +94,34 @@ export const Projects = (): JSX.Element => {
     };
 
     loadData();
-  }, []);
+  }, [user, isRegional]);
 
-  const toggleExpand = (id: number) => {
+  // Quando PGA muda, carrega projetos (Regional)
+  useEffect(() => {
+    if (!isRegional || !selectedPgaId) {
+      if (isRegional) setProjetos([]);
+      return;
+    }
+    setLoadingProjetos(true);
+    api
+      .get<AcaoProjeto[]>(API_ENDPOINTS.REGIONAL_PROJETOS, { params: { pgaId: selectedPgaId } })
+      .then((r) => setProjetos(r.data ?? []))
+      .catch(() => setProjetos([]))
+      .finally(() => setLoadingProjetos(false));
+  }, [isRegional, selectedPgaId]);
+
+  // Quando unidade muda, limpa PGA e projetos (Regional)
+  useEffect(() => {
+    if (!isRegional) return;
+    setSelectedPgaId('');
+    setProjetos([]);
+  }, [isRegional, selectedUnidadeId]);
+
+  const toggleExpand = (id: string) => {
     setExpandedProjectId(expandedProjectId === id ? null : id);
   };
 
-  const handleEdit = async (event: React.MouseEvent, projectId: number) => {
+  const handleEdit = async (event: React.MouseEvent, projectId: string) => {
     event.stopPropagation();
     try {
       const project = await projectService.getById(projectId);
@@ -82,7 +134,7 @@ export const Projects = (): JSX.Element => {
     }
   };
 
-  const handleEditPga = async (event: React.MouseEvent, pgaId?: number | null) => {
+  const handleEditPga = async (event: React.MouseEvent, pgaId?: string | null) => {
     event.stopPropagation();
     if (!pgaId) {
       toast({ title: 'Projeto sem PGA', description: 'Projeto não possui PGA associado.', variant: 'destructive' });
@@ -138,7 +190,7 @@ export const Projects = (): JSX.Element => {
     setPgaForm((s: any) => ({ ...s, [field]: value }));
   };
 
-  const handleExportPdf = async (pgaId: number) => {
+  const handleExportPdf = async (pgaId: string) => {
     try {
       await projectService.exportPgaPdf(pgaId);
     } catch (err) {
@@ -147,7 +199,7 @@ export const Projects = (): JSX.Element => {
     }
   };
 
-  const handleExportCsv = async (pgaId: number) => {
+  const handleExportCsv = async (pgaId: string) => {
     try {
       await projectService.exportPgaCsv(pgaId);
     } catch (err) {
@@ -194,20 +246,68 @@ export const Projects = (): JSX.Element => {
 
   return (
     <>
-      <h1 className="font-extrabold text-black text-[32px] text-center mb-[30px]">
+      <h1 className="font-extrabold text-black text-2xl sm:text-[32px] text-center mb-6 sm:mb-[30px]">
         Ações e Projetos do PGA
       </h1>
 
+      {/* Seletor de Unidade/PGA — apenas para Regional */}
+      {isRegional && (() => {
+        const unidadesUnicas = Array.from(
+          new Map(allPgas.filter(p => p.unidade).map(p => [p.unidade_id, p.unidade!])).values()
+        );
+        const pgasDaUnidade = allPgas.filter(p => p.unidade_id === selectedUnidadeId);
+        return (
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="relative flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <select
+                value={selectedUnidadeId}
+                onChange={(e) => setSelectedUnidadeId(e.target.value)}
+                className="border border-gray-300 rounded-md pl-2 pr-8 py-1.5 text-sm bg-white text-gray-700 appearance-none cursor-pointer min-w-[220px]"
+              >
+                <option value="">Selecione uma unidade</option>
+                {unidadesUnicas.map((u) => (
+                  <option key={u.unidade_id} value={u.unidade_id}>
+                    {u.nome_unidade} ({u.codigo_fnnn})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 pointer-events-none" />
+            </div>
+
+            {selectedUnidadeId && (
+              <div className="relative flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <select
+                  value={selectedPgaId}
+                  onChange={(e) => setSelectedPgaId(e.target.value)}
+                  className="border border-gray-300 rounded-md pl-2 pr-8 py-1.5 text-sm bg-white text-gray-700 appearance-none cursor-pointer"
+                >
+                  <option value="">Selecione o PGA (ano)</option>
+                  {pgasDaUnidade.map((p) => (
+                    <option key={p.pga_id} value={p.pga_id}>
+                      PGA {p.ano}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 pointer-events-none" />
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       <Card className="w-full shadow-[0px_0px_25px_#00000026] rounded-xl">
         <CardHeader className="bg-white-100 rounded-t-xl py-[15px] px-6">
-          <h2 className="font-normal text-black text-[28px]">
+          <h2 className="font-normal text-black text-xl sm:text-[28px]">
             Lista de Ações/Projetos ({projetos.length})
           </h2>
           <div className="flex items-center space-x-2 ml-auto">
             {/* Header buttons removed — use floating PGA button */}
           </div>
         </CardHeader>
-        {/* Floating Action Button container */}
+        {/* Floating Action Button — oculto para Regional */}
+        {!isRegional && (
         <div className="fixed right-6 bottom-6 z-50">
           <div className="flex flex-col items-end space-y-2">
             {fabOpen && (
@@ -252,9 +352,18 @@ export const Projects = (): JSX.Element => {
             </button>
           </div>
         </div>
+        )}
         <CardContent className="p-6">
           <div className="space-y-4">
-            {projetos.length > 0 ? (
+            {isRegional && !selectedPgaId ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-lg">
+                  {!selectedUnidadeId ? 'Selecione uma unidade para visualizar os projetos.' : 'Selecione o PGA para visualizar os projetos.'}
+                </p>
+              </div>
+            ) : isRegional && loadingProjetos ? (
+              <div className="text-center py-8"><p className="text-gray-500">Carregando projetos...</p></div>
+            ) : projetos.length > 0 ? (
               projetos.map((project) => {
                 const isExpanded = expandedProjectId === project.acao_projeto_id;
                 const progresso = calculateProgress(project);
@@ -268,9 +377,9 @@ export const Projects = (): JSX.Element => {
                       className="p-4 hover:bg-gray-50 cursor-pointer"
                       onClick={() => toggleExpand(project.acao_projeto_id)}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-grow">
-                          <h3 className="text-xl font-semibold text-gray-800">{project.tema?.descricao || 'Sem tema'}</h3>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base sm:text-xl font-semibold text-gray-800">{project.tema?.descricao || 'Sem tema'}</h3>
                             <p className="text-gray-600 mt-1 text-sm">
                             Prazo Final: {project.data_final ? new Date(project.data_final).toLocaleDateString() : 'Não definido'}
                           </p>
@@ -279,12 +388,13 @@ export const Projects = (): JSX.Element => {
                             <p><span className="font-semibold">Prioridade:</span> {project.prioridade?.descricao || 'N/A'}</p>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end space-y-2 ml-4">
+                        <div className="flex flex-row flex-wrap items-center justify-end gap-2 sm:flex-col sm:items-end sm:space-y-0 sm:space-y-2 sm:ml-4">
                           <span
                             className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${getStatusColor()}`}
                           >
                             Em Andamento
                           </span>
+                          {!isRegional && (
                           <button
                             onClick={(e) => handleEdit(e, project.acao_projeto_id)}
                             className="flex items-center px-3 py-1 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors duration-200"
@@ -294,23 +404,8 @@ export const Projects = (): JSX.Element => {
                             </svg>
                             Editar
                           </button>
+                          )}
                                     {/* Editar PGA button removed — use floating PGA button for PGA actions */}
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleExportPdf(project.pga_id); }}
-                              title="Gerar PDF do PGA deste projeto"
-                              className="flex items-center px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors duration-200"
-                            >
-                              PDF
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleExportCsv(project.pga_id); }}
-                              title="Gerar CSV do PGA deste projeto"
-                              className="flex items-center px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors duration-200"
-                            >
-                              CSV
-                            </button>
-                          </div>
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 text-gray-500 transform transition-transform ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                           </svg>

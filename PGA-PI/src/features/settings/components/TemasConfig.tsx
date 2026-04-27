@@ -30,11 +30,11 @@ export const TemasConfig = () => {
   
   const [novoTema, setNovoTema] = useState<{ 
     tema_num: number; 
-    eixo_id: number; 
+    eixo_id: string; 
     descricao: string; 
   }>({ 
     tema_num: 0, 
-    eixo_id: 0, 
+    eixo_id: "", 
     descricao: "" 
   });
   
@@ -138,7 +138,7 @@ export const TemasConfig = () => {
       });
       
       setTemas([...temas, novoTemaCreated]);
-      setNovoTema({ tema_num: 0, eixo_id: 0, descricao: "" });
+      setNovoTema({ tema_num: 0, eixo_id: "", descricao: "" });
       
       toast({
         variant: "success",
@@ -196,17 +196,17 @@ export const TemasConfig = () => {
     }
   };
 
-  const getEixoNumero = (eixo_id: number): number => {
+  const getEixoNumero = (eixo_id: string): number => {
     const eixo = eixosTematicos.find(e => e.eixo_id === eixo_id);
     return eixo ? eixo.numero : 0;
   };
 
-  const getEixoNome = (eixo_id: number): string => {
+  const getEixoNome = (eixo_id: string): string => {
     const eixo = eixosTematicos.find(e => e.eixo_id === eixo_id);
     return eixo ? eixo.nome_eixo : "Eixo não encontrado";
   };
 
-  const formatarCodigoTema = (eixo_id: number, tema_num: number): string => {
+  const formatarCodigoTema = (eixo_id: string, tema_num: number): string => {
     const eixoNumero = getEixoNumero(eixo_id);
     return `cat ${eixoNumero}.${tema_num.toString().padStart(2, '0')}`;
   };
@@ -274,8 +274,8 @@ export const TemasConfig = () => {
               </Button>
             </div>
             <Select
-              value={novoTema.eixo_id ? novoTema.eixo_id.toString() : ""}
-              onValueChange={(value) => setNovoTema({ ...novoTema, eixo_id: parseInt(value) })}
+              value={novoTema.eixo_id || ""}
+              onValueChange={(value) => setNovoTema({ ...novoTema, eixo_id: value })}
               disabled={loadingAdd || eixosTematicos.length === 0 || loadingEixos}
             >
               <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800">

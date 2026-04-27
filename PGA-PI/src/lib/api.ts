@@ -6,30 +6,33 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
-
-// Interceptor para adicionar o token JWT em todas as requisições autenticadas
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 // Interceptor para tratar respostas e erros
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && 
-        !window.location.pathname.includes('/login')) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userData');
-      window.location.href = `${BASE_ROUTE}login`;
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Se o access token expirou, tenta renovar via refresh token (cookie)
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/refresh') &&
+      !originalRequest.url?.includes('/auth/login') &&
+      !window.location.pathname.includes('/login')
+    ) {
+      originalRequest._retry = true;
+      try {
+        await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+        return api(originalRequest);
+      } catch {
+        localStorage.removeItem('userData');
+        window.location.href = `${BASE_ROUTE}login`;
+      }
     }
+
     return Promise.reject(error);
   }
 );

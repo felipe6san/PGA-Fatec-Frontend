@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent } from "../../../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Toaster } from "../../../components/ui/toaster";
@@ -14,20 +14,32 @@ import { PgaTabSelector } from "../components/PgaTabSelector";
 import { Cog, Settings as SettingsIcon, Calendar, History } from "lucide-react";
 import { AuditHistoryConfig } from '../components/AuditHistoryConfig';
 import { PGAHistoryViewer } from '../../dashboard/components/PGAHistoryViewer';
+import { useAuth } from "@/context/AuthContext";
+
+const ADMIN_ONLY_TABS = ["eixos", "temas", "prioridades", "entregaveis", "situacoes", "cargahoraria"];
+const ADMIN_ROLES = ["Administrador", "CPS"];
 
 export const Settings = (): JSX.Element => {
+  const { user } = useAuth();
+  const tipoUsuario = user?.tipo_usuario ?? "";
+  const isAdminRole = ADMIN_ROLES.includes(tipoUsuario);
+
   const [activeTab, setActiveTab] = useState("pessoas");
   const [viewingHistory, setViewingHistory] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  // Se a aba ativa for restrita e o usuário não tem permissão, volta para "pessoas"
+  useEffect(() => {
+    if (!isAdminRole && ADMIN_ONLY_TABS.includes(activeTab)) {
+      setActiveTab("pessoas");
+    }
+  }, [activeTab, isAdminRole]);
 
   // Anos disponíveis
   const availableYears = Array.from(
     { length: 5 }, 
     (_, i) => new Date().getFullYear() - i
   );
-
-  // 🔥 ADICIONAR LOG PARA DEBUG
-  console.log('🔍 Settings - selectedYear:', selectedYear, 'viewingHistory:', viewingHistory);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
@@ -76,11 +88,7 @@ export const Settings = (): JSX.Element => {
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
                 <select
                   value={selectedYear}
-                  onChange={(e) => {
-                    const newYear = parseInt(e.target.value);
-                    console.log('📅 Mudando ano para:', newYear); // 🔥 DEBUG
-                    setSelectedYear(newYear);
-                  }}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                   className="border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 bg-white text-xs sm:text-sm min-w-[80px] sm:min-w-[100px] flex-1 sm:flex-none"
                 >
                   {availableYears.map(year => (
@@ -92,10 +100,7 @@ export const Settings = (): JSX.Element => {
               <Button
                 variant={viewingHistory ? "default" : "outline"}
                 size="sm"
-                onClick={() => {
-                  console.log('🔄 Toggling viewingHistory:', !viewingHistory); // 🔥 DEBUG
-                  setViewingHistory(!viewingHistory);
-                }}
+                onClick={() => setViewingHistory(!viewingHistory)}
                 className={`w-full sm:w-auto text-xs sm:text-sm ${viewingHistory ? "bg-[#ae0f0a] hover:bg-[#8d0c08]" : ""}`}
               >
                 <History className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />

@@ -223,9 +223,14 @@
 /* Melhorias para modais em mobile */
 @media (max-width: 768px) {
   .mobile-modal {
-    margin: 1rem;
-    max-height: calc(100vh - 2rem);
+    /* bottom-sheet style on small devices */
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 3.5rem);
     overflow-y: auto;
+    box-sizing: border-box;
+    border-radius: 12px 12px 0 0;
   }
   
   .mobile-modal-header {

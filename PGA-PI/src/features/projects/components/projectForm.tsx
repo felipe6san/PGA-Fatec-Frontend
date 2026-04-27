@@ -18,6 +18,8 @@ import {
   entregaveisService,
 } from "@/services/commonServices";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/config";
 import { situacoesService } from "@/features/settings/services/situacoesService";
 import { TipoUsuario, EntregavelLinkSei, SituacaoProblema } from "@/types/api";
 import { projectService } from "@/features/projects/services/projectService";
@@ -25,6 +27,7 @@ import { processStepService } from "@/services/processStepService";
 import { anexoService } from "@/features/anexos/services/anexoService";
 import { projetoPessoaService } from "@/services/projectPersonService";
 import { pgaService } from "@/services/pgaService";
+import { useToast } from "@/components/ui/use-toast";
 
 const formatCurrency = (value: string): string => {
   const number = parseFloat(value.replace(/[^\d]/g, "")) / 100;
@@ -44,6 +47,7 @@ interface ProjectFormProps {
 
 const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [eixosTematicos, setEixosTematicos] = useState<any[]>([]);
   const [loadingEixos, setLoadingEixos] = useState(false);
@@ -111,7 +115,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     carregarEixosTematicos();
     carregarPrioridades();
     carregarTemas();
-    carregarPessoas();
     carregarTiposVinculoHAE();
     carregarEntregaveis();
     carregarSituacoesProblema();
@@ -119,9 +122,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
   }, []);
 
   useEffect(() => {
+    if (user) carregarPessoas();
+  }, [user]);
+
+  useEffect(() => {
     if (eixoId && temas.length > 0) {
       const temasDoEixo = temas.filter(
-        (tema) => tema.eixo_id === parseInt(eixoId)
+        (tema) => tema.eixo_id === eixoId
       );
       setFilteredTemas(temasDoEixo);
       setTemaId("");
@@ -193,7 +200,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
 
       const userTipo =
         (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
-      const unidadeId = (user as any)?.unidades?.[0]?.unidade_id || 1;
 
       console.log("Tipo de usuário:", userTipo);
 
@@ -204,8 +210,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         console.log("Carregando todas as pessoas (admin/CPS)");
         pessoasData = await userService.getAll();
       } else {
+        let unidadeId: string | undefined =
+          (user as any)?.active_context?.tipo === "unidade"
+            ? (user as any)?.active_context?.id ?? undefined
+            : undefined;
+
+        if (!unidadeId) {
+          const resp = await api.get(API_ENDPOINTS.CONTEXTS);
+          const ctx = resp.data;
+          unidadeId = ctx?.unidades?.[0]?.unidade_id;
+        }
+
         console.log(`Carregando pessoas da unidade: ${unidadeId}`);
-        pessoasData = await userService.getByUnidade(unidadeId);
+        if (unidadeId) {
+          pessoasData = await userService.getByUnidade(unidadeId);
+        }
       }
 
       console.log("Pessoas carregadas:", pessoasData);
@@ -286,7 +305,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
     return `cat ${eixoNumero}.${temaNumero.toString().padStart(2, "0")}`;
   };
 
-  const getEixoNumero = (eixoId: number): number => {
+  const getEixoNumero = (eixoId: string): number => {
     const eixo = eixosTematicos.find((e) => e.eixo_id === eixoId);
     return eixo ? eixo.numero : 0;
   };
@@ -405,20 +424,19 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
 
     try {
       const situacaoIds = situacoesProblema
-        .filter((s) => s && s !== "")
-        .map((s) => parseInt(s));
+        .filter((s) => s && s !== "");
 
       const projetoCriado = await projectService.create({
         codigo_projeto: "",
         nome_projeto: nomeProjeto,
-        pga_id: parseInt(pgaId),
-        tema_id: parseInt(temaId),
-        eixo_id: parseInt(eixoId),
-        prioridade_id: parseInt(prioridadeId),
+        pga_id: pgaId,
+        tema_id: temaId,
+        eixo_id: eixoId,
+        prioridade_id: prioridadeId,
         o_que_sera_feito: oQueSeraFeito,
         por_que_sera_feito: porQueSeraFeito,
-        data_inicio: dataInicio,
-        data_final: dataFinal,
+        data_inicio: dataInicio ? `${dataInicio}T00:00:00.000Z` : undefined,
+        data_final: dataFinal ? `${dataFinal}T00:00:00.000Z` : undefined,
         objetivos_institucionais_referenciados: objetivosInstitucionaisReferenciados,
         obrigatorio_inclusao: obrigatorioInclusao,
         obrigatorio_sustentabilidade: obrigatorioSustentabilidade,
@@ -434,14 +452,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
       for (const pessoa of pessoasProjeto) {
         await projetoPessoaService.create({
           acao_projeto_id: acaoProjetoId,
-          pessoa_id: parseInt(pessoa.pessoaId),
+          pessoa_id: pessoa.pessoaId,
           papel: pessoa.papel,
           carga_horaria_semanal: pessoa.cargaHorariaSemanal
             ? parseInt(pessoa.cargaHorariaSemanal)
             : undefined,
           tipo_vinculo_hae_id:
             pessoa.tipoVinculoHAE && pessoa.tipoVinculoHAE !== "NaoSeAplica"
-              ? parseInt(pessoa.tipoVinculoHAE)
+              ? pessoa.tipoVinculoHAE
               : undefined,
         });
       }
@@ -451,7 +469,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
           acao_projeto_id: acaoProjetoId,
           descricao: etapa.descricao,
           entregavel_id: etapa.entregavelLinkSei
-            ? parseInt(etapa.entregavelLinkSei)
+            ? etapa.entregavelLinkSei
             : undefined,
           numero_ref: etapa.numeroRef,
           data_verificacao_prevista: etapa.dataVerificacaoPrevista
@@ -468,7 +486,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
             await anexoService.create({
               etapa_processo_id: etapaCriada.etapa_id,
               entregavel_id: etapa.entregavelLinkSei
-                ? parseInt(etapa.entregavelLinkSei)
+                ? etapa.entregavelLinkSei
                 : undefined,
               item: anexo.descricao,
               descricao: anexo.descricao || "",
@@ -484,11 +502,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ eixoSelecionado }) => {
         }
       }
 
-      alert("Projeto registrado com sucesso!");
+      toast({ title: "Projeto registrado com sucesso!", variant: "default" });
 
     } catch (error) {
       console.error("Erro ao registrar projeto:", error);
-      alert("Erro ao registrar projeto. Verifique os dados e tente novamente.");
+      toast({ title: "Erro ao registrar projeto", description: "Verifique os dados e tente novamente.", variant: "destructive" });
     }
   };
 

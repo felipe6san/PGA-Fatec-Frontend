@@ -29,8 +29,6 @@ export const AuditHistoryConfig: React.FC<AuditHistoryConfigProps> = ({
       setLoading(true);
       setError(null);
 
-      console.log(`📊 Carregando dados de auditoria para ${selectedYear}...`);
-
       // Buscar dados em paralelo
       const [changes, summary] = await Promise.all([
         auditService.getChangesReport(selectedYear),
@@ -39,8 +37,6 @@ export const AuditHistoryConfig: React.FC<AuditHistoryConfigProps> = ({
 
       setChangesReport(changes);
       setAuditSummary(summary);
-
-      console.log('✅ Dados de auditoria carregados:', { changes, summary });
 
     } catch (err) {
       console.error('❌ Erro ao carregar dados de auditoria:', err);
