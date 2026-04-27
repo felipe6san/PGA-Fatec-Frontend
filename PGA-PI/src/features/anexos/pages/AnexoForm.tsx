@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "@/hooks/useForm";
 import { BASE_ROUTE } from "@/lib/config";
 import { anexoService } from '../services/anexoService';
-import { projectService } from '../../projects/services/projectService';
-import { AnexoProjetoUm, AcaoProjeto } from '@/types/api';
+import { entregaveisService } from '@/services/commonServices';
+import { EntregavelLinkSei } from '@/types/api';
 
 // Interface do formulário de anexo
 interface AnexoFormData {
   item: string;
-  projetoId: string;
-  denominacaoOuEspecificacao: string;
+  entregavel_id: string;
+  descricao: string;
   quantidade: number;
-  precoTotalEstimado: string;
+  preco_unitario_estimado: string;
+  preco_total_estimado: string;
 }
 
 export const AnexoForm = () => {
@@ -23,17 +24,18 @@ export const AnexoForm = () => {
   const anexoType = searchParams.get("type");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [projetos, setProjetos] = useState<AcaoProjeto[]>([]);
+  const [entregaveis, setEntregaveis] = useState<EntregavelLinkSei[]>([]);
   
   // Validação do formulário
   const validate = (values: AnexoFormData) => {
     const errors: Partial<Record<keyof AnexoFormData, string>> = {};
     
     if (!values.item) errors.item = "Item é obrigatório";
-    if (!values.projetoId) errors.projetoId = "Projeto é obrigatório";
-    if (!values.denominacaoOuEspecificacao) errors.denominacaoOuEspecificacao = "Denominação/especificação é obrigatória";
+    if (!values.entregavel_id) errors.entregavel_id = "Entregável é obrigatório";
+    if (!values.descricao) errors.descricao = "Descrição é obrigatória";
     if (!values.quantidade || values.quantidade <= 0) errors.quantidade = "Quantidade deve ser maior que zero";
-    if (!values.precoTotalEstimado) errors.precoTotalEstimado = "Preço total estimado é obrigatório";
+    if (!values.preco_unitario_estimado) errors.preco_unitario_estimado = "Preço unitário estimado é obrigatório";
+    if (!values.preco_total_estimado) errors.preco_total_estimado = "Preço total estimado é obrigatório";
     
     return errors;
   };
@@ -41,25 +43,26 @@ export const AnexoForm = () => {
   // Formulário
   const { values, errors, handleChange, handleBlur, setFieldValue } = useForm<AnexoFormData>({
     item: "",
-    projetoId: "",
-    denominacaoOuEspecificacao: "",
+    entregavel_id: "",
+    descricao: "",
     quantidade: 1,
-    precoTotalEstimado: ""
+    preco_unitario_estimado: "",
+    preco_total_estimado: ""
   }, validate);
 
-  // Carregar projetos disponíveis
+  // Carregar entregáveis disponíveis
   useEffect(() => {
-    const fetchProjetos = async () => {
+    const fetchEntregaveis = async () => {
       try {
-        const projetos = await projectService.getAll();
-        setProjetos(projetos);
+        const data = await entregaveisService.getAll();
+        setEntregaveis(data);
       } catch (error) {
-        console.error("Erro ao carregar projetos:", error);
-        setErrorMessage("Não foi possível carregar a lista de projetos.");
+        console.error("Erro ao carregar entregáveis:", error);
+        setErrorMessage("Não foi possível carregar a lista de entregáveis.");
       }
     };
     
-    fetchProjetos();
+    fetchEntregaveis();
   }, []);
 
   // Formatar o valor para exibição em formato monetário
@@ -76,11 +79,12 @@ export const AnexoForm = () => {
   };
 
   // Processar input de valor monetário
-  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d]/g, "");
-    const formattedValue = formatCurrency(value);
-    setFieldValue("precoTotalEstimado", formattedValue);
-  };
+  const handleCurrencyChange = (fieldName: "preco_unitario_estimado" | "preco_total_estimado") =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/[^\d]/g, "");
+      const formattedValue = formatCurrency(value);
+      setFieldValue(fieldName, formattedValue);
+    };
 
   // Título com base no anexo selecionado
   const getAnexoTitle = () => {
@@ -109,17 +113,20 @@ export const AnexoForm = () => {
     
     try {
       // Preparar dados para envio
-      const precoValue = values.precoTotalEstimado
+      const precoUnitValue = values.preco_unitario_estimado
+        .replace(/[^\d,]/g, "")
+        .replace(",", ".");
+      const precoTotalValue = values.preco_total_estimado
         .replace(/[^\d,]/g, "")
         .replace(",", ".");
       
       const anexoData = {
+        entregavel_id: values.entregavel_id,
         item: values.item,
-        projetoId: values.projetoId,
-        denominacaoOuEspecificacao: values.denominacaoOuEspecificacao,
+        descricao: values.descricao,
         quantidade: values.quantidade,
-        precoTotalEstimado: parseFloat(precoValue),
-        flag: anexoType as AnexoProjetoUm
+        preco_unitario_estimado: parseFloat(precoUnitValue),
+        preco_total_estimado: parseFloat(precoTotalValue),
       };
       
       await anexoService.create(anexoData);
@@ -166,30 +173,30 @@ export const AnexoForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label 
-                  htmlFor="projetoId" 
+                  htmlFor="entregavel_id" 
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Projeto Vinculado:
+                  Entregável:
                 </label>
                 <select
-                  id="projetoId"
-                  name="projetoId"
-                  value={values.projetoId}
+                  id="entregavel_id"
+                  name="entregavel_id"
+                  value={values.entregavel_id}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={`w-full p-3 border rounded-lg focus:ring-2 ${
-                    errors.projetoId ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
+                    errors.entregavel_id ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
                   }`}
                 >
-                  <option value="">Selecione um projeto</option>
-                  {projetos.map(projeto => (
-                    <option key={projeto.acao_projeto_id} value={projeto.acao_projeto_id.toString()}>
-                      {`${projeto.nome_projeto ?? projeto.codigo_projeto ?? `Projeto ${projeto.acao_projeto_id}`}${projeto.tema ? ` — ${projeto.tema.tema_num.toString().padStart(2, '0')} - ${projeto.tema.descricao}` : ''}`}
+                  <option value="">Selecione um entregável</option>
+                  {entregaveis.map(entregavel => (
+                    <option key={entregavel.entregavel_id} value={entregavel.entregavel_id}>
+                      {`${entregavel.entregavel_numero} - ${entregavel.descricao}`}
                     </option>
                   ))}
                 </select>
-                {errors.projetoId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.projetoId}</p>
+                {errors.entregavel_id && (
+                  <p className="mt-1 text-sm text-red-600">{errors.entregavel_id}</p>
                 )}
               </div>
 
@@ -220,29 +227,29 @@ export const AnexoForm = () => {
 
             <div>
               <label 
-                htmlFor="denominacaoOuEspecificacao" 
+                htmlFor="descricao" 
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Denominação/Especificação:
+                Descrição:
               </label>
               <textarea
-                id="denominacaoOuEspecificacao"
-                name="denominacaoOuEspecificacao"
-                value={values.denominacaoOuEspecificacao}
+                id="descricao"
+                name="descricao"
+                value={values.descricao}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 rows={3}
                 className={`w-full p-3 border rounded-lg focus:ring-2 ${
-                  errors.denominacaoOuEspecificacao ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
+                  errors.descricao ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
                 }`}
                 placeholder="Descreva as especificações detalhadas do item"
               />
-              {errors.denominacaoOuEspecificacao && (
-                <p className="mt-1 text-sm text-red-600">{errors.denominacaoOuEspecificacao}</p>
+              {errors.descricao && (
+                <p className="mt-1 text-sm text-red-600">{errors.descricao}</p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label 
                   htmlFor="quantidade" 
@@ -269,25 +276,49 @@ export const AnexoForm = () => {
 
               <div>
                 <label 
-                  htmlFor="precoTotalEstimado" 
+                  htmlFor="preco_unitario_estimado"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Preço Unitário Estimado:
+                </label>
+                <input
+                  type="text"
+                  id="preco_unitario_estimado"
+                  name="preco_unitario_estimado"
+                  value={values.preco_unitario_estimado}
+                  onChange={handleCurrencyChange("preco_unitario_estimado")}
+                  onBlur={handleBlur}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 ${
+                    errors.preco_unitario_estimado ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
+                  }`}
+                  placeholder="R$ 0,00"
+                />
+                {errors.preco_unitario_estimado && (
+                  <p className="mt-1 text-sm text-red-600">{errors.preco_unitario_estimado}</p>
+                )}
+              </div>
+
+              <div>
+                <label 
+                  htmlFor="preco_total_estimado"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Preço Total Estimado:
                 </label>
                 <input
                   type="text"
-                  id="precoTotalEstimado"
-                  name="precoTotalEstimado"
-                  value={values.precoTotalEstimado}
-                  onChange={handleCurrencyChange}
+                  id="preco_total_estimado"
+                  name="preco_total_estimado"
+                  value={values.preco_total_estimado}
+                  onChange={handleCurrencyChange("preco_total_estimado")}
                   onBlur={handleBlur}
                   className={`w-full p-3 border rounded-lg focus:ring-2 ${
-                    errors.precoTotalEstimado ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
+                    errors.preco_total_estimado ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#ae0f0a]"
                   }`}
                   placeholder="R$ 0,00"
                 />
-                {errors.precoTotalEstimado && (
-                  <p className="mt-1 text-sm text-red-600">{errors.precoTotalEstimado}</p>
+                {errors.preco_total_estimado && (
+                  <p className="mt-1 text-sm text-red-600">{errors.preco_total_estimado}</p>
                 )}
               </div>
             </div>

@@ -1,25 +1,37 @@
 import { TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Users, Target, List, BarChart3, FileText, AlertCircle, Clock, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface PgaTabSelectorProps {
   activeTab: string;
   onTabChange: (value: string) => void;
 }
 
+const ALL_TABS = [
+  { id: "pessoas", label: "Pessoas", icon: Users, roles: null },
+  { id: "eixos", label: "Eixos Temáticos", icon: Target, roles: ["Administrador", "CPS"] },
+  { id: "temas", label: "Temas", icon: List, roles: ["Administrador", "CPS"] },
+  { id: "prioridades", label: "Prioridades", icon: BarChart3, roles: ["Administrador", "CPS"] },
+  { id: "entregaveis", label: "Entregáveis", icon: FileText, roles: ["Administrador", "CPS"] },
+  { id: "situacoes", label: "Situações", icon: AlertCircle, roles: ["Administrador", "CPS"] },
+  { id: "cargahoraria", label: "Carga Horária", icon: Clock, roles: ["Administrador", "CPS"] },
+  { id: "auditoria", label: "Auditoria", icon: ShieldCheck, roles: null },
+];
+
 export const PgaTabSelector = ({ activeTab, onTabChange }: PgaTabSelectorProps) => {
-  const tabs = [
-    { id: "pessoas", label: "Pessoas", icon: Users },
-    { id: "eixos", label: "Eixos Temáticos", icon: Target },
-    { id: "temas", label: "Temas", icon: List },
-    { id: "prioridades", label: "Prioridades", icon: BarChart3 },
-    { id: "entregaveis", label: "Entregáveis", icon: FileText },
-    { id: "situacoes", label: "Situações", icon: AlertCircle },
-    { id: "cargahoraria", label: "Carga Horária", icon: Clock },
-    { id: "auditoria", label: "Auditoria", icon: ShieldCheck },
-  ];
+  const { user } = useAuth();
+  const tipoUsuario = user?.tipo_usuario ?? "";
+
+  const tabs = ALL_TABS.filter(tab =>
+    tab.roles === null || tab.roles.includes(tipoUsuario)
+  );
+
+  const gridCols = tabs.length <= 4
+    ? "grid-cols-2 sm:grid-cols-4"
+    : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8";
 
   return (
-    <TabsList className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 bg-transparent w-full">
+    <TabsList className={`mb-6 grid ${gridCols} gap-2 sm:gap-3 bg-transparent w-full`}>
       {tabs.map(tab => (
         <TabsTrigger 
           key={tab.id}

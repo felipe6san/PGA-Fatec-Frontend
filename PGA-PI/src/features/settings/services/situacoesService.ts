@@ -29,7 +29,7 @@ class SituacoesService {
     }
   }
 
-  async getById(id: number): Promise<SituacaoProblema> {
+  async getById(id: string): Promise<SituacaoProblema> {
     try {
       const response = await api.get<SituacaoProblema>(`${this.endpoint}/${id}`);
       return response.data;
@@ -49,7 +49,7 @@ class SituacoesService {
     }
   }
 
-  async update(id: number, data: UpdateSituacaoProblemaRequest): Promise<SituacaoProblema> {
+  async update(id: string, data: UpdateSituacaoProblemaRequest): Promise<SituacaoProblema> {
     try {
       const response = await api.put<SituacaoProblema>(`${this.endpoint}/${id}`, data);
       return response.data;
@@ -59,7 +59,7 @@ class SituacoesService {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await api.delete(`${this.endpoint}/${id}`);
     } catch (error) {

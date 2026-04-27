@@ -19,37 +19,39 @@ export const Modal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4">
       {/* Overlay */}
       <div
         className="fixed inset-0 bg-black/50"
         onClick={onClose}
       />
 
-      {/* Modal Content - com arredondamento completo */}
+      {/* Modal Content */}
       <div
-        className={`relative z-50 w-full rounded-[21px] shadow-lg overflow-hidden mobile-modal ${
+        className={`relative z-50 w-full mx-auto md:rounded-[21px] rounded-t-[21px] shadow-lg overflow-hidden mobile-modal bg-white dark:bg-[#1c2130] ${
           className || ""
         }`}
-        style={{ backgroundColor: "white" }}
+        style={{
+          boxSizing: "border-box",
+          maxWidth: "min(100%,720px)",
+          maxHeight: "calc(100vh - 4rem)",
+          overflowY: "auto",
+        }}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 mobile-modal-header">
-          <h2 className="font-['Source_Sans_3',Helvetica] text-2xl font-bold text-[#2D3748]">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#30363d] mobile-modal-header">
+          <h2 className="font-['Source_Sans_3',Helvetica] text-2xl font-bold text-[#2D3748] dark:text-[#e6edf3]">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
           >
             <XCircle className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Container do conteúdo arredondado na parte inferior */}
-        <div
-          className="p-6 rounded-b-[21px] mobile-modal-content"
-          style={{ backgroundColor: "white" }}
-        >
+        {/* Container do conteúdo */}
+        <div className="p-6 rounded-b-[21px] mobile-modal-content bg-white dark:bg-[#1c2130]">
           {children}
         </div>
       </div>

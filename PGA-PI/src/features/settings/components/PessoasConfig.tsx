@@ -7,11 +7,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, UserPlus, UserRound, InboxIcon, Users } from "lucide-react";
+import { Plus, Search, AlertCircle, UserPlus, UserRound, InboxIcon, Users, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
 import { PendingAccessRequestsTab } from "./PendingAccessRequests";
 import { TipoUsuario, User } from "@/types/api";
-import { accessRequestService, userService, type CreateUserData } from "@/services/commonServices";
+import { accessRequestService, userService, type CreateUserData, type UpdateUserData } from "@/services/commonServices";
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { toast } from "@/components/ui/use-toast";
@@ -32,13 +33,23 @@ export const PessoasConfig: React.FC = () => {
   const [regionais, setRegionais] = useState<any[]>([]);
   const [unidades, setUnidades] = useState<any[]>([]);
   const [fetchedUserDetails, setFetchedUserDetails] = useState<any>(null);
-  const [selectedRegionalId, setSelectedRegionalId] = useState<number | undefined>(undefined);
-  const [selectedUnidadeId, setSelectedUnidadeId] = useState<number | undefined>(undefined);
+  const [selectedRegionalId, setSelectedRegionalId] = useState<string | undefined>(undefined);
+  const [selectedUnidadeId, setSelectedUnidadeId] = useState<string | undefined>(undefined);
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterUnidadeId, setFilterUnidadeId] = useState<string | undefined>(undefined);
   const [showAccessRequests, setShowAccessRequests] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [loadingRequests, setLoadingRequests] = useState(false);
+
+  // Estado para edição
+  const [editingPessoa, setEditingPessoa] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState<{ nome: string; tipo_usuario: TipoUsuario; ativo: boolean }>({
+    nome: '',
+    tipo_usuario: TipoUsuario.DOCENTE,
+    ativo: true,
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const unidadeId = (user as any)?.unidades?.[0]?.unidade_id;
 
@@ -50,9 +61,28 @@ export const PessoasConfig: React.FC = () => {
     const resolvedUnidadeId = first.unidade_id ?? first.unidade?.unidade_id ?? first.unidade?.id ?? first.unidade?.id_unidade;
     const resolvedRegionalId = first.unidade?.regional_id ?? first.regional_id ?? first.unidade?.regional?.regional_id ?? first.regional?.id;
 
-    if (resolvedUnidadeId) setSelectedUnidadeId(resolvedUnidadeId as number);
-    if (resolvedRegionalId) setSelectedRegionalId(resolvedRegionalId as number);
+    if (resolvedUnidadeId) setSelectedUnidadeId(String(resolvedUnidadeId));
+    if (resolvedRegionalId) setSelectedRegionalId(String(resolvedRegionalId));
   }, [user]);
+
+  /** Shared helper: fetch and deduplicate users from a list of unit objects */
+  const fetchPessoasDeUnidades = useCallback(async (units: any[]): Promise<User[]> => {
+    const results = await Promise.allSettled(
+      units.map((u: any) =>
+        api.get(`${API_ENDPOINTS.USERS_BY_UNIDADE}/${u.unidade_id ?? u.id}`).then(r => r.data as User[])
+      )
+    );
+    let data: User[] = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+    const seen = new Set<string>();
+    data = data.filter(p => {
+      const key = (p as any).pessoa_id as string;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return data;
+  }, []);
+
   const loadPessoas = useCallback(async () => {
     if (!user) return;
 
@@ -64,6 +94,14 @@ export const PessoasConfig: React.FC = () => {
 
       if (userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) {
         pessoasData = await userService.getAll();
+      } else if (userTipo === TipoUsuario.REGIONAL) {
+        // Load people from all units of the regional
+        let unitList = unidades.length > 0 ? unidades : [];
+        if (unitList.length === 0 && selectedRegionalId) {
+          const resp = await api.get(API_ENDPOINTS.REGIONAL_UNIDADES, { params: { regional_id: selectedRegionalId } });
+          unitList = Array.isArray(resp.data) ? resp.data : [];
+        }
+        pessoasData = await fetchPessoasDeUnidades(unitList);
       } else {
         const unidadeFromAuth = (user as any)?.unidades?.[0]?.unidade_id ?? (user as any)?.unidades?.[0]?.unidade?.unidade_id;
         const unidadeFromFetched = fetchedUserDetails?.unidades?.[0]?.unidade_id ?? fetchedUserDetails?.unidades?.[0]?.unidade?.unidade_id;
@@ -90,16 +128,16 @@ export const PessoasConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, selectedUnidadeId, fetchedUserDetails]);
+  }, [user, selectedUnidadeId, fetchedUserDetails, fetchPessoasDeUnidades]);
 
   useEffect(() => {
     if (!selectedUnidadeId) return;
     const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
-    if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS) return;
+    if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS || userTipoLocal === TipoUsuario.REGIONAL) return;
     fetchPessoasForUnit(selectedUnidadeId);
   }, [selectedUnidadeId]);
 
-  const fetchPessoasForUnit = async (unidadeNum?: number) => {
+  const fetchPessoasForUnit = async (unidadeNum?: string) => {
     setLoading(true);
     try {
       if (!unidadeNum) {
@@ -143,6 +181,42 @@ export const PessoasConfig: React.FC = () => {
 
     const init = async () => {
       try {
+        const userTipoInit = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
+
+        // For Regional users: resolve regional_id from backend (active_context.id = pessoa_id, not regional_id)
+        if (userTipoInit === TipoUsuario.REGIONAL) {
+          try {
+            // GET /regional/unidades (sem params) retorna { regional_id, nome_regional, unidades[] } para o usuário autenticado
+            const resp = await api.get(API_ENDPOINTS.REGIONAL_UNIDADES);
+            const data = resp.data;
+            const regionalId: string | undefined = data?.regional_id;
+            const regionalNome: string = data?.nome_regional ?? data?.nome ?? '';
+            const units: any[] = Array.isArray(data?.unidades) ? data.unidades : [];
+            if (regionalId) {
+              setRegionais([{ regional_id: regionalId, nome: regionalNome }]);
+              setSelectedRegionalId(regionalId);
+              setUnidades(units);
+            }
+            // Carrega pessoas de todas as unidades diretamente (state pode ainda não ter atualizado)
+            if (units.length > 0) {
+              setLoading(true);
+              try {
+                const pessoasData = await fetchPessoasDeUnidades(units);
+                setPessoas(pessoasData);
+              } catch (err) {
+                console.error('[PessoasConfig] erro ao carregar pessoas da regional:', err);
+                setPessoas([]);
+              } finally {
+                setLoading(false);
+              }
+            }
+          } catch (err) {
+            console.error('[PessoasConfig] erro ao buscar regional do usuário:', err);
+          }
+          // REGIONAL não tem acesso a loadAccessRequests
+          return;
+        }
+
         await carregarContexts();
 
         const hasUnitsInAuth = Array.isArray((user as any)?.unidades) && (user as any).unidades.length > 0;
@@ -154,8 +228,8 @@ export const PessoasConfig: React.FC = () => {
             const first = resp.data?.unidades?.[0];
             const resolvedUnidadeId = first?.unidade_id ?? first?.unidade?.unidade_id ?? first?.unidade?.id;
             const resolvedRegionalId = first?.unidade?.regional_id ?? first?.regional_id ?? first?.unidade?.regional?.regional_id ?? first?.regional?.id;
-            if (resolvedUnidadeId) setSelectedUnidadeId(resolvedUnidadeId as number);
-            if (resolvedRegionalId) setSelectedRegionalId(resolvedRegionalId as number);
+            if (resolvedUnidadeId) setSelectedUnidadeId(String(resolvedUnidadeId));
+            if (resolvedRegionalId) setSelectedRegionalId(String(resolvedRegionalId));
           } catch (err) {
             console.debug('Não foi possível buscar detalhes completos do usuário:', err);
           }
@@ -199,7 +273,7 @@ export const PessoasConfig: React.FC = () => {
       if (!selectedUnidadeId && fetchedUserDetails?.unidades?.length) {
         const first = fetchedUserDetails.unidades[0];
         const uid = first.unidade_id || first.unidade?.unidade_id || first.unidade?.id;
-        if (uid) setSelectedUnidadeId(uid as number);
+        if (uid) setSelectedUnidadeId(String(uid));
       }
       if (!selectedUnidadeId && loadedUnidades.length) {
         setSelectedUnidadeId(loadedUnidades[0].unidade_id || loadedUnidades[0].id);
@@ -213,16 +287,18 @@ export const PessoasConfig: React.FC = () => {
   };
 
   useEffect(() => {
-    const loadUnidadesPorRegional = async (regionalId?: number) => {
+    const loadUnidadesPorRegional = async (regionalId?: string) => {
+      const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
+      // REGIONAL: unidades já carregadas no init, não sobrescrever
+      if (userTipoLocal === TipoUsuario.REGIONAL) return;
+
       if (!regionalId) {
         setUnidades([]);
         return;
       }
 
       try {
-        const userTipoLocal = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
-
-        if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS || userTipoLocal === TipoUsuario.REGIONAL) {
+        if (userTipoLocal === TipoUsuario.ADMINISTRADOR || userTipoLocal === TipoUsuario.CPS) {
           const resp = await api.get(API_ENDPOINTS.REGIONAL_UNIDADES, { params: { regional_id: regionalId } });
           setUnidades(Array.isArray(resp.data) ? resp.data : []);
         } else {
@@ -366,6 +442,48 @@ export const PessoasConfig: React.FC = () => {
     }
   };
 
+  const handleOpenEdit = (pessoa: User) => {
+    setEditingPessoa(pessoa);
+    setEditForm({
+      nome: pessoa.nome || '',
+      tipo_usuario: pessoa.tipo_usuario,
+      ativo: pessoa.ativo ?? true,
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingPessoa) return;
+
+    if (!editForm.nome.trim()) {
+      toast({ variant: 'destructive', title: 'Campo obrigatório', description: 'O nome não pode estar vazio' });
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      const updateData: UpdateUserData = {
+        nome: editForm.nome.trim(),
+        tipo_usuario: editForm.tipo_usuario,
+        ativo: editForm.ativo,
+      };
+      const updated = await userService.update(editingPessoa.pessoa_id, updateData);
+
+      setPessoas(prev =>
+        prev.map(p => p.pessoa_id === editingPessoa.pessoa_id ? { ...p, ...updated } : p)
+      );
+      setEditingPessoa(null);
+      toast({ title: 'Sucesso', description: 'Dados atualizados com sucesso' });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao salvar',
+        description: error?.response?.data?.message || 'Não foi possível salvar as alterações',
+      });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const getUnidadeNome = (pessoa: User) => {
     if (!pessoa.unidades || pessoa.unidades.length === 0) {
       return 'Unidade não definida';
@@ -417,6 +535,10 @@ export const PessoasConfig: React.FC = () => {
     
     if (userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) {
       return tiposUsuario;
+    } else if (userTipo === TipoUsuario.REGIONAL) {
+      return tiposUsuario.filter(tipo => 
+        [TipoUsuario.DIRETOR, TipoUsuario.COORDENADOR, TipoUsuario.ADMINISTRATIVO, TipoUsuario.DOCENTE].includes(tipo.value as TipoUsuario)
+      );
     } else if (userTipo === TipoUsuario.DIRETOR) {
       return tiposUsuario.filter(tipo => 
         [TipoUsuario.COORDENADOR, TipoUsuario.ADMINISTRATIVO, TipoUsuario.DOCENTE].includes(tipo.value as TipoUsuario)
@@ -433,7 +555,11 @@ export const PessoasConfig: React.FC = () => {
     const email = (pessoa.email || '').toString().toLowerCase();
     const tipo = (pessoa.tipo_usuario || '').toString().toLowerCase();
     const term = (searchTerm || '').toLowerCase();
-    return nome.includes(term) || email.includes(term) || tipo.includes(term);
+    const matchesSearch = nome.includes(term) || email.includes(term) || tipo.includes(term);
+    const matchesUnidade = !filterUnidadeId || pessoa.unidades?.some(
+      (u: any) => (u.unidade_id ?? u.unidade?.unidade_id) === filterUnidadeId
+    );
+    return matchesSearch && matchesUnidade;
   });
 
   const getTypeBadgeColor = (tipo: TipoUsuario) => {
@@ -458,7 +584,7 @@ export const PessoasConfig: React.FC = () => {
     TipoUsuario.ADMINISTRADOR, 
     TipoUsuario.CPS, 
     TipoUsuario.DIRETOR, 
-    TipoUsuario.COORDENADOR
+    TipoUsuario.COORDENADOR,
   ].includes(userTipo);
 
   const canViewAccessRequests = userTipo && [
@@ -523,7 +649,7 @@ export const PessoasConfig: React.FC = () => {
       </div>
 
       {/* Card que alterna entre Adicionar Pessoas e Solicitações de Acesso */}
-      <Card className="border border-gray-200 shadow-sm">
+      {userTipo !== TipoUsuario.REGIONAL && <Card className="border border-gray-200 shadow-sm">
         <div className="p-4 sm:p-5">
           {!showAccessRequests ? (
             <>
@@ -608,7 +734,7 @@ export const PessoasConfig: React.FC = () => {
                             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Regional</label>
                             <Select
                               value={selectedRegionalId?.toString() || ""}
-                              onValueChange={(v) => setSelectedRegionalId(v ? parseInt(v) : undefined)}
+                              onValueChange={(v) => setSelectedRegionalId(v || undefined)}
                               disabled={regionais.length === 0}
                             >
                               <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
@@ -626,7 +752,7 @@ export const PessoasConfig: React.FC = () => {
                         );
                       }
 
-                      const isAdminView = ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.ADMINISTRADOR || ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.CPS;
+                      const isAdminView = ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.ADMINISTRADOR || ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.CPS || ((user as any)?.tipo_usuario || (user as any)?.tipoUsuario) === TipoUsuario.REGIONAL;
 
                       if (isAdminView) {
                         return (
@@ -635,7 +761,7 @@ export const PessoasConfig: React.FC = () => {
                               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Regional</label>
                               <Select
                                 value={selectedRegionalId?.toString() || ""}
-                                onValueChange={(v) => setSelectedRegionalId(v ? parseInt(v) : undefined)}
+                                onValueChange={(v) => setSelectedRegionalId(v || undefined)}
                                 disabled={regionais.length === 0}
                               >
                                 <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
@@ -654,7 +780,7 @@ export const PessoasConfig: React.FC = () => {
                               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Unidade</label>
                               <Select
                                 value={selectedUnidadeId?.toString() || ""}
-                                onValueChange={(v) => setSelectedUnidadeId(v ? parseInt(v) : undefined)}
+                                onValueChange={(v) => setSelectedUnidadeId(v || undefined)}
                                 disabled={unidades.length === 0}
                               >
                                 <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800 text-sm">
@@ -736,30 +862,45 @@ export const PessoasConfig: React.FC = () => {
             </>
           )}
         </div>
-      </Card>
+      </Card>}
       
       {/* Lista de Pessoas - só mostra quando não estiver na aba de solicitações */}
-      {!showAccessRequests && (
+      {(userTipo === TipoUsuario.REGIONAL || !showAccessRequests) && (
         <div>
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-wrap gap-3 items-center justify-between mb-3">
             <h3 className="text-md font-medium text-gray-700">
               Pessoas Cadastradas
-              {userTipo !== TipoUsuario.ADMINISTRADOR && userTipo !== TipoUsuario.CPS && (
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  (da sua unidade)
-                </span>
+              {userTipo === TipoUsuario.REGIONAL && (
+                <span className="text-sm font-normal text-gray-500 ml-2">(da sua regional)</span>
+              )}
+              {userTipo !== TipoUsuario.ADMINISTRADOR && userTipo !== TipoUsuario.CPS && userTipo !== TipoUsuario.REGIONAL && (
+                <span className="text-sm font-normal text-gray-500 ml-2">(da sua unidade)</span>
               )}
             </h3>
             
-            <div className="relative w-64">
-              <Input
-                placeholder="Pesquisar pessoas..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white"
-                disabled={loading}
-              />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <div className="flex gap-2 flex-wrap">
+              {userTipo === TipoUsuario.REGIONAL && unidades.length > 0 && (
+                <select
+                  value={filterUnidadeId ?? ''}
+                  onChange={e => setFilterUnidadeId(e.target.value || undefined)}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#ae0f0a]"
+                >
+                  <option value="">Todas as unidades</option>
+                  {unidades.map(u => (
+                    <option key={u.unidade_id} value={u.unidade_id}>{u.nome_unidade}</option>
+                  ))}
+                </select>
+              )}
+              <div className="relative w-64">
+                <Input
+                  placeholder="Pesquisar pessoas..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-9 bg-white"
+                  disabled={loading}
+                />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              </div>
             </div>
           </div>
           
@@ -777,12 +918,12 @@ export const PessoasConfig: React.FC = () => {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>E-mail</TableHead>
-                    {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) && (
+                    {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS || userTipo === TipoUsuario.REGIONAL) && (
                       <TableHead>Unidade</TableHead>
                     )}
                     <TableHead>Tipo</TableHead>
                     <TableHead>Status</TableHead>
-                    {canManagePessoas && <TableHead className="w-24 text-right">Ações</TableHead>}
+                    {canManagePessoas && <TableHead className="w-32 text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -796,7 +937,7 @@ export const PessoasConfig: React.FC = () => {
                           {pessoa.nome}
                         </TableCell>
                         <TableCell>{pessoa.email || '-'}</TableCell>
-                        {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) && (
+                        {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS || userTipo === TipoUsuario.REGIONAL) && (
                           <TableCell className="text-sm text-gray-600">
                             <div className="group relative">
                               {getUnidadeNome(pessoa)}
@@ -833,15 +974,28 @@ export const PessoasConfig: React.FC = () => {
                         </TableCell>
                         {canManagePessoas && (
                           <TableCell className="text-right">
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => handleRemovePessoa(pessoa.pessoa_id)}
-                              className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
-                              disabled={loading}
-                            >
-                              Remover
-                            </Button>
+                            <div className="flex items-center justify-end gap-2">
+                              {userTipo === TipoUsuario.ADMINISTRADOR && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenEdit(pessoa)}
+                                  className="text-gray-600 border-gray-200 hover:bg-gray-50 px-2"
+                                  disabled={loading}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleRemovePessoa(pessoa.pessoa_id)}
+                                className="bg-[#ae0f0a]/10 hover:bg-[#ae0f0a]/20 text-[#ae0f0a] border border-[#ae0f0a]/20"
+                                disabled={loading}
+                              >
+                                Remover
+                              </Button>
+                            </div>
                           </TableCell>
                         )}
                       </TableRow>
@@ -861,6 +1015,121 @@ export const PessoasConfig: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Modal de Edição ────────────────────────────────── */}
+      <Modal
+        isOpen={!!editingPessoa}
+        onClose={() => setEditingPessoa(null)}
+        title="Editar Pessoa"
+      >
+        {editingPessoa && (
+          <div className="p-6 space-y-5">
+            {/* Email — somente leitura */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                E-mail
+                <span className="ml-2 text-xs text-gray-400 font-normal">(não pode ser alterado)</span>
+              </label>
+              <div className="w-full bg-gray-50 dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] rounded-md px-3 py-2 text-sm text-gray-500 dark:text-gray-400 select-none">
+                {editingPessoa.email || '—'}
+              </div>
+            </div>
+
+            {/* Nome — editável */}
+            <div>
+              <label htmlFor="edit-nome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Nome Completo
+              </label>
+              <Input
+                id="edit-nome"
+                value={editForm.nome}
+                onChange={e => setEditForm(prev => ({ ...prev, nome: e.target.value }))}
+                className="w-full bg-white dark:bg-[#21262d] border-gray-300 dark:border-[#30363d] text-sm"
+                disabled={savingEdit}
+              />
+            </div>
+
+            {/* Tipo de usuário — editável com restrições */}
+            <div>
+              <label htmlFor="edit-tipo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Tipo de Usuário
+              </label>
+              <Select
+                value={editForm.tipo_usuario}
+                onValueChange={v => setEditForm(prev => ({ ...prev, tipo_usuario: v as TipoUsuario }))}
+                disabled={savingEdit}
+              >
+                <SelectTrigger id="edit-tipo" className="w-full bg-white dark:bg-[#21262d] border-gray-300 dark:border-[#30363d] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {getTiposUsuarioPermitidos().map(tipo => (
+                      <SelectItem key={tipo.value} value={tipo.value}>
+                        {tipo.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Unidade — somente leitura */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Unidade
+                <span className="ml-2 text-xs text-gray-400 font-normal">(não pode ser alterada)</span>
+              </label>
+              <div className="w-full bg-gray-50 dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] rounded-md px-3 py-2 text-sm text-gray-500 dark:text-gray-400 select-none">
+                {getUnidadeNome(editingPessoa)}
+              </div>
+            </div>
+
+            {/* Status ativo */}
+            <div className="flex items-center justify-between py-2 px-4 rounded-lg border border-gray-200 dark:border-[#30363d]">
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Pessoa ativa no sistema</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={editForm.ativo}
+                onClick={() => setEditForm(prev => ({ ...prev, ativo: !prev.ativo }))}
+                disabled={savingEdit}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#ae0f0a]/50 ${
+                  editForm.ativo ? 'bg-[#ae0f0a]' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                    editForm.ativo ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Botões */}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setEditingPessoa(null)}
+                disabled={savingEdit}
+                className="px-5"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="bg-[#ae0f0a] hover:bg-[#8e0c08] text-white px-5"
+              >
+                {savingEdit ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

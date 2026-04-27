@@ -19,7 +19,7 @@ export class ProjectService {
     }
   }
 
-  async getById(id: number): Promise<AcaoProjeto> {
+  async getById(id: string): Promise<AcaoProjeto> {
     try {
       const response = await api.get<AcaoProjeto>(`${API_ENDPOINTS.PROJECTS}/${id}`);
       return response.data;
@@ -39,7 +39,7 @@ export class ProjectService {
     }
   }
 
-  async update(id: number, data: UpdateProject1Dto): Promise<AcaoProjeto> {
+  async update(id: string, data: UpdateProject1Dto): Promise<AcaoProjeto> {
     try {
       const response = await api.put<AcaoProjeto>(`${API_ENDPOINTS.PROJECTS}/${id}`, data);
       return response.data;
@@ -49,7 +49,7 @@ export class ProjectService {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await api.delete(`${API_ENDPOINTS.PROJECTS}/${id}`);
     } catch (error) {
@@ -58,7 +58,7 @@ export class ProjectService {
     }
   }
 
-  async exportPgaPdf(pgaId: number): Promise<void> {
+  async exportPgaPdf(pgaId: string): Promise<void> {
     try {
       const url = `${API_ENDPOINTS.PGA}/${pgaId}/export/pdf`;
       const response = await api.get(url, { responseType: 'blob' });
@@ -75,7 +75,7 @@ export class ProjectService {
     }
   }
 
-  async exportPgaCsv(pgaId: number): Promise<void> {
+  async exportPgaCsv(pgaId: string): Promise<void> {
     try {
       const url = `${API_ENDPOINTS.PGA}/${pgaId}/export/csv`;
       const response = await api.get(url, { responseType: 'blob' });
@@ -92,7 +92,7 @@ export class ProjectService {
     }
   }
 
-  async updatePga(id: number, data: any): Promise<any> {
+  async updatePga(id: string, data: any): Promise<any> {
     try {
       const response = await api.put(`${API_ENDPOINTS.PGA}/${id}`, data);
       return response.data;

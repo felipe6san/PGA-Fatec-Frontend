@@ -62,7 +62,7 @@ function projectDisplayName(proj: AcaoProjeto): string {
 }
 
 export function buildEmployees(projetos: AcaoProjeto[]): EmployeeData[] {
-  const map = new Map<number, { name: string; hours: number; projects: Set<number>; department: string }>();
+  const map = new Map<string, { name: string; hours: number; projects: Set<string>; department: string }>();
 
   for (const proj of projetos) {
     for (const pp of proj.pessoas ?? []) {
@@ -83,7 +83,7 @@ export function buildEmployees(projetos: AcaoProjeto[]): EmployeeData[] {
   }
 
   return Array.from(map.entries()).map(([id, data]) => ({
-    id: String(id),
+    id,
     name: data.name,
     hoursAllocated: data.hours,
     projectsCount: data.projects.size,

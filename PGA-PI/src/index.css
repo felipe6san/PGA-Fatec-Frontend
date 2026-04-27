@@ -8,10 +8,10 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Tema escuro base */
+  /* Tema escuro — fundo e texto base */
   .dark body {
-    background-color: #0f1419;
-    color: #f0f6fc;
+    background-color: #0d1117;
+    color: #e6edf3;
   }
 
   /* Transições suaves para mudança de tema */
@@ -42,58 +42,21 @@
     transition: all 0.2s ease;
   }
 
-  /* Versões do tema escuro para componentes */
+  /* Tema escuro — componentes custom (accessibility.css cobre os utilitários do Tailwind) */
   .dark .card {
-    background-color: #1e2433;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    background-color: #1c2130;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   }
 
   .dark .project-card {
-    background-color: #1e2433;
+    background-color: #1c2130;
     border-color: #30363d;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   }
 
   .dark .project-card:hover {
-    background-color: #252a3a;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  }
-
-  /* CORREÇÕES ESPECÍFICAS PARA OS ELEMENTOS DAS IMAGENS */
-  
-  /* Cards de deadline/próximas datas */
-  .dark .bg-red-50,
-  .dark .bg-red-100 {
-    background-color: rgba(248, 81, 73, 0.15);
-    color: #ffa8a3;
-  }
-
-  .dark .bg-yellow-50,
-  .dark .bg-yellow-100 {
-    background-color: rgba(210, 153, 34, 0.15);
-    color: #f2cc60;
-  }
-
-  .dark .bg-green-50,
-  .dark .bg-green-100 {
-    background-color: rgba(35, 134, 54, 0.15);
-    color: #7ee787;
-  }
-
-  /* Badges de status */
-  .dark .badge {
-    background-color: #252a3a;
-    color: #c9d1d9;
-    border-color: #30363d;
-  }
-
-  /* Progress bars */
-  .dark .progress-bar-bg {
-    background-color: #252a3a;
-  }
-
-  .dark .progress-bar-fill {
-    background-color: #f85149;
+    background-color: #262d3a;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -111,37 +74,5 @@
   .skip-link {
     @apply absolute -top-40 left-6 bg-red-600 text-white px-4 py-2 rounded-lg z-50 focus:top-6;
     transition: top 0.2s ease;
-  }
-
-  /* Sobrescritas específicas para tema escuro */
-  .dark .text-red-500,
-  .dark .text-red-600,
-  .dark .text-red-700,
-  .dark .text-red-800 {
-    color: #ffa8a3;
-  }
-
-  .dark .text-yellow-500,
-  .dark .text-yellow-600,
-  .dark .text-yellow-700,
-  .dark .text-yellow-800 {
-    color: #f2cc60;
-  }
-
-  .dark .text-green-500,
-  .dark .text-green-600,
-  .dark .text-green-700,
-  .dark .text-green-800 {
-    color: #7ee787;
-  }
-
-  /* Backgrounds escuros apenas para elementos essenciais */
-  .dark .bg-white {
-    background-color: #1e2433;
-  }
-
-  .dark .bg-gray-50,
-  .dark .bg-gray-100 {
-    background-color: #1e2433;
   }
 }
