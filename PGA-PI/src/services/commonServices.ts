@@ -1,12 +1,13 @@
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
-import { 
-  EixoTematico, 
-  PrioridadeAcao, 
-  Tema, 
+import {
+  EixoTematico,
+  PrioridadeAcao,
+  Tema,
   User,
   SolicitacaoAcesso,
-  TipoUsuario
+  TipoUsuario,
+  CargoUnidade,
 } from '@/types/api';
 import { TipoVinculoHAE } from "@/features/projects/components/projectFormTypes";
 
@@ -117,6 +118,15 @@ async getByUnidade(unidadeId: string): Promise<User[]> {
       await api.delete(`${API_ENDPOINTS.USERS}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar usuário:', error);
+      throw error;
+    }
+  }
+
+  async updateCargoUnidade(pessoaId: string, unidadeId: string, cargo: CargoUnidade | null): Promise<void> {
+    try {
+      await api.patch(`${API_ENDPOINTS.USERS}/${pessoaId}/cargo-unidade`, { unidade_id: unidadeId, cargo });
+    } catch (error) {
+      console.error('Erro ao atualizar cargo na unidade:', error);
       throw error;
     }
   }

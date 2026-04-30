@@ -11,7 +11,7 @@ import { Plus, Search, AlertCircle, UserPlus, UserRound, InboxIcon, Users, Penci
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { PendingAccessRequestsTab } from "./PendingAccessRequests";
-import { TipoUsuario, User } from "@/types/api";
+import { CargoUnidade, CARGO_UNIDADE_LABELS, TipoUsuario, User } from "@/types/api";
 import { accessRequestService, userService, type CreateUserData, type UpdateUserData } from "@/services/commonServices";
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
@@ -44,10 +44,11 @@ export const PessoasConfig: React.FC = () => {
 
   // Estado para edição
   const [editingPessoa, setEditingPessoa] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState<{ nome: string; tipo_usuario: TipoUsuario; ativo: boolean }>({
+  const [editForm, setEditForm] = useState<{ nome: string; tipo_usuario: TipoUsuario; ativo: boolean; cargo: CargoUnidade | null }>({
     nome: '',
     tipo_usuario: TipoUsuario.DOCENTE,
     ativo: true,
+    cargo: null,
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -442,12 +443,20 @@ export const PessoasConfig: React.FC = () => {
     }
   };
 
+  const getCargoNaUnidade = (pessoa: User): CargoUnidade | null => {
+    const vinculo = pessoa.unidades?.find(
+      (u: any) => u.unidade_id === selectedUnidadeId || String(u.unidade?.unidade_id) === selectedUnidadeId
+    );
+    return (vinculo?.cargo as CargoUnidade) ?? null;
+  };
+
   const handleOpenEdit = (pessoa: User) => {
     setEditingPessoa(pessoa);
     setEditForm({
       nome: pessoa.nome || '',
       tipo_usuario: pessoa.tipo_usuario,
       ativo: pessoa.ativo ?? true,
+      cargo: getCargoNaUnidade(pessoa),
     });
   };
 
@@ -466,10 +475,31 @@ export const PessoasConfig: React.FC = () => {
         tipo_usuario: editForm.tipo_usuario,
         ativo: editForm.ativo,
       };
-      const updated = await userService.update(editingPessoa.pessoa_id, updateData);
+      const updated = await userService.update(String(editingPessoa.pessoa_id), updateData);
+
+      // Atualizar cargo na unidade se houver unidade selecionada
+      const unidadeVinculada = editingPessoa.unidades?.[0];
+      const unidadeIdParaCargo = selectedUnidadeId
+        ?? String(unidadeVinculada?.unidade_id ?? unidadeVinculada?.unidade?.unidade_id ?? '');
+      if (unidadeIdParaCargo) {
+        await userService.updateCargoUnidade(
+          String(editingPessoa.pessoa_id),
+          unidadeIdParaCargo,
+          editForm.cargo,
+        );
+      }
 
       setPessoas(prev =>
-        prev.map(p => p.pessoa_id === editingPessoa.pessoa_id ? { ...p, ...updated } : p)
+        prev.map(p => p.pessoa_id === editingPessoa.pessoa_id
+          ? {
+              ...p, ...updated,
+              unidades: p.unidades?.map(u =>
+                String(u.unidade_id) === unidadeIdParaCargo || String(u.unidade?.unidade_id) === unidadeIdParaCargo
+                  ? { ...u, cargo: editForm.cargo }
+                  : u
+              ),
+            }
+          : p)
       );
       setEditingPessoa(null);
       toast({ title: 'Sucesso', description: 'Dados atualizados com sucesso' });
@@ -921,6 +951,7 @@ export const PessoasConfig: React.FC = () => {
                     {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS || userTipo === TipoUsuario.REGIONAL) && (
                       <TableHead>Unidade</TableHead>
                     )}
+                    <TableHead>Cargo na Unidade</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Status</TableHead>
                     {canManagePessoas && <TableHead className="w-32 text-right">Ações</TableHead>}
@@ -962,6 +993,12 @@ export const PessoasConfig: React.FC = () => {
                             </div>
                           </TableCell>
                         )}
+                        <TableCell className="text-sm text-gray-600">
+                          {(() => {
+                            const cargo = getCargoNaUnidade(pessoa);
+                            return cargo ? CARGO_UNIDADE_LABELS[cargo] : <span className="text-gray-400">—</span>;
+                          })()}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`${getTypeBadgeColor(pessoa.tipo_usuario)} font-semibold`}>
                             {tiposUsuario.find(t => t.value === pessoa.tipo_usuario)?.label || pessoa.tipo_usuario}
@@ -975,7 +1012,7 @@ export const PessoasConfig: React.FC = () => {
                         {canManagePessoas && (
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                              {userTipo === TipoUsuario.ADMINISTRADOR && (
+                              {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.DIRETOR) && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1084,6 +1121,33 @@ export const PessoasConfig: React.FC = () => {
                 {getUnidadeNome(editingPessoa)}
               </div>
             </div>
+
+            {/* Cargo na Unidade */}
+            {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS || userTipo === TipoUsuario.DIRETOR) && (
+              <div>
+                <label htmlFor="edit-cargo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Cargo na Unidade
+                  <span className="ml-2 text-xs text-gray-400 font-normal">(Equipe Gestora do PGA)</span>
+                </label>
+                <Select
+                  value={editForm.cargo ?? '__none__'}
+                  onValueChange={v => setEditForm(prev => ({ ...prev, cargo: v === '__none__' ? null : v as CargoUnidade }))}
+                  disabled={savingEdit}
+                >
+                  <SelectTrigger id="edit-cargo" className="w-full bg-white dark:bg-[#21262d] border-gray-300 dark:border-[#30363d] text-sm">
+                    <SelectValue placeholder="Sem cargo de gestão" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="__none__">Sem cargo de gestão</SelectItem>
+                      {Object.entries(CARGO_UNIDADE_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Status ativo */}
             <div className="flex items-center justify-between py-2 px-4 rounded-lg border border-gray-200 dark:border-[#30363d]">

@@ -22,6 +22,24 @@ export enum StatusVerificacao {
   REQUER_ACAO = "RequerAcao",
 }
 
+export enum CargoUnidade {
+  AssessorIV = 'AssessorIV',
+  ChefeServicoAdministrativo = 'ChefeServicoAdministrativo',
+  ChefeServicoAcademico = 'ChefeServicoAcademico',
+  AssistenteTecnico = 'AssistenteTecnico',
+  PsicologoInstitucional = 'PsicologoInstitucional',
+  AgenteFacilitadorInova = 'AgenteFacilitadorInova',
+}
+
+export const CARGO_UNIDADE_LABELS: Record<CargoUnidade, string> = {
+  [CargoUnidade.AssessorIV]: 'Assessor IV – Vice-Diretor(a)',
+  [CargoUnidade.ChefeServicoAdministrativo]: 'Chefe de Serviço Área Administrativa',
+  [CargoUnidade.ChefeServicoAcademico]: 'Chefe de Serviço Área Acadêmica',
+  [CargoUnidade.AssistenteTecnico]: 'Assistente Técnico – AT',
+  [CargoUnidade.PsicologoInstitucional]: 'Psicólogo Institucional – PNE',
+  [CargoUnidade.AgenteFacilitadorInova]: 'Agente Facilitador Local do INOVA CPS',
+};
+
 export interface User {
   pessoa_id: number;
   nome: string;
@@ -36,6 +54,7 @@ export interface User {
     unidade_id: number;
     data_vinculo: string;
     ativo: boolean;
+    cargo?: CargoUnidade | null;
     unidade: {
       unidade_id: number;
       codigo_fnnn: string;
