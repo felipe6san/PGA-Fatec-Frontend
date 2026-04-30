@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useAccessibility } from "@/hooks/useAccessibility";
-import { Menu, ChevronLeft, ChevronRight, Settings, User, LogOut, Info, Plus, Minus, Contrast, Moon, Sun, Zap, ZapOff, Volume2, VolumeX, Monitor, Type, Palette, Activity } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, Settings, User, LogOut, Info, Plus, Minus, Contrast, Moon, Sun, Zap, ZapOff, Volume2, VolumeX, Monitor, Type, Palette, Activity, HelpCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
   // Estados para controlar a exibição dos modais
   const [isAccessibilityModalOpen, setIsAccessibilityModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   
   // Estados para controlar o gesto de swipe
@@ -296,11 +297,48 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
         isOpen={isAccessibilityModalOpen}
         onClose={() => {
           setIsAccessibilityModalOpen(false);
+          setShowShortcuts(false);
           announceToScreenReader("Configurações de acessibilidade fechadas");
         }}
         title="Acessibilidade"
         className="max-w-[95%] md:max-w-lg mx-auto"
+        sidePanel={
+          <div
+            className={`w-72 bg-white dark:bg-[#1c2130] border border-gray-200 dark:border-[#30363d] rounded-2xl shadow-2xl transition-all duration-300 ${
+              showShortcuts ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#30363d]">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Atalhos de Teclado</span>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                aria-label="Fechar painel de atalhos"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              <AccessibilityHelp />
+            </div>
+          </div>
+        }
       >
+        <div className="relative">
+        {/* Botão ? no canto superior direito do conteúdo */}
+        <button
+          onClick={() => setShowShortcuts(v => !v)}
+          className={`absolute top-0 right-0 flex items-center justify-center w-7 h-7 rounded-full border transition-colors z-10 ${
+            showShortcuts
+              ? 'border-[#ae0f0a] text-[#ae0f0a]'
+              : 'border-gray-300 dark:border-[#30363d] text-gray-400 hover:text-[#ae0f0a] hover:border-[#ae0f0a]'
+          }`}
+          aria-label="Ver atalhos de teclado"
+          aria-pressed={showShortcuts}
+          title="Atalhos de teclado"
+        >
+          <HelpCircle className="h-4 w-4" />
+        </button>
         <div className="space-y-5">
 
           {/* ── Tamanho da Fonte ───────────────────────────────── */}
@@ -495,6 +533,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
               Salvar e Fechar
             </Button>
           </div>
+        </div>
         </div>
       </Modal>
 
