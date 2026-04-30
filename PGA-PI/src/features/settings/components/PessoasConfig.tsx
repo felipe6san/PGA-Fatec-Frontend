@@ -443,11 +443,21 @@ export const PessoasConfig: React.FC = () => {
     }
   };
 
+  const resolveVinculoUnidade = (pessoa: User) => {
+    const targetId = selectedUnidadeId ?? filterUnidadeId;
+    const vinculos = pessoa.unidades ?? [];
+    if (targetId) {
+      const match = vinculos.find(
+        u => String(u.unidade_id) === String(targetId) || String(u.unidade?.unidade_id) === String(targetId)
+      );
+      if (match) return match;
+    }
+    return vinculos[0];
+  };
+
   const getCargoNaUnidade = (pessoa: User): CargoUnidade | null => {
-    const vinculo = pessoa.unidades?.find(
-      (u: any) => u.unidade_id === selectedUnidadeId || String(u.unidade?.unidade_id) === selectedUnidadeId
-    );
-    return (vinculo?.cargo as CargoUnidade) ?? null;
+    const vinculo = resolveVinculoUnidade(pessoa);
+    return (vinculo?.cargo as CargoUnidade | undefined) ?? null;
   };
 
   const handleOpenEdit = (pessoa: User) => {
@@ -477,11 +487,14 @@ export const PessoasConfig: React.FC = () => {
       };
       const updated = await userService.update(String(editingPessoa.pessoa_id), updateData);
 
-      // Atualizar cargo na unidade se houver unidade selecionada
-      const unidadeVinculada = editingPessoa.unidades?.[0];
-      const unidadeIdParaCargo = selectedUnidadeId
-        ?? String(unidadeVinculada?.unidade_id ?? unidadeVinculada?.unidade?.unidade_id ?? '');
-      if (unidadeIdParaCargo) {
+      // Atualizar cargo apenas se mudou e se houver vínculo de unidade
+      const vinculo = resolveVinculoUnidade(editingPessoa);
+      const cargoOriginal = (vinculo?.cargo as CargoUnidade | undefined) ?? null;
+      const unidadeIdParaCargo = vinculo
+        ? String(vinculo.unidade_id ?? vinculo.unidade?.unidade_id ?? '')
+        : '';
+      const cargoMudou = editForm.cargo !== cargoOriginal;
+      if (unidadeIdParaCargo && cargoMudou) {
         await userService.updateCargoUnidade(
           String(editingPessoa.pessoa_id),
           unidadeIdParaCargo,
@@ -493,11 +506,13 @@ export const PessoasConfig: React.FC = () => {
         prev.map(p => p.pessoa_id === editingPessoa.pessoa_id
           ? {
               ...p, ...updated,
-              unidades: p.unidades?.map(u =>
-                String(u.unidade_id) === unidadeIdParaCargo || String(u.unidade?.unidade_id) === unidadeIdParaCargo
-                  ? { ...u, cargo: editForm.cargo }
-                  : u
-              ),
+              unidades: cargoMudou
+                ? p.unidades?.map(u =>
+                    String(u.unidade_id) === unidadeIdParaCargo || String(u.unidade?.unidade_id) === unidadeIdParaCargo
+                      ? { ...u, cargo: editForm.cargo }
+                      : u
+                  )
+                : p.unidades,
             }
           : p)
       );
@@ -1123,7 +1138,7 @@ export const PessoasConfig: React.FC = () => {
             </div>
 
             {/* Cargo na Unidade */}
-            {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS || userTipo === TipoUsuario.DIRETOR) && (
+            {(userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.DIRETOR) && (
               <div>
                 <label htmlFor="edit-cargo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Cargo na Unidade

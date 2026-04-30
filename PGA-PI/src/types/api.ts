@@ -23,12 +23,12 @@ export enum StatusVerificacao {
 }
 
 export enum CargoUnidade {
-  AssessorIV = 'AssessorIV',
-  ChefeServicoAdministrativo = 'ChefeServicoAdministrativo',
-  ChefeServicoAcademico = 'ChefeServicoAcademico',
-  AssistenteTecnico = 'AssistenteTecnico',
-  PsicologoInstitucional = 'PsicologoInstitucional',
-  AgenteFacilitadorInova = 'AgenteFacilitadorInova',
+  AssessorIV = "AssessorIV",
+  ChefeServicoAdministrativo = "ChefeServicoAdministrativo",
+  ChefeServicoAcademico = "ChefeServicoAcademico",
+  AssistenteTecnico = "AssistenteTecnico",
+  PsicologoInstitucional = "PsicologoInstitucional",
+  AgenteFacilitadorInova = "AgenteFacilitadorInova",
 }
 
 export const CARGO_UNIDADE_LABELS: Record<CargoUnidade, string> = {
