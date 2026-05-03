@@ -131,7 +131,7 @@ export const Settings = (): JSX.Element => {
                 </TabsContent>
 
                 <TabsContent value="unidades" isActive={activeTab === "unidades"}>
-                  <UnidadesConfig />
+                  {isAdminRole && <UnidadesConfig />}
                 </TabsContent>
                 
                 <TabsContent value="eixos" isActive={activeTab === "eixos"}>
