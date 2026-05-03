@@ -10,6 +10,7 @@ import { PrioridadesConfig } from "../components/PrioridadesConfig";
 import { EntregaveisConfig } from "../components/EntregaveisConfig";
 import { SituacoesConfig } from "../components/SituacoesConfig";
 import { CargaHorariaConfig } from "../components/CargaHorariaConfig";
+import { UnidadesConfig } from "../components/UnidadesConfig";
 import { PgaTabSelector } from "../components/PgaTabSelector";
 import { Cog, Settings as SettingsIcon, Calendar, History } from "lucide-react";
 import { AuditHistoryConfig } from '../components/AuditHistoryConfig';
@@ -127,6 +128,10 @@ export const Settings = (): JSX.Element => {
               <div className="space-y-0">
                 <TabsContent value="pessoas" isActive={activeTab === "pessoas"}>
                   <PessoasConfig />
+                </TabsContent>
+
+                <TabsContent value="unidades" isActive={activeTab === "unidades"}>
+                  <UnidadesConfig />
                 </TabsContent>
                 
                 <TabsContent value="eixos" isActive={activeTab === "eixos"}>

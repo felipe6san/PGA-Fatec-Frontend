@@ -129,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
     
-    if (isRightSwipe && isMobile && !isExpanded) {
+    if (isRightSwipe && isMobile && !isExpanded && (touchStart ?? 0) <= 30) {
       toggleSidebar();
       playSound('click');
     }
@@ -196,7 +196,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
       </a>
 
       <header 
-        className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-all duration-300 ${showHeader ? 'transform-none' : '-translate-y-full'} ${!isMobile && isExpanded ? 'ml-60' : 'ml-20'}`}
+        className={`sticky top-0 bg-white border-b border-gray-200 h-16 z-40 transition-all duration-300 ${showHeader ? 'transform-none' : '-translate-y-full'} ${isMobile ? 'ml-0' : isExpanded ? 'ml-60' : 'ml-20'}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
