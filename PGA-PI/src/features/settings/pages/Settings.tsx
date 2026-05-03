@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent } from "../../../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Toaster } from "../../../components/ui/toaster";
@@ -16,14 +17,23 @@ import { Cog, Settings as SettingsIcon, Calendar, History } from "lucide-react";
 import { AuditHistoryConfig } from '../components/AuditHistoryConfig';
 import { PGAHistoryViewer } from '../../dashboard/components/PGAHistoryViewer';
 import { useAuth } from "@/context/AuthContext";
+import { BASE_ROUTE } from "@/lib/config";
 
 const ADMIN_ONLY_TABS = ["eixos", "temas", "prioridades", "entregaveis", "situacoes", "cargahoraria"];
 const ADMIN_ROLES = ["Administrador", "CPS"];
 
 export const Settings = (): JSX.Element => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const tipoUsuario = user?.tipo_usuario ?? "";
   const isAdminRole = ADMIN_ROLES.includes(tipoUsuario);
+
+  // Redireciona Docente e Administrativo — sem acesso a Configurações
+  useEffect(() => {
+    if (user && (tipoUsuario === 'Docente' || tipoUsuario === 'Administrativo')) {
+      navigate(`${BASE_ROUTE}dashboard`, { replace: true });
+    }
+  }, [user, tipoUsuario, navigate]);
 
   const [activeTab, setActiveTab] = useState("pessoas");
   const [viewingHistory, setViewingHistory] = useState(false);
