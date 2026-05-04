@@ -89,7 +89,8 @@ Controle rigoroso de acesso onde cada rota é protegida por roles (papéis), gar
 </details>
 
 <details>
-   <summary>Clique aqui para visualizar os Requisitos Funcionais</summary>
+   <summary>Clique aqui para visualizar os Requisitos Não Funcionais</summary>
+  
 ## 🔧 Requisitos Não Funcionais
  
 ### RNF001 - Segurança: 
@@ -104,7 +105,7 @@ API seguindo os padrões RESTful, garantindo que os endpoints sejam intuitivos, 
 ### RNF004 - Portabilidade:
 Aplicação totalmente containerizada com Docker e Docker Compose, facilitando o deploy em diferentes ambientes (Dev, Teste, Produção).  
  
-### RNF005 - Manutenibilidade:
+### RNF005 - Manutenção:
 Arquitetura modular baseada em NestJS, utilizando padrões de projeto como Repository e Service, além de tipagem estática para evitar erros em tempo de execução.  
  
 ### RNF006 - Desenvolvimento:
