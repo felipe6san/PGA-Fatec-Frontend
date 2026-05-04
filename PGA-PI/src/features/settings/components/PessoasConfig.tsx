@@ -601,8 +601,12 @@ export const PessoasConfig: React.FC = () => {
   const getTiposUsuarioPermitidos = () => {
     const userTipo = (user as any)?.tipo_usuario || (user as any)?.tipoUsuario;
     
-    if (userTipo === TipoUsuario.ADMINISTRADOR || userTipo === TipoUsuario.CPS) {
+    if (userTipo === TipoUsuario.ADMINISTRADOR) {
       return tiposUsuario;
+    } else if (userTipo === TipoUsuario.CPS) {
+      return tiposUsuario.filter(tipo =>
+        ![TipoUsuario.ADMINISTRADOR, TipoUsuario.CPS].includes(tipo.value as TipoUsuario)
+      );
     } else if (userTipo === TipoUsuario.REGIONAL) {
       return tiposUsuario.filter(tipo => 
         [TipoUsuario.DIRETOR, TipoUsuario.COORDENADOR, TipoUsuario.ADMINISTRATIVO, TipoUsuario.DOCENTE].includes(tipo.value as TipoUsuario)

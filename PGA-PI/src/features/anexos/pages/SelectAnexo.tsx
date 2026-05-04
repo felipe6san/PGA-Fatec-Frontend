@@ -21,6 +21,12 @@ export const SelectAnexo = () => {
 
   const [activeTab, setActiveTab] = useState<"projects" | "anexos">(canCreateProject ? "projects" : "anexos");
 
+  useEffect(() => {
+    if (user && !canCreateProject) {
+      navigate(`${BASE_ROUTE}projects/list`, { replace: true });
+    }
+  }, [user, canCreateProject, navigate]);
+
   const [eixosTematicos, setEixosTematicos] = useState<EixoTematico[]>([]);
   const [loadingEixos, setLoadingEixos] = useState(false);
   const [errorEixos, setErrorEixos] = useState<string | null>(null);
