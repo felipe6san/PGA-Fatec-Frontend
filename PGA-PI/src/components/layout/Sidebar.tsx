@@ -142,7 +142,7 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
             {isExpanded && (
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-700">PGA {new Date().getFullYear()}</h3>
+                  <h3 className="text-lg font-semibold text-gray-700">PGA</h3>
                   <p className="text-sm text-gray-500">Bem-vindo, {user?.nome}</p>
                 </div>
               </div>

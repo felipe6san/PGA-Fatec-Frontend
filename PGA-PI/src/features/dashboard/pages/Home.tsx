@@ -143,7 +143,7 @@ export const Home = (): JSX.Element => {
   return (
     <div className="space-y-6">
       <h1 className="font-extrabold text-black text-2xl md:text-[32px] text-center">
-        Dashboard PGA {anoAtual}
+        Dashboard PGA
       </h1>
 
       {/* Card da Instituição */}

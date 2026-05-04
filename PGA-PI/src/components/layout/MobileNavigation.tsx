@@ -122,7 +122,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
         {/* Footer do menu */}
         <div className="p-6 border-t border-gray-200">
           <div className="text-center">
-            <p className="text-sm text-gray-500">PGA {new Date().getFullYear()}</p>
+            <p className="text-sm text-gray-500">PGA</p>
             <p className="text-xs text-gray-400">Fatec Votorantim</p>
           </div>
         </div>

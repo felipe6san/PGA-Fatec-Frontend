@@ -80,7 +80,7 @@ export const ResetPassword = () => {
           />
 
           <h1 className="font-['Source_Sans_3',Helvetica] font-extrabold text-white text-3xl md:text-4xl text-center mb-8 drop-shadow-lg">
-            Plano de Gestão Anual - PGA {new Date().getFullYear()}
+            Plano de Gestão Anual - PGA
           </h1>
 
           <Card className="w-full bg-white/95 shadow-[0px_0px_25px_#00000055] rounded-[21px] backdrop-blur-sm">
