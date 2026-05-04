@@ -688,7 +688,6 @@ export const PessoasConfig: React.FC = () => {
     TipoUsuario.ADMINISTRADOR, 
     TipoUsuario.CPS, 
     TipoUsuario.DIRETOR, 
-    TipoUsuario.COORDENADOR,
   ].includes(userTipo);
 
   const canViewAccessRequests = userTipo && [
@@ -753,7 +752,7 @@ export const PessoasConfig: React.FC = () => {
       </div>
 
       {/* Card que alterna entre Adicionar Pessoas e Solicitações de Acesso */}
-      {userTipo !== TipoUsuario.REGIONAL && <Card className="border border-gray-200 shadow-sm">
+      {canManagePessoas && userTipo !== TipoUsuario.REGIONAL && <Card className="border border-gray-200 shadow-sm">
         <div className="p-4 sm:p-5">
           {!showAccessRequests ? (
             <>
