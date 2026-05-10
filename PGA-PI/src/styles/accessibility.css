@@ -302,22 +302,22 @@
 }
 
 /* Focus visível para navegação por teclado */
-.accessibility-focus:focus,
-button:focus,
-input:focus,
-select:focus,
-textarea:focus,
-a:focus {
+.accessibility-focus:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
   outline: 3px solid #ae0f0a !important;
   outline-offset: 2px !important;
 }
 
-.dark .accessibility-focus:focus,
-.dark button:focus,
-.dark input:focus,
-.dark select:focus,
-.dark textarea:focus,
-.dark a:focus {
+.dark .accessibility-focus:focus-visible,
+.dark button:focus-visible,
+.dark input:focus-visible,
+.dark select:focus-visible,
+.dark textarea:focus-visible,
+.dark a:focus-visible {
   outline: 3px solid var(--dark-accent-hover) !important;
   outline-offset: 2px !important;
 }

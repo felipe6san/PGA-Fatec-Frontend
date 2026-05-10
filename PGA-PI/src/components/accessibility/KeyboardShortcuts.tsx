@@ -127,18 +127,17 @@ export const KeyboardShortcuts = ({ onToggleAccessibilityMenu }: KeyboardShortcu
 // Componente para mostrar lista de atalhos
 export const AccessibilityHelp = () => {
   return (
-    <div className="accessibility-help bg-gray-50 p-4 rounded-lg text-sm text-gray-700">
-      <h4 className="font-semibold mb-2">Atalhos de Teclado</h4>
-      <ul className="space-y-1">
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + A</kbd> - Abrir menu de acessibilidade</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + +</kbd> - Aumentar fonte</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + -</kbd> - Diminuir fonte</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + 0</kbd> - Restaurar fonte padrão</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + C</kbd> - Alternar alto contraste</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + D</kbd> - Alternar tema claro/escuro</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Alt + M</kbd> - Alternar redução de movimento</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Tab</kbd> - Navegar pelos elementos</li>
-        <li><kbd className="bg-gray-200 px-2 py-1 rounded">Esc</kbd> - Fechar menus/modais</li>
+    <div className="accessibility-help text-sm text-gray-700 dark:text-gray-300">
+      <ul className="space-y-2">
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + A</kbd><span>Abrir acessibilidade</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + +</kbd><span>Aumentar fonte</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + -</kbd><span>Diminuir fonte</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + 0</kbd><span>Restaurar fonte</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + C</kbd><span>Alto contraste</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + D</kbd><span>Tema claro/escuro</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Alt + M</kbd><span>Reduzir animações</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Tab</kbd><span>Navegar elementos</span></li>
+        <li className="flex items-center gap-3"><kbd className="bg-gray-100 dark:bg-[#21262d] border border-gray-300 dark:border-[#30363d] px-2 py-0.5 rounded text-xs font-mono min-w-[80px] text-center">Esc</kbd><span>Fechar modal</span></li>
       </ul>
     </div>
   );
