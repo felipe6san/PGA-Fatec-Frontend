@@ -10,12 +10,15 @@ import { Modal } from "@/components/ui/modal";
 import api from "@/lib/api";
 import { BASE_ROUTE } from "@/lib";
 import { Select, SelectContent, SelectItem, SelectGroup, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { authService } from "@/features/auth/services/authService";
+import { useToast } from '@/components/ui/use-toast';
 
 type ErrorType = "credentials" | "server" | "connection" | "validation" | null;
 
 export const Login = (): JSX.Element => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, refreshUser } = useAuth();
+  const { toast } = useToast();
   const [credentials, setCredentials] = useState({
     email: "",
     senha: "",
@@ -72,14 +75,41 @@ export const Login = (): JSX.Element => {
     setIsLoading(true);
 
     try {
-      console.log('Tentando fazer login...'); // Debug
       const success = await login(credentials.email, credentials.senha);
-      console.log('Login success:', success); // Debug
-
       if (success) {
-        console.log('Redirecionando para dashboard...'); // Debug
-        // Usar window.location para garantir o redirecionamento
-        window.location.href = `${BASE_ROUTE}dashboard`;
+        try {
+          const contexts = await authService.getContexts();
+          const numRegionais = contexts.regionais?.length || 0;
+          const numUnidades = contexts.unidades?.length || 0;
+
+          if (numRegionais + numUnidades > 1) {
+            setContextOptions(contexts);
+            setIsContextModalOpen(true);
+            return;
+          }
+
+          if (numRegionais + numUnidades === 1) {
+            if (numUnidades === 1) {
+              const unidade = contexts.unidades![0];
+              await authService.selectContext({ tipo: 'unidade', id: unidade.unidade_id });
+            } else if (numRegionais === 1) {
+              const regional = contexts.regionais![0];
+              await authService.selectContext({ tipo: 'regional', id: regional.pessoa_id });
+            }
+
+            try {
+              toast({ title: 'Contexto ativado', description: 'Contexto selecionado automaticamente.', variant: 'success' });
+            } catch (e) {}
+          }
+
+          // Recarrega o user do backend após contexto definido
+          await refreshUser();
+          navigate('/dashboard');
+        } catch (err) {
+          console.error('Erro obtendo/selecionando contexts:', err);
+          try { toast({ title: 'Erro', description: 'Não foi possível obter os contextos. Faça login novamente ou contate o suporte.', variant: 'destructive' }); } catch (e) {}
+          navigate('/dashboard');
+        }
       } else {
         setErrorType("credentials");
         setErrorMessage(
@@ -87,7 +117,6 @@ export const Login = (): JSX.Element => {
         );
       }
     } catch (err: any) {
-      console.error('Erro no login:', err); // Debug
       if (err.response) {
         if (err.response.status === 401 || err.response.status === 403) {
           setErrorType("credentials");
@@ -119,6 +148,60 @@ export const Login = (): JSX.Element => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const [isContextModalOpen, setIsContextModalOpen] = useState(false);
+  const [contextOptions, setContextOptions] = useState<{
+    regionais?: Array<{ pessoa_id: string; nome: string }>;
+    unidades?: Array<{ unidade_id: string; nome_unidade: string }>;
+  } | null>(null);
+  const [selectedContext, setSelectedContext] = useState<{ tipo: string; id?: string | null }>({ tipo: '', id: null });
+
+  const [isSelectingContext, setIsSelectingContext] = useState(false);
+
+  const handleConfirmContext = async () => {
+    if (!selectedContext || !selectedContext.tipo) {
+      setErrorType('validation');
+      setErrorMessage('Selecione um contexto antes de confirmar.');
+      return;
+    }
+
+    if (selectedContext.tipo !== 'global' && !selectedContext.id) {
+      setErrorType('validation');
+      setErrorMessage('Selecione uma regional ou unidade válida.');
+      return;
+    }
+
+    setIsSelectingContext(true);
+    try {
+      if (selectedContext.tipo === 'global') {
+        await authService.selectContext({ tipo: 'global' });
+      } else {
+        await authService.selectContext({ tipo: selectedContext.tipo as 'unidade' | 'regional', id: selectedContext.id });
+      }
+
+      try {
+        await refreshUser();
+      } catch (err) {
+        console.warn('refreshUser falhou:', err);
+      }
+
+      try {
+        toast({ title: 'Contexto ativado', description: 'O contexto foi ativado para sua sessão.', variant: 'success' });
+      } catch (e) {}
+
+      setIsContextModalOpen(false);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Erro ao selecionar contexto:', err);
+      setErrorType('server');
+      setErrorMessage('Erro ao selecionar contexto. Tente novamente.');
+      try {
+        toast({ title: 'Erro', description: 'Não foi possível ativar o contexto.', variant: 'destructive' });
+      } catch (e) {}
+    } finally {
+      setIsSelectingContext(false);
     }
   };
 
@@ -164,12 +247,11 @@ export const Login = (): JSX.Element => {
     setIsModalOpen(true);
   };
 
-  // Estados para o modal de solicitação de acesso
   const [isRequestAccessModalOpen, setIsRequestAccessModalOpen] = useState(false);
   const [accessRequestData, setAccessRequestData] = useState({
     nome: '',
     email: '',
-    codigo_unidade: '', // Mudou de unidade_id para codigo_unidade
+    codigo_unidade: '',
   });
   const [isLoadingRequest, setIsLoadingRequest] = useState(false);
   const [requestStatus, setRequestStatus] = useState<{
@@ -198,7 +280,6 @@ export const Login = (): JSX.Element => {
     
     setIsLoadingRequest(true);
     try {
-      // Enviar solicitação para o backend
       await api.post('/users/request-access', accessRequestData);
       
       setRequestStatus({
@@ -218,7 +299,6 @@ export const Login = (): JSX.Element => {
 
   const handleRequestAccess = () => {
     setIsRequestAccessModalOpen(true);
-    // Resetar estados
     setAccessRequestData({ nome: '', email: '', codigo_unidade: '' });
     setRequestStatus({ type: null, message: '' });
   };
@@ -443,6 +523,54 @@ export const Login = (): JSX.Element => {
         </form>
       </Modal>
 
+      {/* Modal de Seleção de Contexto (após login) */}
+      <Modal
+        isOpen={isContextModalOpen}
+        onClose={() => setIsContextModalOpen(false)}
+        title="Selecionar contexto"
+        className="max-w-md mx-auto"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Escolha o contexto que deseja ativar para esta sessão.</p>
+
+          <div>
+            <div className="text-sm font-medium pb-1.5">Contexto</div>
+            <Select
+              value={selectedContext.tipo ? (selectedContext.tipo === 'global' ? 'global' : `${selectedContext.tipo}:${selectedContext.id}`) : undefined}
+              onValueChange={(val) => {
+              if (val === 'global') {
+                setSelectedContext({ tipo: 'global', id: null });
+              } else {
+                const [tipo, idStr] = val.split(':');
+                setSelectedContext({ tipo, id: idStr });
+              }
+            }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione um contexto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="global">Global</SelectItem>
+                  {contextOptions?.regionais?.map((r) => (
+                    <SelectItem key={`r-${r.pessoa_id}`} value={`regional:${r.pessoa_id}`}>{`Regional - ${r.nome}`}</SelectItem>
+                  ))}
+                  {contextOptions?.unidades?.map((u) => (
+                    <SelectItem key={`u-${u.unidade_id}`} value={`unidade:${u.unidade_id}`}>{`Unidade - ${u.nome_unidade}`}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-2">
+            <Button variant="secondary" onClick={() => setIsContextModalOpen(false)} disabled={isSelectingContext}>Cancelar</Button>
+            <Button onClick={handleConfirmContext} disabled={isSelectingContext || !selectedContext || (selectedContext.tipo !== 'global' && !selectedContext.id)}>
+              {isSelectingContext ? 'Selecionando...' : 'Confirmar'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Modal de Solicitação de Acesso */}
       <Modal
         isOpen={isRequestAccessModalOpen}
@@ -452,7 +580,6 @@ export const Login = (): JSX.Element => {
       >
         <div className="space-y-4">
           {requestStatus.type ? (
-            // Feedback de sucesso ou erro
             <div className={`flex flex-col items-center text-center space-y-4 py-4 ${
               requestStatus.type === "success" ? "text-green-600" : "text-red-600"
             }`}>
@@ -476,7 +603,6 @@ export const Login = (): JSX.Element => {
               </Button>
             </div>
           ) : (
-            // Formulário de solicitação
             <form onSubmit={handleSubmitAccessRequest} className="space-y-4">
               <div>
                 <div className="text-sm font-medium pb-1.5">Nome Completo</div>

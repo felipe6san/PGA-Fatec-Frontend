@@ -75,7 +75,7 @@ export interface EixoTematico {
 }
 
 export interface PrioridadeAcao {
-  prioridade_id: number;
+  prioridade_id: string;
   grau: number;
   descricao: string;
   tipo_gestao: string;

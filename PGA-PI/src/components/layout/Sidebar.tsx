@@ -7,7 +7,8 @@ import {
   PlusCircle, 
   Settings, 
   LogOut,
-  FileText
+  FileText,
+  LayoutList,
 } from "lucide-react";
 import { Tooltip } from "../ui/tooltip";
 import { BASE_ROUTE } from "@lib/config";
@@ -22,22 +23,43 @@ export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps): JSX.Elemen
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const isAdminOrCps =
+    user?.tipo_usuario === 'Administrador' || user?.tipo_usuario === 'CPS';
+  const isDiretor = user?.tipo_usuario === 'Diretor';
+  const isRegional = user?.tipo_usuario === 'Regional';
+
   const navItems = [
     {
       label: "Visão Geral",
       path: `${BASE_ROUTE}dashboard`,
       icon: Home,
     },
+    // PGAs — visível para Admin/CPS, Diretor e Regional
+    ...(isAdminOrCps || isDiretor || isRegional
+      ? [
+          {
+            label: "PGAs",
+            path: `${BASE_ROUTE}pgas`,
+            icon: LayoutList,
+          },
+        ]
+      : []),
+    // Projetos — visível para todos (Regional só visualiza, sem criar)
     {
       label: "Projetos",
       path: `${BASE_ROUTE}projects/list`,
       icon: ClipboardList,
     },
-    {
-      label: "Criar Formulário",
-      path: `${BASE_ROUTE}projects`,
-      icon: PlusCircle,
-    },
+    // Criar Formulário — oculto para Regional
+    ...(!isRegional
+      ? [
+          {
+            label: "Criar Formulário",
+            path: `${BASE_ROUTE}projects`,
+            icon: PlusCircle,
+          },
+        ]
+      : []),
     {
       label: "Configurações",
       path: `${BASE_ROUTE}settings`,

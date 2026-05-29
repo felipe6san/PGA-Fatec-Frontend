@@ -96,7 +96,15 @@ export const useAccessibility = () => {
     const checkThemeChange = () => {
       const currentTheme = getTheme();
       if (currentTheme !== settings.theme) {
-        setSettings(prev => ({ ...prev, theme: currentTheme }));
+        // Re-ler todos os settings do localStorage para não sobrescrever
+        // valores definidos por outra instância do hook (ex: KeyboardShortcuts)
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          const savedSettings = saved ? JSON.parse(saved) : {};
+          setSettings(prev => ({ ...prev, ...savedSettings, theme: currentTheme }));
+        } catch {
+          setSettings(prev => ({ ...prev, theme: currentTheme }));
+        }
       }
     };
 

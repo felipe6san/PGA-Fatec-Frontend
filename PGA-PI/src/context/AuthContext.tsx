@@ -7,6 +7,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,44 +21,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há dados de usuário salvos
-    const checkStoredAuth = () => {
-      try {
-        if (authService.isAuthenticated()) {
-          const userData = authService.getCurrentUser();
-          console.log('Usuário carregado do localStorage:', userData);
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-        // Limpar dados corrompidos
-        authService.logout();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkStoredAuth();
+    // Ao montar, valida o cookie via /auth/me
+    authService.getMe()
+      .then((userData) => setUser(userData))
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      // O authService.login retorna UserData diretamente
-      const userData = await authService.login({ email, senha: password });
-      console.log('Login realizado com:', userData);
-      
-      // O authService já salva no localStorage, então só precisamos atualizar o state
-      setUser(userData);
-      return true;
-    } catch (error) {
-      console.error('Erro no login:', error);
-      throw error;
-    }
+    const userData = await authService.login({ email, senha: password });
+    setUser(userData);
+    return true;
   };
 
   const logout = () => {
     authService.logout();
     setUser(null);
+  };
+
+  const refreshUser = async () => {
+    try {
+      const current = await authService.getMe();
+      setUser(current);
+    } catch (err) {
+      console.error('Erro ao atualizar usuário:', err);
+    }
   };
 
   const value: AuthContextType = {
@@ -66,6 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     login,
     logout,
+    refreshUser,
   };
 
   return (
@@ -83,5 +72,4 @@ export const useAuth = () => {
   return context;
 };
 
-// Re-exportar o tipo UserData do authService
 export type { UserData } from '@/features/auth/services/authService';

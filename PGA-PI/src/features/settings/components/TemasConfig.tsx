@@ -24,29 +24,26 @@ export const TemasConfig = () => {
   const [loadingRemove, setLoadingRemove] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  
-  // Estados do modal de confirmação
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [temaToDelete, setTemaToDelete] = useState<Tema | null>(null);
   
   const [novoTema, setNovoTema] = useState<{ 
     tema_num: number; 
-    eixo_id: number; 
+    eixo_id: string; 
     descricao: string; 
   }>({ 
     tema_num: 0, 
-    eixo_id: 0, 
+    eixo_id: "", 
     descricao: "" 
   });
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Carrega dados iniciais
   useEffect(() => {
     loadInitialData();
   }, []);
 
-  // Atualiza eixos quando a janela ganha foco
   useEffect(() => {
     const handleFocus = () => {
       refreshEixosTematicos();
@@ -72,17 +69,16 @@ export const TemasConfig = () => {
       console.error('Erro ao carregar dados:', err);
       setError('Erro ao carregar dados. Tente novamente mais tarde.');
       
-      // Fallback para dados mock em caso de erro
       setEixosTematicos([
-        { eixo_id: 1, numero: 1, nome: "Didático-pedagógico" },
-        { eixo_id: 2, numero: 2, nome: "Laboratórios - Ensino e Equipamentos Associados" },
-        { eixo_id: 3, numero: 3, nome: "Pesquisa / Extensão e Equipamentos Associados" },
-        { eixo_id: 4, numero: 4, nome: "Atividades Formativas em Projetos (nível tático)" },
-        { eixo_id: 5, numero: 5, nome: "Infraestrutura (instalações prediais)" },
-        { eixo_id: 6, numero: 6, nome: "Desenvolvimento de pessoas (docentes e servidores)" },
-        { eixo_id: 7, numero: 7, nome: "Convênios e Parcerias Institucionais" },
-        { eixo_id: 8, numero: 8, nome: "Implantação de UE / Cursos" },
-        { eixo_id: 9, numero: 9, nome: "Gestão da Rotina Educacional" },
+        { eixo_id: 1, numero: 1, nome_eixo: "Didático-pedagógico" },
+        { eixo_id: 2, numero: 2, nome_eixo: "Laboratórios - Ensino e Equipamentos Associados" },
+        { eixo_id: 3, numero: 3, nome_eixo: "Pesquisa / Extensão e Equipamentos Associados" },
+        { eixo_id: 4, numero: 4, nome_eixo: "Atividades Formativas em Projetos (nível tático)" },
+        { eixo_id: 5, numero: 5, nome_eixo: "Infraestrutura (instalações prediais)" },
+        { eixo_id: 6, numero: 6, nome_eixo: "Desenvolvimento de pessoas (docentes e servidores)" },
+        { eixo_id: 7, numero: 7, nome_eixo: "Convênios e Parcerias Institucionais" },
+        { eixo_id: 8, numero: 8, nome_eixo: "Implantação de UE / Cursos" },
+        { eixo_id: 9, numero: 9, nome_eixo: "Gestão da Rotina Educacional" },
       ]);
       
       setTemas([
@@ -101,7 +97,6 @@ export const TemasConfig = () => {
     }
   };
 
-  // Nova função para atualizar apenas os eixos temáticos
   const refreshEixosTematicos = async () => {
     try {
       setLoadingEixos(true);
@@ -109,7 +104,6 @@ export const TemasConfig = () => {
       setEixosTematicos(eixosData);
     } catch (err) {
       console.error('Erro ao atualizar eixos temáticos:', err);
-      // Silencioso - não mostra erro pois é uma atualização em background
     } finally {
       setLoadingEixos(false);
     }
@@ -125,7 +119,6 @@ export const TemasConfig = () => {
       return;
     }
 
-    // Verifica se já existe um tema com o mesmo número e eixo temático
     if (temas.some(t => t.tema_num === novoTema.tema_num && t.eixo_id === novoTema.eixo_id)) {
       toast({
         variant: "destructive",
@@ -145,7 +138,7 @@ export const TemasConfig = () => {
       });
       
       setTemas([...temas, novoTemaCreated]);
-      setNovoTema({ tema_num: 0, eixo_id: 0, descricao: "" });
+      setNovoTema({ tema_num: 0, eixo_id: "", descricao: "" });
       
       toast({
         variant: "success",
@@ -165,19 +158,16 @@ export const TemasConfig = () => {
     }
   };
 
-  // Função para abrir o modal de confirmação
   const handleShowDeleteModal = (tema: Tema) => {
     setTemaToDelete(tema);
     setShowDeleteModal(true);
   };
 
-  // Função para fechar o modal
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
     setTemaToDelete(null);
   };
 
-  // Função para confirmar a remoção
   const handleConfirmDelete = async () => {
     if (!temaToDelete) return;
     
@@ -206,32 +196,27 @@ export const TemasConfig = () => {
     }
   };
 
-  // Função para obter o número do eixo temático
-  const getEixoNumero = (eixo_id: number): number => {
+  const getEixoNumero = (eixo_id: string): number => {
     const eixo = eixosTematicos.find(e => e.eixo_id === eixo_id);
     return eixo ? eixo.numero : 0;
   };
 
-  // Função para obter o nome do eixo temático
-  const getEixoNome = (eixo_id: number): string => {
+  const getEixoNome = (eixo_id: string): string => {
     const eixo = eixosTematicos.find(e => e.eixo_id === eixo_id);
-    return eixo ? eixo.nome : "Eixo não encontrado";
+    return eixo ? eixo.nome_eixo : "Eixo não encontrado";
   };
 
-  // Função para formatar o código do tema no formato "cat X.YY"
-  const formatarCodigoTema = (eixo_id: number, tema_num: number): string => {
+  const formatarCodigoTema = (eixo_id: string, tema_num: number): string => {
     const eixoNumero = getEixoNumero(eixo_id);
     return `cat ${eixoNumero}.${tema_num.toString().padStart(2, '0')}`;
   };
 
-  // Filtragem de temas com base no termo de busca
   const filteredTemas = temas.filter(tema => 
     formatarCodigoTema(tema.eixo_id, tema.tema_num).toLowerCase().includes(searchTerm.toLowerCase()) ||
     getEixoNome(tema.eixo_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
     tema.descricao.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -289,8 +274,8 @@ export const TemasConfig = () => {
               </Button>
             </div>
             <Select
-              value={novoTema.eixo_id ? novoTema.eixo_id.toString() : ""}
-              onValueChange={(value) => setNovoTema({ ...novoTema, eixo_id: parseInt(value) })}
+              value={novoTema.eixo_id || ""}
+              onValueChange={(value) => setNovoTema({ ...novoTema, eixo_id: value })}
               disabled={loadingAdd || eixosTematicos.length === 0 || loadingEixos}
             >
               <SelectTrigger className="w-full bg-white border-gray-300 text-gray-800">
@@ -300,7 +285,7 @@ export const TemasConfig = () => {
                 <SelectGroup>
                   {eixosTematicos.map(eixo => (
                     <SelectItem key={eixo.eixo_id} value={eixo.eixo_id.toString()}>
-                      {eixo.numero.toString().padStart(2, '0')} - {eixo.nome}
+                      {eixo.numero.toString().padStart(2, '0')} - {eixo.nome_eixo}
                     </SelectItem>
                   ))}
                 </SelectGroup>

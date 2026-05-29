@@ -10,85 +10,73 @@ export interface UserData {
   pessoa_id: number;
   email: string;
   nome: string;
+  tipo_usuario: string;
+  active_context?: { tipo: string; id?: string | null } | null;
 }
 
-export interface LoginResponse {
-  access_token: string;
-  user: UserData;
+export interface ContextsResponse {
+  regionais?: Array<{ pessoa_id: string; nome: string }>;
+  unidades?: Array<{ unidade_id: string; nome_unidade: string }>;
 }
 
-/** Função de autenticação */
+export interface SelectContextPayload {
+  tipo: 'unidade' | 'regional' | 'global';
+  id?: string | null;
+}
+
+/** Serviço de autenticação — tokens gerenciados por cookies HttpOnly no servidor */
 export const authService = {
-  /** Realiza o login do usuário
-   * @param credentials - Objeto com email e senha
-   * @returns Promise com os dados do usuário
-   */
   async login(credentials: LoginCredentials): Promise<UserData> {
+    // POST /auth/login: backend seta cookies access_token + refresh_token (HttpOnly)
+    // Retorna { user: UserData }
+    const response = await api.post<{ user: UserData }>(API_ENDPOINTS.LOGIN, credentials);
+    return response.data.user;
+  },
+
+  async getContexts(): Promise<ContextsResponse> {
     try {
-      const response = await api.post<LoginResponse>(
-        API_ENDPOINTS.LOGIN,
-        credentials
-      );
-
-      if (response.status !== 200) {
-        throw new Error("Falha na autenticação");
-      }
-
-      const data: LoginResponse = response.data;
-      const access_token: string = data.access_token;
-
-      const userData = parseJwt(access_token);
-      localStorage.setItem("accessToken", access_token);
-      localStorage.setItem("userData", JSON.stringify(userData));
-
-      return data.user;
+      const response = await api.get<ContextsResponse>(API_ENDPOINTS.CONTEXTS);
+      return response.data;
     } catch (error) {
-      console.error("Erro durante o login:", error);
-      throw error;
+      console.error('Erro ao buscar contexts:', error);
+      return {} as ContextsResponse;
     }
   },
 
-  /** Logout do usuário
-   * Remove o token de acesso e os dados do usuário do armazenamento local
-   */
-  logout(): void {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userData");
+  async selectContext(payload: SelectContextPayload): Promise<void> {
+    // POST /auth/select-context: backend atualiza cookie com novo active_context
+    await api.post(API_ENDPOINTS.SELECT_CONTEXT, payload);
   },
 
-  /** Verifica se o usuário está autenticado
-   * @returns true se o usuário estiver autenticado, false caso contrário
-   */
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem("accessToken");
+  async logout(): Promise<void> {
+    try {
+      await api.post(API_ENDPOINTS.LOGOUT);
+    } catch {
+      // ignora erro de rede no logout
+    }
+    localStorage.removeItem('userData');
   },
 
-  /** Retorna os dados do usuário atual
-   * @returns Objeto com os dados do usuário ou null se não estiver autenticado
-   */
+  async isAuthenticated(): Promise<boolean> {
+    try {
+      await api.get(API_ENDPOINTS.ME);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  async getMe(): Promise<UserData | null> {
+    try {
+      const response = await api.get<UserData>(API_ENDPOINTS.ME);
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
   getCurrentUser(): UserData | null {
-    const userData = localStorage.getItem("userData");
+    const userData = localStorage.getItem('userData');
     return userData ? JSON.parse(userData) : null;
   },
 };
-
-/** Função auxiliar para decodificar o token JWT
- * @param token - O token JWT a ser decodificado
- * @returns Objeto com os dados do usuário
- */
-function parseJwt(token: string): UserData {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error("Erro ao decodificar token JWT:", e);
-    return { pessoa_id: 0, email: "", nome: "" };
-  }
-}

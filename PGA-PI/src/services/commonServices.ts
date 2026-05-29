@@ -1,12 +1,13 @@
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
-import { 
-  EixoTematico, 
-  PrioridadeAcao, 
-  Tema, 
+import {
+  EixoTematico,
+  PrioridadeAcao,
+  Tema,
   User,
   SolicitacaoAcesso,
-  TipoUsuario
+  TipoUsuario,
+  CargoUnidade,
 } from '@/types/api';
 import { TipoVinculoHAE } from "@/features/projects/components/projectFormTypes";
 
@@ -16,6 +17,15 @@ interface CreateUserData {
   email: string;
   tipo_usuario: TipoUsuario;
   unidade_id?: number;
+}
+
+// Tipo para atualização de usuário (inclui campos adicionais como ativo)
+interface UpdateUserData {
+  nome?: string;
+  email?: string;
+  tipo_usuario?: TipoUsuario;
+  unidade_id?: number;
+  ativo?: boolean;
 }
 
 // EixoTematico Service
@@ -71,7 +81,7 @@ class UserService {
     }
   }
 
-async getByUnidade(unidadeId: number): Promise<User[]> {
+async getByUnidade(unidadeId: string): Promise<User[]> {
   try {
     const response = await api.get<User[]>(`/users/by-unidade/${unidadeId}`);
     return response.data;
@@ -84,14 +94,16 @@ async getByUnidade(unidadeId: number): Promise<User[]> {
   async create(data: CreateUserData): Promise<User> {
     try {
       const response = await api.post<User>(`${API_ENDPOINTS.USERS}`, data);
-      return response.data;
+      // backend may return { user, email_sent } or directly the created user
+      if (response.data && (response.data as any).user) return (response.data as any).user;
+      return response.data as any;
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
       throw error;
     }
   }
 
-  async update(id: number, data: Partial<CreateUserData>): Promise<User> {
+  async update(id: string, data: UpdateUserData): Promise<User> {
     try {
       const response = await api.put<User>(`${API_ENDPOINTS.USERS}/${id}`, data);
       return response.data;
@@ -101,11 +113,20 @@ async getByUnidade(unidadeId: number): Promise<User[]> {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await api.delete(`${API_ENDPOINTS.USERS}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar usuário:', error);
+      throw error;
+    }
+  }
+
+  async updateCargoUnidade(pessoaId: string, unidadeId: string, cargo: CargoUnidade | null): Promise<void> {
+    try {
+      await api.patch(`${API_ENDPOINTS.USERS}/${pessoaId}/cargo-unidade`, { unidade_id: unidadeId, cargo });
+    } catch (error) {
+      console.error('Erro ao atualizar cargo na unidade:', error);
       throw error;
     }
   }
@@ -165,7 +186,7 @@ class WorkloadHaeService {
     }
   }
 
-  async getById(id: number): Promise<TipoVinculoHAE> {
+  async getById(id: string): Promise<TipoVinculoHAE> {
     try {
       const response = await api.get<TipoVinculoHAE>(`${API_ENDPOINTS.WORKLOAD_HAE}/${id}`);
       return response.data;
@@ -184,7 +205,7 @@ export const accessRequestService = new AccessRequestService();
 export const workloadHaeService = new WorkloadHaeService();
 
 // Exportar tipos para uso em outros arquivos
-export type { CreateUserData };
+export type { CreateUserData, UpdateUserData };
 
 // Serviço para entregáveis (linkSei)
 export const entregaveisService = {
@@ -193,7 +214,7 @@ export const entregaveisService = {
     return response.data;
   },
   
-  async getById(id: number) {
+  async getById(id: string) {
     const response = await api.get(`${API_ENDPOINTS.DELIVERABLES}/${id}`);
     return response.data;
   }

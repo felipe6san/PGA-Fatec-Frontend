@@ -11,6 +11,7 @@ import { SelectAnexo } from "@/features/anexos/pages/SelectAnexo";
 import { SelectSubAnexo } from "@/features/anexos/pages/SelectSubAnexo";
 import { BASE_ROUTE } from "@lib/config";
 import { AnexoForm } from "@features/anexos/pages/AnexoForm";
+import { PgaList } from "@features/pga/pages/PgaList";
 
 // Componente para rotas protegidas
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -69,6 +70,8 @@ export const Router = (): JSX.Element => {
         <Route path="anexos">
           <Route path="new" element={<AnexoForm />} />
         </Route>
+
+        <Route path="pgas" element={<PgaList />} />
 
         <Route path="settings" element={<Settings />} />
       </Route>

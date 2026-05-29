@@ -7,5 +7,23 @@ export const projetoPessoaService = {
     const response = await api.post(API_ENDPOINTS.PROJECT_PERSON, data);
     return response.data;
   },
-  // Adicione outros métodos se necessário
+
+  async update(id: number, data: Partial<CreateProjetoPessoaDto>) {
+    try {
+      const response = await api.put(`${API_ENDPOINTS.PROJECT_PERSON}/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar pessoa do projeto:', error);
+      throw error;
+    }
+  },
+
+  async delete(id: number) {
+    try {
+      await api.delete(`${API_ENDPOINTS.PROJECT_PERSON}/${id}`);
+    } catch (error) {
+      console.error('Erro ao remover pessoa do projeto:', error);
+      throw error;
+    }
+  }
 };

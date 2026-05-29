@@ -22,6 +22,24 @@ export enum StatusVerificacao {
   REQUER_ACAO = "RequerAcao",
 }
 
+export enum CargoUnidade {
+  AssessorIV = "AssessorIV",
+  ChefeServicoAdministrativo = "ChefeServicoAdministrativo",
+  ChefeServicoAcademico = "ChefeServicoAcademico",
+  AssistenteTecnico = "AssistenteTecnico",
+  PsicologoInstitucional = "PsicologoInstitucional",
+  AgenteFacilitadorInova = "AgenteFacilitadorInova",
+}
+
+export const CARGO_UNIDADE_LABELS: Record<CargoUnidade, string> = {
+  [CargoUnidade.AssessorIV]: 'Assessor IV – Vice-Diretor(a)',
+  [CargoUnidade.ChefeServicoAdministrativo]: 'Chefe de Serviço Área Administrativa',
+  [CargoUnidade.ChefeServicoAcademico]: 'Chefe de Serviço Área Acadêmica',
+  [CargoUnidade.AssistenteTecnico]: 'Assistente Técnico – AT',
+  [CargoUnidade.PsicologoInstitucional]: 'Psicólogo Institucional – PNE',
+  [CargoUnidade.AgenteFacilitadorInova]: 'Agente Facilitador Local do INOVA CPS',
+};
+
 export interface User {
   pessoa_id: number;
   nome: string;
@@ -36,10 +54,11 @@ export interface User {
     unidade_id: number;
     data_vinculo: string;
     ativo: boolean;
+    cargo?: CargoUnidade | null;
     unidade: {
       unidade_id: number;
       codigo_fnnn: string;
-      nome_completo: string;
+      nome_unidade: string;
       diretor_nome?: string;
     }
   }>;
@@ -54,20 +73,20 @@ export interface Pessoa {
   criado_em?: string;
   unidades?: Array<{
     unidade_id: number;
-    nome_completo: string;
+    nome_unidade: string;
     ativo: boolean;
   }>;
 }
 
 export interface EixoTematico {
-  eixo_id: number;
+  eixo_id: string;
   numero: number;
-  nome: string;
+  nome_eixo: string;
   descricao?: string;
 }
 
 export interface PrioridadeAcao {
-  prioridade_id: number;
+  prioridade_id: string;
   grau: number;
   descricao: string;
   tipo_gestao: string;
@@ -75,20 +94,20 @@ export interface PrioridadeAcao {
 }
 
 export interface Tema {
-  tema_id: number;
+  tema_id: string;
   tema_num: number;
-  eixo_id: number;
+  eixo_id: string;
   descricao: string;
 }
 
 export interface ProjetoPessoa {
-  projeto_pessoa_id?: number;
-  pessoa_id: number;
+  projeto_pessoa_id?: string;
+  pessoa_id: string;
   papel: 'Responsavel' | 'Colaborador';
   carga_horaria_semanal?: number;
-  tipo_vinculo_hae_id?: number;
+  tipo_vinculo_hae_id?: string;
   pessoa: {
-    pessoa_id: number;
+    pessoa_id: string;
     nome: string;
     email?: string;
     tipo_usuario?: string;
@@ -96,7 +115,7 @@ export interface ProjetoPessoa {
 }
 
 export interface EtapaProjeto {
-  etapa_id: number;
+  etapa_id: string;
   descricao: string;
   data_verificacao_prevista?: string;
   data_verificacao_realizada?: string;
@@ -104,28 +123,51 @@ export interface EtapaProjeto {
   numero_ref?: string;
 }
 
+export type StatusPGA =
+  | 'EmElaboracao'
+  | 'Publicado'
+  | 'Submetido'
+  | 'Aprovado'
+  | 'AguardandoCPS'
+  | 'AprovadoCPS'
+  | 'Reprovado';
+
 export interface PgaComUnidade {
-  pga_id: number;
+  pga_id: string;
   ano: number;
-  unidade_id: number;
-  status: string;
+  unidade_id: string | null;
+  status: StatusPGA;
   versao?: string;
+  is_template: boolean;
+  template_pga_id?: string | null;
+  data_limite_submissao?: string | null;
+  analise_cenario?: string | null;
+  parecer_regional?: string | null;
+  parecer_cps?: string | null;
+  copias?: Array<{ pga_id: string; unidade_id: string; status: StatusPGA }>;
   unidade?: {
-    unidade_id: number;
+    unidade_id: string;
     codigo_fnnn: string;
-    nome_completo: string;
-    diretor_nome?: string;
+    nome_unidade: string;
+    diretor?: { nome: string } | null;
   };
 }
 
+export interface PublishPgaResult {
+  template_pga_id: string;
+  ano: number;
+  copias_geradas: number;
+  unidades: Array<{ pga_id: string; unidade_id: string }>;
+}
+
 export interface AcaoProjeto {
-  acao_projeto_id: number;
+  acao_projeto_id: string;
   codigo_projeto?: string;
   nome_projeto?: string;
-  pga_id: number;
-  eixo_id: number;
-  prioridade_id: number;
-  tema_id: number;
+  pga_id: string;
+  eixo_id: string;
+  prioridade_id: string;
+  tema_id: string;
   o_que_sera_feito: string;
   por_que_sera_feito: string;
   data_inicio?: Date | null;
@@ -147,9 +189,9 @@ export interface AcaoProjeto {
 }
 
 export interface Attachment {
-  anexo_id: number;
-  etapa_processo_id: number;
-  entregavel_id?: number;
+  anexo_id: string;
+  etapa_processo_id: string;
+  entregavel_id?: string;
   item: string;
   descricao: string;
   quantidade: number;
@@ -160,35 +202,35 @@ export interface Attachment {
 }
 
 export interface EntregavelLinkSei {
-  entregavel_id: number;
+  entregavel_id: string;
   entregavel_numero: string;
   descricao: string;
   detalhes?: string;
 }
 
 export interface SituacaoProblema {
-  situacao_id: number;
+  situacao_id: string;
   codigo_categoria: string;
   descricao: string;
   fonte?: string | null;
   ordem?: number | null;
   ativo: boolean;
   criado_em: string;
-  criado_por?: number | null;
+  criado_por?: string | null;
   atualizado_em: string;
-  atualizado_por?: number | null;
+  atualizado_por?: string | null;
 }
 
 export interface TipoVinculoHAE {
-  id: number;
+  id: string;
   sigla: string;
   descricao: string;
   detalhes?: string;
 }
 
 export interface CreateAttachmentDto {
-  etapa_processo_id: number;
-  entregavel_id?: number;
+  etapa_processo_id?: string;
+  entregavel_id?: string;
   item: string;
   descricao: string;
   quantidade: number;
@@ -197,8 +239,8 @@ export interface CreateAttachmentDto {
 }
 
 export interface UpdateAttachmentDto {
-  etapa_processo_id?: number;
-  entregavel_id?: number;
+  etapa_processo_id?: string;
+  entregavel_id?: string;
   item?: string;
   descricao?: string;
   quantidade?: number;
@@ -207,10 +249,10 @@ export interface UpdateAttachmentDto {
 }
 
 export interface CreateProject1Dto {
-  pga_id: number;
-  eixo_id: number;
-  prioridade_id: number;
-  tema_id: number;
+  pga_id: string;
+  eixo_id: string;
+  prioridade_id: string;
+  tema_id: string;
   o_que_sera_feito: string;
   por_que_sera_feito: string;
   data_inicio?: string | Date | null;
@@ -222,12 +264,13 @@ export interface CreateProject1Dto {
   codigo_projeto?: string;
   custo_total_estimado?: number;
   fonte_recursos?: string;
+  situacao_problema_ids?: string[];
 }
 
 export interface UpdateProject1Dto {
-  pga_id?: number;
-  eixo_id?: number;
-  prioridade_id?: number;
+  pga_id?: string;
+  eixo_id?: string;
+  prioridade_id?: string;
   tema?: string;
   o_que_sera_feito?: string;
   por_que_sera_feito?: string;
@@ -239,9 +282,9 @@ export interface UpdateProject1Dto {
 }
 
 export interface CreateProcessStepDto {
-  acao_projeto_id: number;
+  acao_projeto_id: string;
   descricao: string;
-  entregavel_id?: number;
+  entregavel_id?: string;
   numero_ref?: string;
   data_verificacao_prevista?: string;
   data_verificacao_realizada?: string;
@@ -249,11 +292,11 @@ export interface CreateProcessStepDto {
 }
 
 export interface CreateProjetoPessoaDto {
-  acao_projeto_id: number;
-  pessoa_id: number;
+  acao_projeto_id: string;
+  pessoa_id: string;
   papel: string;
   carga_horaria_semanal?: number;
-  tipo_vinculo_hae_id?: number;
+  tipo_vinculo_hae_id?: string;
 }
 
 // Tipos de resposta da API
@@ -284,7 +327,7 @@ export interface SolicitacaoAcesso {
   tipo_usuario_concedido?: string | null;
   unidade?: {
     unidade_id: number;
-    nome_completo: string;
+    nome_unidade: string;
     codigo_fnnn: string;
   };
   processador?: {

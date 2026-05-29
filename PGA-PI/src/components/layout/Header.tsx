@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useAccessibility } from "@/hooks/useAccessibility";
-import { Menu, ChevronLeft, ChevronRight, Settings, User, LogOut, Info, Plus, Minus, Contrast, Moon, Sun, Zap, ZapOff, Volume2, VolumeX, HelpCircle, Monitor } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, Settings, User, LogOut, Info, Plus, Minus, Contrast, Moon, Sun, Zap, ZapOff, Volume2, VolumeX, Monitor, Type, Palette, Activity, HelpCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,8 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
   // Estados para controlar a exibição dos modais
   const [isAccessibilityModalOpen, setIsAccessibilityModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
   
   // Estados para controlar o gesto de swipe
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -165,19 +166,19 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
     setIsAccessibilityModalOpen(!isAccessibilityModalOpen);
   };
 
-  // Função para obter o ícone do tema atual
-  const getThemeIcon = (theme: Theme) => {
-    switch (theme) {
-      case 'light':
-        return <Sun className="h-5 w-5" />;
-      case 'dark':
-        return <Moon className="h-5 w-5" />;
-      case 'system':
-        return <Monitor className="h-5 w-5" />;
-      default:
-        return <Sun className="h-5 w-5" />;
-    }
-  };
+  // Componente interno de toggle switch
+  const Toggle = ({ active }: { active: boolean }) => (
+    <div
+      className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors duration-200 ${
+        active ? 'bg-[#ae0f0a]' : 'bg-gray-300'
+      }`}
+      aria-hidden="true"
+    >
+      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+        active ? 'translate-x-5' : 'translate-x-0.5'
+      }`} />
+    </div>
+  );
 
   return (
     <>
@@ -296,193 +297,227 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
         isOpen={isAccessibilityModalOpen}
         onClose={() => {
           setIsAccessibilityModalOpen(false);
+          setShowShortcuts(false);
           announceToScreenReader("Configurações de acessibilidade fechadas");
         }}
-        title="Configurações de Acessibilidade"
+        title="Acessibilidade"
         className="max-w-[95%] md:max-w-lg mx-auto"
-      >
-        <div className="space-y-6">
-          {/* Botão de Ajuda */}
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Configure as opções para melhorar sua experiência</span>
-            <button
-              onClick={() => setShowHelp(!showHelp)}
-              className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors accessibility-focus"
-              aria-label="Mostrar/esconder ajuda de atalhos"
-              aria-pressed={showHelp}
-            >
-              <HelpCircle className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Seção de Ajuda */}
-          {showHelp && (
-            <div className="mb-4">
+        sidePanel={
+          <div
+            className={`w-72 bg-white dark:bg-[#1c2130] border border-gray-200 dark:border-[#30363d] rounded-2xl shadow-2xl transition-all duration-300 ${
+              showShortcuts ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#30363d]">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Atalhos de Teclado</span>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                aria-label="Fechar painel de atalhos"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
               <AccessibilityHelp />
             </div>
-          )}
+          </div>
+        }
+      >
+        <div className="relative">
+        {/* Botão ? no canto superior direito do conteúdo */}
+        <button
+          onClick={() => setShowShortcuts(v => !v)}
+          className={`absolute top-0 right-0 flex items-center justify-center w-7 h-7 rounded-full border transition-colors z-10 ${
+            showShortcuts
+              ? 'border-[#ae0f0a] text-[#ae0f0a]'
+              : 'border-gray-300 dark:border-[#30363d] text-gray-400 hover:text-[#ae0f0a] hover:border-[#ae0f0a]'
+          }`}
+          aria-label="Ver atalhos de teclado"
+          aria-pressed={showShortcuts}
+          title="Atalhos de teclado"
+        >
+          <HelpCircle className="h-4 w-4" />
+        </button>
+        <div className="space-y-5">
 
-          {/* Tamanho da Fonte */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Tamanho da Fonte</h3>
-            <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-              <span className="text-sm text-gray-700">Atual: {accessibilitySettings.fontSize}px</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handleAccessibilityAction(decreaseFontSize, `Fonte diminuída para ${accessibilitySettings.fontSize - 2}px`)}
-                  disabled={accessibilitySettings.fontSize <= 12}
-                  className="p-2 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors accessibility-focus"
-                  aria-label="Diminuir fonte (Alt + -)"
+          {/* ── Tamanho da Fonte ───────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Type className="h-4 w-4 text-[#ae0f0a] flex-shrink-0" />
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tamanho da Fonte</h3>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4">
+              {/* Preview ao vivo */}
+              <div className="flex items-center justify-between mb-3">
+                <span
+                  style={{ fontSize: accessibilitySettings.fontSize }}
+                  className="font-semibold text-gray-800 transition-all duration-200 leading-none"
                 >
-                  <Minus className="h-4 w-4" />
+                  Aa
+                </span>
+                <span className="text-xs text-gray-500 bg-white dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] px-2.5 py-1 rounded-full">
+                  {accessibilitySettings.fontSize}px
+                </span>
+              </div>
+              {/* Controles */}
+              <div className="flex items-stretch gap-2">
+                <button
+                  onClick={() => handleAccessibilityAction(decreaseFontSize, `Fonte diminuída`)}
+                  disabled={accessibilitySettings.fontSize <= 12}
+                  className="flex flex-1 items-center justify-center gap-1.5 py-2 bg-white dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] hover:bg-gray-100 dark:hover:bg-[#262d3a] disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors accessibility-focus"
+                  aria-label="Diminuir fonte"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                  <span>A−</span>
                 </button>
                 <button
-                  onClick={() => handleAccessibilityAction(resetFontSize, "Fonte restaurada para tamanho padrão")}
-                  className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm transition-colors accessibility-focus"
-                  aria-label="Restaurar fonte padrão (Alt + 0)"
+                  onClick={() => handleAccessibilityAction(resetFontSize, "Fonte padrão restaurada")}
+                  className="flex flex-1 items-center justify-center py-2 bg-white dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] hover:bg-gray-100 dark:hover:bg-[#262d3a] rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors accessibility-focus"
+                  aria-label="Restaurar fonte padrão"
                 >
                   Padrão
                 </button>
                 <button
-                  onClick={() => handleAccessibilityAction(increaseFontSize, `Fonte aumentada para ${accessibilitySettings.fontSize + 2}px`)}
+                  onClick={() => handleAccessibilityAction(increaseFontSize, `Fonte aumentada`)}
                   disabled={accessibilitySettings.fontSize >= 24}
-                  className="p-2 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors accessibility-focus"
-                  aria-label="Aumentar fonte (Alt + +)"
+                  className="flex flex-1 items-center justify-center gap-1.5 py-2 bg-white dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] hover:bg-gray-100 dark:hover:bg-[#262d3a] disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors accessibility-focus"
+                  aria-label="Aumentar fonte"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>A+</span>
                 </button>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Contraste e Tema */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Contraste e Tema</h3>
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={() => handleAccessibilityAction(
-                  toggleHighContrast, 
-                  accessibilitySettings.highContrast ? "Alto contraste desativado" : "Alto contraste ativado"
-                )}
-                className={`accessibility-toggle flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                  accessibilitySettings.highContrast 
-                    ? 'border-[#ae0f0a] bg-[#ae0f0a]/10' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                aria-pressed={accessibilitySettings.highContrast}
-                aria-label="Alternar alto contraste (Alt + C)"
-              >
-                <div className="flex items-center space-x-3">
-                  <Contrast className="h-5 w-5" />
-                  <span className="font-medium">Alto Contraste</span>
-                </div>
-                <div className={`w-12 h-6 rounded-full transition-colors ${
-                  accessibilitySettings.highContrast ? 'bg-[#ae0f0a]' : 'bg-gray-300'
-                }`} aria-hidden="true">
-                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform mt-0.5 ${
-                    accessibilitySettings.highContrast ? 'translate-x-6 ml-1' : 'translate-x-0 ml-0.5'
-                  }`}></div>
-                </div>
-              </button>
+          <hr className="border-gray-100" />
 
-              {/* Seletor de Tema */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Tema da Interface</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['light', 'dark', 'system'] as const).map((theme) => (
-                    <button
-                      key={theme}
-                      onClick={() => handleThemeChange(theme)}
-                      className={`accessibility-toggle flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
-                        accessibilitySettings.theme === theme
-                          ? 'border-[#ae0f0a] bg-[#ae0f0a]/10' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      aria-pressed={accessibilitySettings.theme === theme}
-                      aria-label={`Selecionar ${theme === 'light' ? 'tema claro' : theme === 'dark' ? 'tema escuro' : 'tema do sistema'}`}
-                    >
-                      <div className="mb-2">
-                        {getThemeIcon(theme)}
-                      </div>
-                      <span className="text-xs font-medium capitalize">
-                        {theme === 'light' ? 'Claro' : theme === 'dark' ? 'Escuro' : 'Sistema'}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500">
-                  {accessibilitySettings.theme === 'system' 
-                    ? 'Segue a preferência do seu dispositivo'
-                    : `Tema ${accessibilitySettings.theme === 'light' ? 'claro' : 'escuro'} ativo`
-                  }
-                </p>
-              </div>
+          {/* ── Aparência ─────────────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Palette className="h-4 w-4 text-[#ae0f0a] flex-shrink-0" />
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Aparência</h3>
             </div>
-          </div>
 
-          {/* Configurações de Movimento e Som */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Movimento e Som</h3>
-            <div className="grid grid-cols-1 gap-3">
+            {/* Seletor de tema */}
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {([
+                { key: 'light',  label: 'Claro',   Icon: Sun },
+                { key: 'dark',   label: 'Escuro',  Icon: Moon },
+                { key: 'system', label: 'Sistema', Icon: Monitor },
+              ] as const).map(({ key, label, Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => handleThemeChange(key)}
+                  className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all ${
+                    accessibilitySettings.theme === key
+                      ? 'border-[#ae0f0a] bg-[#ae0f0a]/10 text-[#ae0f0a]'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                  aria-pressed={accessibilitySettings.theme === key}
+                  aria-label={`Selecionar ${ key === 'light' ? 'tema claro' : key === 'dark' ? 'tema escuro' : 'tema do sistema' }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs font-semibold">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Alto Contraste */}
+            <button
+              onClick={() => handleAccessibilityAction(
+                toggleHighContrast,
+                accessibilitySettings.highContrast ? "Alto contraste desativado" : "Alto contraste ativado"
+              )}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
+                accessibilitySettings.highContrast
+                  ? 'border-[#ae0f0a] bg-[#ae0f0a]/10'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              aria-pressed={accessibilitySettings.highContrast}
+              aria-label="Alternar alto contraste"
+            >
+              <div className="flex items-center gap-3">
+                <Contrast className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                <div className="text-left">
+                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200">Alto Contraste</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Aumenta o contraste de cores</div>
+                </div>
+              </div>
+              <Toggle active={accessibilitySettings.highContrast} />
+            </button>
+          </section>
+
+          <hr className="border-gray-100" />
+
+          {/* ── Movimento e Som ───────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="h-4 w-4 text-[#ae0f0a] flex-shrink-0" />
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Movimento e Som</h3>
+            </div>
+            <div className="space-y-2">
               <button
                 onClick={() => handleAccessibilityAction(
-                  toggleReduceMotion, 
+                  toggleReduceMotion,
                   accessibilitySettings.reduceMotion ? "Animações reativadas" : "Animações reduzidas"
                 )}
-                className={`accessibility-toggle flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                  accessibilitySettings.reduceMotion 
-                    ? 'border-[#ae0f0a] bg-[#ae0f0a]/10' 
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
+                  accessibilitySettings.reduceMotion
+                    ? 'border-[#ae0f0a] bg-[#ae0f0a]/10'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
                 aria-pressed={accessibilitySettings.reduceMotion}
-                aria-label="Alternar redução de movimento (Alt + M)"
+                aria-label="Alternar redução de movimento"
               >
-                <div className="flex items-center space-x-3">
-                  {accessibilitySettings.reduceMotion ? <ZapOff className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
-                  <span className="font-medium">Reduzir Animações</span>
+                <div className="flex items-center gap-3">
+                  {accessibilitySettings.reduceMotion
+                    ? <ZapOff className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    : <Zap className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  }
+                  <div className="text-left">
+                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200">Reduzir Animações</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Minimiza efeitos de transição</div>
+                  </div>
                 </div>
-                <div className={`w-12 h-6 rounded-full transition-colors ${
-                  accessibilitySettings.reduceMotion ? 'bg-[#ae0f0a]' : 'bg-gray-300'
-                }`} aria-hidden="true">
-                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform mt-0.5 ${
-                    accessibilitySettings.reduceMotion ? 'translate-x-6 ml-1' : 'translate-x-0 ml-0.5'
-                  }`}></div>
-                </div>
+                <Toggle active={accessibilitySettings.reduceMotion} />
               </button>
 
               <button
                 onClick={() => handleAccessibilityAction(
-                  toggleSound, 
-                  accessibilitySettings.soundEnabled ? "Sons do sistema desativados" : "Sons do sistema ativados"
+                  toggleSound,
+                  accessibilitySettings.soundEnabled ? "Sons desativados" : "Sons ativados"
                 )}
-                className={`accessibility-toggle flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                  accessibilitySettings.soundEnabled 
-                    ? 'border-[#ae0f0a] bg-[#ae0f0a]/10' 
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
+                  accessibilitySettings.soundEnabled
+                    ? 'border-[#ae0f0a] bg-[#ae0f0a]/10'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
                 aria-pressed={accessibilitySettings.soundEnabled}
+                aria-label="Alternar sons do sistema"
               >
-                <div className="flex items-center space-x-3">
-                  {accessibilitySettings.soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-                  <span className="font-medium">Sons do Sistema</span>
+                <div className="flex items-center gap-3">
+                  {accessibilitySettings.soundEnabled
+                    ? <Volume2 className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    : <VolumeX className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  }
+                  <div className="text-left">
+                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200">Sons do Sistema</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Feedbacks sonoros de interação</div>
+                  </div>
                 </div>
-                <div className={`w-12 h-6 rounded-full transition-colors ${
-                  accessibilitySettings.soundEnabled ? 'bg-[#ae0f0a]' : 'bg-gray-300'
-                }`} aria-hidden="true">
-                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform mt-0.5 ${
-                    accessibilitySettings.soundEnabled ? 'translate-x-6 ml-1' : 'translate-x-0 ml-0.5'
-                  }`}></div>
-                </div>
+                <Toggle active={accessibilitySettings.soundEnabled} />
               </button>
             </div>
-          </div>
+          </section>
 
-          {/* Botões de Ação */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+          {/* ── Rodapé ────────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-[#30363d]">
             <Button
               type="button"
-              onClick={() => handleAccessibilityAction(resetAllSettings, "Todas as configurações de acessibilidade foram restauradas")}
-              className="flex-1 h-[48px] px-4 bg-gray-500 hover:bg-gray-600 rounded-lg font-['Source_Sans_3',Helvetica] font-medium text-white transition-colors duration-200 accessibility-focus"
+              onClick={() => handleAccessibilityAction(resetAllSettings, "Configurações restauradas para o padrão")}
+              className="flex-1 h-11 px-4 bg-gray-100 dark:bg-[#21262d] hover:bg-gray-200 dark:hover:bg-[#30363d] rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 accessibility-focus"
             >
               Restaurar Padrão
             </Button>
@@ -491,13 +526,14 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isMobile, isExpan
               onClick={() => {
                 setIsAccessibilityModalOpen(false);
                 playSound('success');
-                announceToScreenReader("Configurações de acessibilidade salvas e modal fechado");
+                announceToScreenReader("Configurações salvas");
               }}
-              className="flex-1 h-[48px] px-4 bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-lg font-['Source_Sans_3',Helvetica] font-medium text-white transition-colors duration-200 accessibility-focus"
+              className="flex-1 h-11 px-4 bg-[#ae0f0a] hover:bg-[#8e0c08] rounded-xl text-sm font-medium text-white transition-colors duration-200 accessibility-focus"
             >
               Salvar e Fechar
             </Button>
           </div>
+        </div>
         </div>
       </Modal>
 

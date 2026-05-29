@@ -14,9 +14,6 @@ export const PGAHistoryViewer: React.FC<PGAHistoryViewerProps> = ({ pgaId, ano }
   const { configurations, loading, error } = useConfigurationsByYear(ano);
   const [selectedSection, setSelectedSection] = useState<string>('situacoesProblema');
 
-  // 🔥 DEBUG LOG
-  console.log(`🖥️ PGAHistoryViewer - Renderizando para ano: ${ano}`, { configurations, loading, error });
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -168,7 +165,7 @@ export const PGAHistoryViewer: React.FC<PGAHistoryViewerProps> = ({ pgaId, ano }
                         {selectedSection === 'eixosTematicos' && (
                           <>
                             <div className="font-medium text-gray-800 mb-1">
-                              Eixo {item.numero}: {item.nome}
+                              Eixo {item.numero}: {item.nome_eixo}
                             </div>
                             {item.descricao && (
                               <div className="text-sm text-gray-600">{item.descricao}</div>
@@ -197,7 +194,7 @@ export const PGAHistoryViewer: React.FC<PGAHistoryViewerProps> = ({ pgaId, ano }
                             </div>
                             {item.eixo && (
                               <div className="text-sm text-gray-600">
-                                <span className="font-medium">Eixo:</span> {item.eixo.nome}
+                                <span className="font-medium">Eixo:</span> {item.eixo.nome_eixo}
                               </div>
                             )}
                           </>

@@ -26,8 +26,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
   const [selectedTipoUsuario, setSelectedTipoUsuario] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'processed'>('pending');
-  
-  // Tipos de usuário que podem ser atribuídos
+
   const tiposUsuarioDisponiveis = [
     { value: TipoUsuario.ADMINISTRADOR, label: 'Administrador', nivel: 1 },
     { value: TipoUsuario.CPS, label: 'CPS', nivel: 1 },
@@ -51,8 +50,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
       
       const result = await accessRequestService.getAll();
       console.log('📥 PendingAccessRequests: Resultado recebido:', result);
-      
-      // Verificação da estrutura da resposta
+
       if (!result) {
         console.error('❌ Resultado é null ou undefined');
         setPendingRequests([]);
@@ -60,8 +58,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
         setError('Erro: resposta vazia do servidor');
         return;
       }
-      
-      // Garantir que pendingRequests seja um array válido
+
       let pendingReqs: SolicitacaoAcesso[] = [];
       if (result.pendingRequests) {
         if (Array.isArray(result.pendingRequests)) {
@@ -74,8 +71,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
           }
         }
       }
-      
-      // Garantir que processedRequests seja um array válido
+
       let processedReqs: SolicitacaoAcesso[] = [];
       if (result.processedRequests) {
         if (Array.isArray(result.processedRequests)) {
@@ -90,8 +86,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
       }
       
       console.log('✅ Arrays finais - Pendentes:', pendingReqs.length, 'Processadas:', processedReqs.length);
-      
-      // Define os estados com os arrays verificados
+
       setPendingRequests(pendingReqs);
       setProcessedRequests(processedReqs);
       
@@ -133,15 +128,13 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
 
     setIsProcessing(true);
     try {
-      // Adicionar log para debug
       console.log('🚀 Enviando aprovação:', {
         id: selectedRequest.solicitacao_id,
         status: 'Aprovada',
         tipoUsuario: selectedTipoUsuario,
-        unidadeId: selectedRequest.unidade_id // Incluir o ID da unidade da solicitação
+        unidadeId: selectedRequest.unidade_id
       });
       
-      // Passar a unidade_id da solicitação quando o tipo for Diretor
       await accessRequestService.processRequest(
         selectedRequest.solicitacao_id,
         'Aprovada',
@@ -161,10 +154,8 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
       
       setModalOpen(false);
     } catch (err: any) {
-      // Tratamento de erro mais detalhado para evitar deslogamento indevido
       console.error('❌ Erro ao aprovar solicitação:', err);
-      
-      // Verificar se é erro de autenticação
+
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
         toast({
           variant: 'destructive',
@@ -184,7 +175,6 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
   };
 
   const handleRejectRequest = async (requestId: number): Promise<void> => {
-    // Lógica de rejeição existente...
     if (!confirm('Tem certeza que deseja rejeitar esta solicitação de acesso?')) {
       return;
     }
@@ -290,7 +280,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
                     <tr key={`pending-${request.solicitacao_id}`}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.nome}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.unidade?.nome_completo || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.unidade?.nome_unidade || '-'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {request.data_solicitacao 
                           ? new Date(request.data_solicitacao).toLocaleDateString('pt-BR') 
@@ -348,7 +338,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
                     <tr key={`processed-${request.solicitacao_id}`}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.nome}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.unidade?.nome_completo || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.unidade?.nome_unidade || '-'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           request.status === 'Aprovada' 
@@ -399,7 +389,7 @@ export const PendingAccessRequestsTab: React.FC<PendingAccessRequestsTabProps> =
                 <div className="grid gap-2">
                   <p><strong>Nome:</strong> {selectedRequest.nome}</p>
                   <p><strong>Email:</strong> {selectedRequest.email}</p>
-                  <p><strong>Unidade:</strong> {selectedRequest.unidade?.nome_completo || `Unidade #${selectedRequest.unidade_id}`}</p>
+                  <p><strong>Unidade:</strong> {selectedRequest.unidade?.nome_unidade || `Unidade #${selectedRequest.unidade_id}`}</p>
                 </div>
                 
                 <div className="space-y-2">

@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { BASE_ROUTE } from "@/lib/config";
-import { eixoTematicoService, entregaveisService } from "@/services/commonServices"; // Adicionar o serviço de entregáveis
+import { eixoTematicoService, entregaveisService } from "@/services/commonServices";
 import { EixoTematico } from "@/types/api";
 import { Loader2, AlertCircle } from "lucide-react";
 
-// Interface para os entregáveis
 interface Entregavel {
   id: number;
   nome: string;
@@ -16,18 +15,15 @@ interface Entregavel {
 export const SelectAnexo = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"projects" | "anexos">("projects");
-  
-  // Estados para os eixos temáticos
+
   const [eixosTematicos, setEixosTematicos] = useState<EixoTematico[]>([]);
   const [loadingEixos, setLoadingEixos] = useState(false);
   const [errorEixos, setErrorEixos] = useState<string | null>(null);
-  
-  // Estados para os anexos/entregáveis
+
   const [entregaveis, setEntregaveis] = useState<Entregavel[]>([]);
   const [loadingEntregaveis, setLoadingEntregaveis] = useState(false);
   const [errorEntregaveis, setErrorEntregaveis] = useState<string | null>(null);
 
-  // Efeito para carregar dados com base na aba ativa
   useEffect(() => {
     if (activeTab === "projects") {
       loadEixosTematicos();
@@ -36,14 +32,12 @@ export const SelectAnexo = () => {
     }
   }, [activeTab]);
 
-  // Função para carregar os eixos temáticos
   const loadEixosTematicos = async () => {
     try {
       setLoadingEixos(true);
       setErrorEixos(null);
       
       const data = await eixoTematicoService.getAll();
-      console.log("Eixos temáticos carregados:", data);
       setEixosTematicos(data);
     } catch (error) {
       console.error("Erro ao carregar eixos temáticos:", error);
@@ -53,7 +47,6 @@ export const SelectAnexo = () => {
     }
   };
 
-  // Função para carregar os entregáveis/anexos
   const loadEntregaveis = async () => {
     try {
       setLoadingEntregaveis(true);
@@ -70,7 +63,6 @@ export const SelectAnexo = () => {
     }
   };
 
-  // Função para navegar para o formulário apropriado
   const handleItemClick = (type: string, id: number) => {
     if (type === "project") {
       const eixoSelecionado = eixosTematicos.find(eixo => eixo.eixo_id === id);
@@ -151,7 +143,7 @@ export const SelectAnexo = () => {
                       onClick={() => handleItemClick("project", eixo.eixo_id)}
                     >
                       <h3 className="text-lg font-semibold">
-                        {eixo.numero.toString().padStart(2, "0")} - {eixo.nome}
+                        {eixo.numero.toString().padStart(2, "0")} - {eixo.nome_eixo}
                       </h3>
                     </Card>
                   ))}

@@ -19,7 +19,7 @@ export class ProjectService {
     }
   }
 
-  async getById(id: number): Promise<AcaoProjeto> {
+  async getById(id: string): Promise<AcaoProjeto> {
     try {
       const response = await api.get<AcaoProjeto>(`${API_ENDPOINTS.PROJECTS}/${id}`);
       return response.data;
@@ -39,7 +39,7 @@ export class ProjectService {
     }
   }
 
-  async update(id: number, data: UpdateProject1Dto): Promise<AcaoProjeto> {
+  async update(id: string, data: UpdateProject1Dto): Promise<AcaoProjeto> {
     try {
       const response = await api.put<AcaoProjeto>(`${API_ENDPOINTS.PROJECTS}/${id}`, data);
       return response.data;
@@ -49,12 +49,56 @@ export class ProjectService {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       await api.delete(`${API_ENDPOINTS.PROJECTS}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar projeto:', error);
       throw new Error('Falha ao deletar projeto');
+    }
+  }
+
+  async exportPgaPdf(pgaId: string): Promise<void> {
+    try {
+      const url = `${API_ENDPOINTS.PGA}/${pgaId}/export/pdf`;
+      const response = await api.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `pga-${pgaId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Erro ao exportar PDF do PGA:', error);
+      throw new Error('Falha ao exportar PDF');
+    }
+  }
+
+  async exportPgaCsv(pgaId: string): Promise<void> {
+    try {
+      const url = `${API_ENDPOINTS.PGA}/${pgaId}/export/csv`;
+      const response = await api.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `pga-${pgaId}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Erro ao exportar CSV do PGA:', error);
+      throw new Error('Falha ao exportar CSV');
+    }
+  }
+
+  async updatePga(id: string, data: any): Promise<any> {
+    try {
+      const response = await api.put(`${API_ENDPOINTS.PGA}/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar PGA:', error);
+      throw new Error('Falha ao atualizar PGA');
     }
   }
 }
