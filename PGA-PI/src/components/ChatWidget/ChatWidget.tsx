@@ -1,12 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
-import axios from 'axios';
+import api from '@lib/api';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
 import { Message, ChatState } from './types';
-
-// Vite env variable resolution with local fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export function ChatWidget() {
   const [state, setState] = useState<ChatState>({
@@ -43,8 +40,7 @@ export function ChatWidget() {
     }));
 
     try {
-      // Direct POST request to NestJS /chat
-      const response = await axios.post(`${API_URL}/chat`, {
+      const response = await api.post('/chat', {
         messages: [...state.messages, userMessage].map((m) => ({
           role: m.role,
           content: m.content,
@@ -63,10 +59,11 @@ export function ChatWidget() {
         messages: [...prev.messages, assistantMessage],
         isLoading: false,
       }));
-    } catch (error) {
-      const errorMsg = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.message
-        : 'Erro ao conectar com o servidor do chatbot';
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Erro ao conectar com o servidor do chatbot';
 
       setState((prev) => ({
         ...prev,
