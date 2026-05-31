@@ -154,7 +154,7 @@ jobs:
           NEW_VERSION=$(semver -i major $CURRENT_VERSION)
         elif [[ $MINOR -eq 1 ]]; then
           NEW_VERSION=$(semver -i minor $CURRENT_VERSION)
-        elif [[ $PATCH -eq 1 ]]; date then
+        elif [[ $PATCH -eq 1 ]]; then
           NEW_VERSION=$(semver -i patch $CURRENT_VERSION)
         fi
 
