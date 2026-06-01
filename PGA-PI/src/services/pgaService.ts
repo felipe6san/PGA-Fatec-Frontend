@@ -1,6 +1,6 @@
 import api from "@/lib/api";
-import { API_ENDPOINTS } from '@/lib/config';
-import type { PgaComUnidade, PublishPgaResult } from '@/types/api';
+import { API_ENDPOINTS } from "@/lib/config";
+import type { PgaComUnidade, PublishPgaResult } from "@/types/api";
 
 export interface CreatePgaPayload {
   ano: number;
@@ -15,7 +15,7 @@ export interface CreatePgaPayload {
 class PgaService {
   async getAll(): Promise<PgaComUnidade[]> {
     const response = await api.get<PgaComUnidade[]>(API_ENDPOINTS.PGA);
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   }
 
   async getTemplates(): Promise<PgaComUnidade[]> {
@@ -33,18 +33,28 @@ class PgaService {
     return response.data;
   }
 
-  async update(id: string, payload: Partial<CreatePgaPayload>): Promise<PgaComUnidade> {
-    const response = await api.put<PgaComUnidade>(`${API_ENDPOINTS.PGA}/${id}`, payload);
+  async update(
+    id: string,
+    payload: Partial<CreatePgaPayload>,
+  ): Promise<PgaComUnidade> {
+    const response = await api.put<PgaComUnidade>(
+      `${API_ENDPOINTS.PGA}/${id}`,
+      payload,
+    );
     return response.data;
   }
 
   async publish(id: string): Promise<PublishPgaResult> {
-    const response = await api.post<PublishPgaResult>(`${API_ENDPOINTS.PGA}/${id}/publicar`);
+    const response = await api.post<PublishPgaResult>(
+      `${API_ENDPOINTS.PGA}/${id}/publicar`,
+    );
     return response.data;
   }
 
   async submit(id: string): Promise<PgaComUnidade> {
-    const response = await api.post<PgaComUnidade>(`${API_ENDPOINTS.PGA}/${id}/submeter`);
+    const response = await api.post<PgaComUnidade>(
+      `${API_ENDPOINTS.PGA}/${id}/submeter`,
+    );
     return response.data;
   }
 
@@ -54,14 +64,14 @@ class PgaService {
 
   async exportPdf(id: string): Promise<Blob> {
     const response = await api.get(`${API_ENDPOINTS.PGA}/${id}/export/pdf`, {
-      responseType: 'blob',
+      responseType: "blob",
     });
     return response.data as Blob;
   }
 
   async exportCsv(id: string): Promise<Blob> {
     const response = await api.get(`${API_ENDPOINTS.PGA}/${id}/export/csv`, {
-      responseType: 'blob',
+      responseType: "blob",
     });
     return response.data as Blob;
   }

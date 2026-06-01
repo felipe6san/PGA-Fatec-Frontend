@@ -1,5 +1,5 @@
-import api from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/config';
+import api from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/config";
 import {
   EixoTematico,
   PrioridadeAcao,
@@ -8,7 +8,7 @@ import {
   SolicitacaoAcesso,
   TipoUsuario,
   CargoUnidade,
-} from '@/types/api';
+} from "@/types/api";
 import { TipoVinculoHAE } from "@/features/projects/components/projectFormTypes";
 
 // Tipo para criação de usuário
@@ -33,13 +33,13 @@ export const eixoTematicoService = {
   async getAll(): Promise<EixoTematico[]> {
     try {
       const response = await api.get(API_ENDPOINTS.THEMATIC_AXIS);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Erro ao buscar eixos temáticos:', error);
+      console.error("Erro ao buscar eixos temáticos:", error);
       throw error;
     }
   },
-  
+
   // Outros métodos como getById, create, update, delete...
 };
 
@@ -47,10 +47,12 @@ export const eixoTematicoService = {
 class PrioridadeAcaoService {
   async getAll(): Promise<PrioridadeAcao[]> {
     try {
-      const response = await api.get<PrioridadeAcao[]>(API_ENDPOINTS.PRIORITY_ACTIONS);
-      return response.data;
+      const response = await api.get<PrioridadeAcao[]>(
+        API_ENDPOINTS.PRIORITY_ACTIONS,
+      );
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Erro ao buscar prioridades de ação:', error);
+      console.error("Erro ao buscar prioridades de ação:", error);
       throw error;
     }
   }
@@ -61,9 +63,9 @@ class TemaService {
   async getAll(): Promise<Tema[]> {
     try {
       const response = await api.get<Tema[]>(API_ENDPOINTS.THEMES);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Erro ao buscar temas:', error);
+      console.error("Erro ao buscar temas:", error);
       throw error;
     }
   }
@@ -74,41 +76,45 @@ class UserService {
   async getAll(): Promise<User[]> {
     try {
       const response = await api.get<User[]>(`${API_ENDPOINTS.USERS}`);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Erro ao buscar todos os usuários:', error);
+      console.error("Erro ao buscar todos os usuários:", error);
       throw error;
     }
   }
 
-async getByUnidade(unidadeId: string): Promise<User[]> {
-  try {
-    const response = await api.get<User[]>(`/users/by-unidade/${unidadeId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao buscar usuários por unidade:', error);
-    return [];
+  async getByUnidade(unidadeId: string): Promise<User[]> {
+    try {
+      const response = await api.get<User[]>(`/users/by-unidade/${unidadeId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar usuários por unidade:", error);
+      return [];
+    }
   }
-}
 
   async create(data: CreateUserData): Promise<User> {
     try {
       const response = await api.post<User>(`${API_ENDPOINTS.USERS}`, data);
       // backend may return { user, email_sent } or directly the created user
-      if (response.data && (response.data as any).user) return (response.data as any).user;
+      if (response.data && (response.data as any).user)
+        return (response.data as any).user;
       return response.data as any;
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
+      console.error("Erro ao criar usuário:", error);
       throw error;
     }
   }
 
   async update(id: string, data: UpdateUserData): Promise<User> {
     try {
-      const response = await api.put<User>(`${API_ENDPOINTS.USERS}/${id}`, data);
+      const response = await api.put<User>(
+        `${API_ENDPOINTS.USERS}/${id}`,
+        data,
+      );
       return response.data;
     } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
+      console.error("Erro ao atualizar usuário:", error);
       throw error;
     }
   }
@@ -117,16 +123,23 @@ async getByUnidade(unidadeId: string): Promise<User[]> {
     try {
       await api.delete(`${API_ENDPOINTS.USERS}/${id}`);
     } catch (error) {
-      console.error('Erro ao deletar usuário:', error);
+      console.error("Erro ao deletar usuário:", error);
       throw error;
     }
   }
 
-  async updateCargoUnidade(pessoaId: string, unidadeId: string, cargo: CargoUnidade | null): Promise<void> {
+  async updateCargoUnidade(
+    pessoaId: string,
+    unidadeId: string,
+    cargo: CargoUnidade | null,
+  ): Promise<void> {
     try {
-      await api.patch(`${API_ENDPOINTS.USERS}/${pessoaId}/cargo-unidade`, { unidade_id: unidadeId, cargo });
+      await api.patch(`${API_ENDPOINTS.USERS}/${pessoaId}/cargo-unidade`, {
+        unidade_id: unidadeId,
+        cargo,
+      });
     } catch (error) {
-      console.error('Erro ao atualizar cargo na unidade:', error);
+      console.error("Erro ao atualizar cargo na unidade:", error);
       throw error;
     }
   }
@@ -134,25 +147,32 @@ async getByUnidade(unidadeId: string): Promise<User[]> {
 
 // AccessRequest Service
 class AccessRequestService {
-  async getAll(): Promise<{ pendingRequests: SolicitacaoAcesso[], processedRequests: SolicitacaoAcesso[] }> {
+  async getAll(): Promise<{
+    pendingRequests: SolicitacaoAcesso[];
+    processedRequests: SolicitacaoAcesso[];
+  }> {
     try {
       const response = await api.get(`${API_ENDPOINTS.USERS}/access-requests`);
-      
+
       // Verificação detalhada do formato da resposta
-      if (!response.data || typeof response.data !== 'object') {
-        throw new Error('Formato de resposta inválido da API');
+      if (!response.data || typeof response.data !== "object") {
+        throw new Error("Formato de resposta inválido da API");
       }
-      
+
       // Garantir que temos os dois arrays necessários
       const result = {
-        pendingRequests: Array.isArray(response.data.pendingRequests) ? response.data.pendingRequests : [],
-        processedRequests: Array.isArray(response.data.processedRequests) ? response.data.processedRequests : []
+        pendingRequests: Array.isArray(response.data.pendingRequests)
+          ? response.data.pendingRequests
+          : [],
+        processedRequests: Array.isArray(response.data.processedRequests)
+          ? response.data.processedRequests
+          : [],
       };
-      
+
       return result;
     } catch (error: any) {
-      console.error('Erro ao buscar solicitações de acesso:', error);
-      
+      console.error("Erro ao buscar solicitações de acesso:", error);
+
       // Permite que o erro se propague para ser tratado pelo componente
       throw new Error(`Falha na conexão com servidor: ${error.message}`);
     }
@@ -160,16 +180,19 @@ class AccessRequestService {
 
   async processRequest(
     requestId: number,
-    status: 'Aprovada' | 'Rejeitada',
+    status: "Aprovada" | "Rejeitada",
     tipo_usuario?: string,
-    unidade_id?: number
+    unidade_id?: number,
   ): Promise<SolicitacaoAcesso> {
-    const response = await api.post(`${API_ENDPOINTS.USERS}/process-access-request/${requestId}`, {
-      status,
-      tipo_usuario,
-      unidade_id
-    });
-    
+    const response = await api.post(
+      `${API_ENDPOINTS.USERS}/process-access-request/${requestId}`,
+      {
+        status,
+        tipo_usuario,
+        unidade_id,
+      },
+    );
+
     return response.data;
   }
 }
@@ -178,17 +201,21 @@ class AccessRequestService {
 class WorkloadHaeService {
   async getAll(): Promise<TipoVinculoHAE[]> {
     try {
-      const response = await api.get<TipoVinculoHAE[]>(API_ENDPOINTS.WORKLOAD_HAE);
-      return response.data;
+      const response = await api.get<TipoVinculoHAE[]>(
+        API_ENDPOINTS.WORKLOAD_HAE,
+      );
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Erro ao buscar tipos de vínculo HAE:', error);
+      console.error("Erro ao buscar tipos de vínculo HAE:", error);
       throw error;
     }
   }
 
   async getById(id: string): Promise<TipoVinculoHAE> {
     try {
-      const response = await api.get<TipoVinculoHAE>(`${API_ENDPOINTS.WORKLOAD_HAE}/${id}`);
+      const response = await api.get<TipoVinculoHAE>(
+        `${API_ENDPOINTS.WORKLOAD_HAE}/${id}`,
+      );
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar tipo de vínculo HAE ID ${id}:`, error);
@@ -213,9 +240,9 @@ export const entregaveisService = {
     const response = await api.get(API_ENDPOINTS.DELIVERABLES);
     return response.data;
   },
-  
+
   async getById(id: string) {
     const response = await api.get(`${API_ENDPOINTS.DELIVERABLES}/${id}`);
     return response.data;
-  }
+  },
 };

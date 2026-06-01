@@ -1,5 +1,5 @@
-import api from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/config';
+import api from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/config";
 
 export interface Regional {
   regional_id: string;
@@ -51,7 +51,7 @@ class UnidadesService {
   // Regionais
   async getAllRegionais(): Promise<Regional[]> {
     const response = await api.get<Regional[]>(API_ENDPOINTS.REGIONALS);
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   }
 
   async createRegional(data: CreateRegionalDto): Promise<Regional> {
@@ -62,7 +62,7 @@ class UnidadesService {
   // Unidades
   async getAllUnidades(): Promise<Unidade[]> {
     const response = await api.get<Unidade[]>(API_ENDPOINTS.UNITS);
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   }
 
   async createUnidade(data: CreateUnidadeDto): Promise<Unidade> {
@@ -71,7 +71,10 @@ class UnidadesService {
   }
 
   async updateUnidade(id: string, data: UpdateUnidadeDto): Promise<Unidade> {
-    const response = await api.put<Unidade>(`${API_ENDPOINTS.UNITS}/${id}`, data);
+    const response = await api.put<Unidade>(
+      `${API_ENDPOINTS.UNITS}/${id}`,
+      data,
+    );
     return response.data;
   }
 
@@ -83,7 +86,7 @@ class UnidadesService {
     const response = await api.get<Unidade[]>(
       `${API_ENDPOINTS.REGIONAL_UNIDADES}?regional_id=${regionalId}`,
     );
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   }
 }
 

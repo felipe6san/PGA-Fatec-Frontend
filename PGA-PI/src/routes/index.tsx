@@ -15,7 +15,15 @@ import { PgaList } from "@features/pga/pages/PgaList";
 
 // Componente para rotas protegidas
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-lg text-gray-500">Carregando...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to={`${BASE_ROUTE}login`} replace />;
@@ -40,10 +48,7 @@ export const Router = (): JSX.Element => {
         }
       />
 
-      <Route
-        path={`${BASE_ROUTE}reset-password`}
-        element={<ResetPassword />}
-      />
+      <Route path={`${BASE_ROUTE}reset-password`} element={<ResetPassword />} />
 
       <Route
         path={`${BASE_ROUTE}*`}
@@ -53,10 +58,7 @@ export const Router = (): JSX.Element => {
           </PrivateRoute>
         }
       >
-        <Route
-          index
-          element={<Navigate to={`dashboard`} replace />}
-        />
+        <Route index element={<Navigate to={`dashboard`} replace />} />
         <Route path="dashboard" element={<Home />} />
 
         <Route path="projects">
@@ -78,7 +80,13 @@ export const Router = (): JSX.Element => {
 
       <Route
         path="*"
-        element={<Navigate to={isAuthenticated ? `${BASE_ROUTE}dashboard` : `${BASE_ROUTE}login`} />}
+        element={
+          <Navigate
+            to={
+              isAuthenticated ? `${BASE_ROUTE}dashboard` : `${BASE_ROUTE}login`
+            }
+          />
+        }
       />
     </Routes>
   );

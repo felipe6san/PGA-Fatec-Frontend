@@ -6,7 +6,12 @@ import { StatsCard } from "../components/StatsCard";
 import { ProjectProgressCard } from "../components/ProjectProgressCard";
 import { EmployeeChart } from "../components/EmployeeChart";
 import { UpcomingDeadlines } from "../components/UpcomingDeadlines";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../../../components/ui/tabs";
 import {
   Users,
   Briefcase,
@@ -21,8 +26,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { projectService } from "@/features/projects/services/projectService";
-import api from "@/lib/api";
-import { API_ENDPOINTS, BASE_ROUTE } from "@/lib/config";
+import { pgaService } from "@/services/pgaService";
+import { BASE_ROUTE } from "@/lib/config";
 import { useAuth } from "@/context/AuthContext";
 import { AcaoProjeto, PgaComUnidade, StatusPGA } from "@/types/api";
 import {
@@ -32,23 +37,23 @@ import {
 } from "../utils/transformers";
 
 const STATUS_LABEL: Record<StatusPGA, string> = {
-  EmElaboracao: 'Em Elaboração',
-  Publicado: 'Publicado',
-  Submetido: 'Submetido — aguardando avaliação regional',
-  Aprovado: 'Aprovado pela Regional',
-  AguardandoCPS: 'Aguardando CPS',
-  AprovadoCPS: 'Aprovado pelo CPS',
-  Reprovado: 'Reprovado — necessita correções',
+  EmElaboracao: "Em Elaboração",
+  Publicado: "Publicado",
+  Submetido: "Submetido — aguardando avaliação regional",
+  Aprovado: "Aprovado pela Regional",
+  AguardandoCPS: "Aguardando CPS",
+  AprovadoCPS: "Aprovado pelo CPS",
+  Reprovado: "Reprovado — necessita correções",
 };
 
 const STATUS_CLASS: Record<StatusPGA, string> = {
-  EmElaboracao: 'bg-yellow-100 text-yellow-800',
-  Publicado: 'bg-blue-100 text-blue-800',
-  Submetido: 'bg-purple-100 text-purple-800',
-  Aprovado: 'bg-green-100 text-green-800',
-  AguardandoCPS: 'bg-orange-100 text-orange-800',
-  AprovadoCPS: 'bg-green-200 text-green-900',
-  Reprovado: 'bg-red-100 text-red-800',
+  EmElaboracao: "bg-yellow-100 text-yellow-800",
+  Publicado: "bg-blue-100 text-blue-800",
+  Submetido: "bg-purple-100 text-purple-800",
+  Aprovado: "bg-green-100 text-green-800",
+  AguardandoCPS: "bg-orange-100 text-orange-800",
+  AprovadoCPS: "bg-green-200 text-green-900",
+  Reprovado: "bg-red-100 text-red-800",
 };
 
 export const Home = (): JSX.Element => {
@@ -63,9 +68,12 @@ export const Home = (): JSX.Element => {
 
   useEffect(() => {
     // Regional tem view própria
-    if (user?.tipo_usuario === 'Regional') return;
+    if (user?.tipo_usuario === "Regional") return;
     // CPS e Admin não carregam dados de unidade, mas liberam o loading
-    if (user?.tipo_usuario === 'CPS' || user?.tipo_usuario === 'Administrador') {
+    if (
+      user?.tipo_usuario === "CPS" ||
+      user?.tipo_usuario === "Administrador"
+    ) {
       setLoading(false);
       return;
     }
@@ -76,10 +84,7 @@ export const Home = (): JSX.Element => {
         setError(null);
 
         const [projetosData, pgasData]: [AcaoProjeto[], PgaComUnidade[]] =
-          await Promise.all([
-            projectService.getAll(),
-            api.get(API_ENDPOINTS.PGA).then((r) => r.data),
-          ]);
+          await Promise.all([projectService.getAll(), pgaService.getAll()]);
 
         const pgasOrdenados = [...pgasData].sort((a, b) => b.ano - a.ano);
         setAllPgas(pgasOrdenados);
@@ -97,7 +102,7 @@ export const Home = (): JSX.Element => {
   }, [user]);
 
   // Regional tem dashboard dedicado
-  if (user?.tipo_usuario === 'Regional') {
+  if (user?.tipo_usuario === "Regional") {
     return <HomeRegional />;
   }
 
@@ -117,7 +122,8 @@ export const Home = (): JSX.Element => {
     );
   }
 
-  const pgaSelecionado = allPgas.find((p) => p.pga_id === selectedPgaId) ?? allPgas[0] ?? null;
+  const pgaSelecionado =
+    allPgas.find((p) => p.pga_id === selectedPgaId) ?? allPgas[0] ?? null;
   const projetos = selectedPgaId
     ? allProjetos.filter((p) => p.pga_id === selectedPgaId)
     : allProjetos;
@@ -126,12 +132,15 @@ export const Home = (): JSX.Element => {
   const projectCards = buildProjectCards(projetos);
   const deadlines = buildDeadlines(projetos);
 
-  const totalHoras = employees.reduce((acc, emp) => acc + emp.hoursAllocated, 0);
+  const totalHoras = employees.reduce(
+    (acc, emp) => acc + emp.hoursAllocated,
+    0,
+  );
   const progressoMedio =
     projectCards.length > 0
       ? Math.round(
           projectCards.reduce((acc, p) => acc + p.progress, 0) /
-            projectCards.length
+            projectCards.length,
         )
       : 0;
 
@@ -162,7 +171,9 @@ export const Home = (): JSX.Element => {
               <p className="font-medium text-white/80 text-base md:text-lg mb-2">
                 Código da Unidade
               </p>
-              <p className="font-bold text-white text-2xl md:text-3xl">{codigoUnidade}</p>
+              <p className="font-bold text-white text-2xl md:text-3xl">
+                {codigoUnidade}
+              </p>
             </div>
             <div className="text-center md:text-left">
               <p className="font-medium text-white/80 text-base md:text-lg mb-2">
@@ -190,13 +201,20 @@ export const Home = (): JSX.Element => {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-gray-400 flex-shrink-0" />
             <div>
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Status do PGA</p>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${STATUS_CLASS[pgaSelecionado.status]}`}>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                Status do PGA
+              </p>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${STATUS_CLASS[pgaSelecionado.status]}`}
+              >
                 {STATUS_LABEL[pgaSelecionado.status]}
               </span>
-              {pgaSelecionado.status === 'Reprovado' && pgaSelecionado.parecer_regional && (
-                <p className="text-xs text-red-600 mt-1">Parecer: {pgaSelecionado.parecer_regional}</p>
-              )}
+              {pgaSelecionado.status === "Reprovado" &&
+                pgaSelecionado.parecer_regional && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Parecer: {pgaSelecionado.parecer_regional}
+                  </p>
+                )}
             </div>
           </div>
 
@@ -220,14 +238,15 @@ export const Home = (): JSX.Element => {
             </div>
 
             {/* Link para enviar — só Diretor, só EmElaboracao */}
-            {user?.tipo_usuario === 'Diretor' && pgaSelecionado.status === 'EmElaboracao' && (
-              <Link
-                to={`${BASE_ROUTE}pgas`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[#ae0f0a] text-[#ae0f0a] hover:bg-[#ae0f0a]/5 transition-colors"
-              >
-                Enviar para Regional
-              </Link>
-            )}
+            {user?.tipo_usuario === "Diretor" &&
+              pgaSelecionado.status === "EmElaboracao" && (
+                <Link
+                  to={`${BASE_ROUTE}pgas`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[#ae0f0a] text-[#ae0f0a] hover:bg-[#ae0f0a]/5 transition-colors"
+                >
+                  Enviar para Regional
+                </Link>
+              )}
           </div>
         </div>
       )}
